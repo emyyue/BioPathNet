@@ -14,7 +14,7 @@ from torchdrug.core import Registry as R
 class InductiveKnowledgeGraphDataset(data.KnowledgeGraphDataset):
 
     def load_inductive_tsvs(self, train_files, test_files, verbose=0):
-        assert len(train_files) == len(test_files) == 2
+        assert len(train_files) == len(test_files)
         inv_train_entity_vocab = {}
         inv_test_entity_vocab = {}
         inv_relation_vocab = {}
@@ -351,4 +351,34 @@ class OGBLBioKG(data.KnowledgeGraphDataset):
             splits.append(split)
             offset += num_sample
             neg_offset += num_sample_with_neg
+        return splits
+
+    
+@R.register("datasets.aerohealth")
+class aerohealth(data.KnowledgeGraphDataset):
+    """
+    load training, validation and testing triplets from multiple files
+    """
+
+    files = [
+        "train.txt",
+        "valid.txt",
+        "test.txt",]
+
+    def __init__(self, path, verbose=1):
+        self.path = path
+
+        txt_files=[]
+        for x in self.files:
+            txt_files.append(os.path.join(self.path, x))
+
+        self.load_tsvs(txt_files, verbose=verbose)
+
+    def split(self):
+        offset = 0
+        splits = []
+        for num_sample in self.num_samples:
+            split = torch_data.Subset(self, range(offset, offset + num_sample))
+            splits.append(split)
+            offset += num_sample
         return splits

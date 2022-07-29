@@ -11,7 +11,8 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
 
 
-vocab_file = os.path.join(os.path.dirname(__file__), "../data/fb15k237_entity.txt")
+#vocab_file = os.path.join(os.path.dirname(__file__), "../data/fb15k237_entity.txt")
+vocab_file = os.path.join(os.path.dirname(__file__), "../data/aerohealth_entity.txt")
 vocab_file = os.path.abspath(vocab_file)
 
 
@@ -75,8 +76,11 @@ if __name__ == "__main__":
     logger.warning("Config file: %s" % args.config)
     logger.warning(pprint.pformat(cfg))
 
-    if cfg.dataset["class"] != "FB15k237":
-        raise ValueError("Visualization is only implemented for FB15k237")
+    #if cfg.dataset["class"] != "FB15k237":
+     #   raise ValueError("Visualization is only implemented for FB15k237")
+    #import pickle
+    #with open('/home/mila/y/yue.hu/proj/NBFNet/saved_dictionary.pkl', 'wb') as f:
+     #   pickle.dump(cfg, f)
 
     dataset = core.Configurable.load_config_dict(cfg.dataset)
     solver = util.build_solver(cfg, dataset)

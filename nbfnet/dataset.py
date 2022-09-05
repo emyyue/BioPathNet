@@ -5,6 +5,7 @@ from tqdm import tqdm
 from ogb import linkproppred
 
 import torch
+import torch.nn as tnn
 from torch.utils import data as torch_data
 
 from torchdrug import data, datasets, utils

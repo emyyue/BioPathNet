@@ -355,22 +355,27 @@ class OGBLBioKG(data.KnowledgeGraphDataset):
         return splits
 
     
-@R.register("datasets.aerohealth")
-class aerohealth(data.KnowledgeGraphDataset):
+
+@R.register("datasets.biomedical")
+class biomedical(data.KnowledgeGraphDataset):
     """
     load training, validation and testing triplets from multiple files
     """
 
     files = [
-        "train.txt",
-        "valid.txt",
-        "test.txt",]
+        "train1.txt", # such as biogrid
+        "train2.txt",  # such as KEGG train
+        "valid.txt", # such as KEGG valid
+        "test.txt",] # such as KEGG test
 
-    def __init__(self, path, verbose=1):
+    def __init__(self, path, include_factgraph=True, verbose=1):
         self.path = path
+        self.include_factgraph = include_factgraph
+        
+        chosen_files = self.files if self.include_factgraph else self.files[1:]
 
         txt_files=[]
-        for x in self.files:
+        for x in chosen_files:
             txt_files.append(os.path.join(self.path, x))
 
         self.load_tsvs(txt_files, verbose=verbose)
@@ -382,4 +387,15 @@ class aerohealth(data.KnowledgeGraphDataset):
             split = torch_data.Subset(self, range(offset, offset + num_sample))
             splits.append(split)
             offset += num_sample
-        return splits
+            
+        if self.include_factgraph:
+            return splits[1:]
+        else:
+            return splits
+        
+    def get_fact1(self):
+        if self.include_factgraph:
+            return splits[0]
+        else:
+            return None
+    

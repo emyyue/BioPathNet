@@ -503,7 +503,9 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
         else:
             ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
-
+        
+        pred = pred.flatten()
+        target = target.flatten()
         metric = {}
         for _metric in self.metric:
             if _metric == "mr":

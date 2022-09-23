@@ -65,7 +65,9 @@ class KnowledgeGraphCompletionExt(tasks.KnowledgeGraphCompletion, core.Configura
             ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
         else:
             ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
-
+            
+        pred = pred.flatten()
+        target = target.flatten()
         metric = {}
         for _metric in self.metric:
             if _metric == "mr":
@@ -481,3 +483,43 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
             new_metric[new_key] = metric[key].mean()
 
         return new_metric
+    
+@R.register("tasks.KnowledgeGraphCompletionBiomed")
+class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Configurable):
+
+    def __init__(self, model, criterion="bce",
+                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "auroc", "ap"),
+                 num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True, filtered_ranking=True,
+                 fact_ratio=None, sample_weight=True):
+        super(KnowledgeGraphCompletionBiomed, self).__init__(model, criterion, metric, num_negative, margin, 
+                                                          adversarial_temperature, strict_negative, 
+                                                          filtered_ranking,fact_ratio, sample_weight)
+    
+    def evaluate(self, pred, target):
+        mask, target = target
+
+        pos_pred = pred.gather(-1, target.unsqueeze(-1))
+        if self.filtered_ranking:
+            ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
+        else:
+            ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
+
+        metric = {}
+        for _metric in self.metric:
+            if _metric == "mr":
+                score = ranking.float().mean()
+            elif _metric == "mrr":
+                score = (1 / ranking.float()).mean()
+            elif _metric.startswith("hits@"):
+                threshold = int(_metric[5:])
+                score = (ranking <= threshold).float().mean()
+            elif _metric == "auroc":
+                score = metrics.area_under_roc(pred, target)
+            elif _metric == "ap":
+                score = metrics.area_under_prc(pred, target)
+            else:
+                raise ValueError("Unknown metric `%s`" % _metric)
+            name = tasks._get_metric_name(_metric)
+            metric[name] = score
+
+        return metric

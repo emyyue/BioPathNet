@@ -5,7 +5,7 @@ import pprint
 
 import torch
 
-from torchdrug import core
+from torchdrug import core, models
 from torchdrug.utils import comm
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))

@@ -368,9 +368,11 @@ class biomedical(data.KnowledgeGraphDataset):
         "valid.txt", # such as KEGG valid
         "test.txt",] # such as KEGG test
 
-    def __init__(self, path, include_factgraph=True, verbose=1):
+    def __init__(self, path, include_factgraph=True, fact_as_train=False, verbose=1):
+        path = os.path.expanduser(path)
         self.path = path
         self.include_factgraph = include_factgraph
+        self.fact_as_train = fact_as_train
         
         chosen_files = self.files if self.include_factgraph else self.files[1:]
 
@@ -383,12 +385,15 @@ class biomedical(data.KnowledgeGraphDataset):
     def split(self):
         offset = 0
         splits = []
-        for num_sample in self.num_samples:
+        num_samples = self.num_samples
+        if self.include_factgraph and self.fact_as_train:
+            num_samples = [num_samples[0] + num_samples[1]] + num_samples[2:]
+        for num_sample in num_samples:
             split = torch_data.Subset(self, range(offset, offset + num_sample))
             splits.append(split)
             offset += num_sample
             
-        if self.include_factgraph:
+        if self.include_factgraph and not self.fact_as_train:
             return splits[1:]
         else:
             return splits

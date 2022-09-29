@@ -1,0 +1,32 @@
+output_dir: ~/scratch/experiments/
+
+dataset:
+  class: biomedical
+  path: ~/nbfnet_hy/data/PC_KEGG
+  include_factgraph: yes
+  fact_as_train: yes
+  
+task:
+  class: KnowledgeGraphCompletion
+  model:
+    class: RotatE
+    embedding_dim: 128
+    max_score: 6
+  criterion: bce
+  num_negative: 512
+  strict_negative: yes
+  adversarial_temperature: 1
+  sample_weight: yes
+
+optimizer:
+  class: Adam
+  lr: 5.0e-4
+
+engine:
+  gpus: {{ gpus }}
+  batch_size: 4096
+
+train:
+  num_epoch: 100
+
+metric: mrr

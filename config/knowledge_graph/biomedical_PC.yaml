@@ -1,12 +1,12 @@
-output_dir: ~/experiments/
+output_dir: ~/scratch/experiments/
 
 dataset:
   class: biomedical
-  path: /home/mila/y/yue.hu/github/NBFNet/data/PC_KEGG
+  path: ~/nbfnet_hy/data/PC_KEGG_0928
   include_factgraph: True
   
 task:
-  class: KnowledgeGraphCompletion
+  class: KnowledgeGraphCompletionBiomed
   model:
     class: NBFNet
     input_dim: 32
@@ -19,6 +19,8 @@ task:
   criterion: bce
   num_negative: 32
   strict_negative: yes
+  heterogeneous_negative: yes
+  heterogeneous_evaluation: yes
   adversarial_temperature: 1
   sample_weight: no
 

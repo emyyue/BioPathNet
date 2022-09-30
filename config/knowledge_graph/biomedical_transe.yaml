@@ -2,11 +2,11 @@ output_dir: ~/scratch/experiments/
 
 dataset:
   class: biomedical
-  path: ~/nbfnet_hy/data/PC_KEGG
+  path: ~/nbfnet_hy/data/PC_KEGG_0928
   include_factgraph: no
   
 task:
-  class: KnowledgeGraphCompletion
+  class: KnowledgeGraphCompletionBiomed
   model:
     class: TransE
     embedding_dim: 512
@@ -14,6 +14,8 @@ task:
   criterion: bce
   num_negative: 512
   strict_negative: yes
+  heterogeneous_negative: yes
+  heterogeneous_evaluation: yes
   adversarial_temperature: 1
   sample_weight: yes
 

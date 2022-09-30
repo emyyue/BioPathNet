@@ -368,6 +368,8 @@ class biomedical(data.KnowledgeGraphDataset):
         "valid.txt", # such as KEGG valid
         "test.txt",] # such as KEGG test
 
+    entity_vocab_file = "entity_types.txt"
+
     def __init__(self, path, include_factgraph=True, fact_as_train=False, verbose=1):
         path = os.path.expanduser(path)
         self.path = path
@@ -381,6 +383,24 @@ class biomedical(data.KnowledgeGraphDataset):
             txt_files.append(os.path.join(self.path, x))
 
         self.load_tsvs(txt_files, verbose=verbose)
+        self.load_entity_types(path)
+
+    def load_entity_types(self, path) -> None:
+        inv_type_vocab = {}
+        node_type = {}
+        with open(os.path.join(path, self.entity_vocab_file), "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                entity_token, type_token = line.strip().split()
+                if type_token not in inv_type_vocab:
+                    inv_type_vocab[type_token] = len(inv_type_vocab)
+                node_type[self.inv_entity_vocab[entity_token]] = inv_type_vocab[type_token]
+
+        assert len(node_type) == self.num_entity
+        _, node_type = zip(*sorted(node_type.items()))
+
+        with self.graph.node():
+            self.graph.node_type = torch.tensor(node_type)
 
     def split(self):
         offset = 0

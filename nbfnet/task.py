@@ -488,13 +488,87 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
 class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Configurable):
 
     def __init__(self, model, criterion="bce",
-                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "auroc", "ap"),
-                 num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True, filtered_ranking=True,
+                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10"),
+                 num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
+                 heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True):
-        super(KnowledgeGraphCompletionBiomed, self).__init__(model, criterion, metric, num_negative, margin, 
-                                                          adversarial_temperature, strict_negative, 
-                                                          filtered_ranking,fact_ratio, sample_weight)
-    
+        super(KnowledgeGraphCompletionBiomed, self).__init__(model, criterion, metric, num_negative, margin,
+                                                             adversarial_temperature, strict_negative,
+                                                             filtered_ranking,fact_ratio, sample_weight)
+        self.heterogeneous_negative = heterogeneous_negative
+        self.heterogeneous_evaluation = heterogeneous_evaluation
+
+    @torch.no_grad()
+    def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
+        batch_size = len(pos_h_index)
+        any = -torch.ones_like(pos_h_index)
+        node_type = self.fact_graph.node_type
+
+        pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+        pattern = pattern[:batch_size // 2]
+        edge_index, num_t_truth = self.fact_graph.match(pattern)
+        t_truth_index = self.fact_graph.edge_list[edge_index, 1]
+        pos_index = functional._size_to_index(num_t_truth)
+        if self.heterogeneous_negative:
+            pos_t_type = node_type[pos_t_index[:batch_size // 2]]
+            t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
+        else:
+            t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+        t_mask[pos_index, t_truth_index] = 0
+        neg_t_candidate = t_mask.nonzero()[:, 1]
+        num_t_candidate = t_mask.sum(dim=-1)
+        neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
+
+        pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+        pattern = pattern[batch_size // 2:]
+        edge_index, num_h_truth = self.fact_graph.match(pattern)
+        h_truth_index = self.fact_graph.edge_list[edge_index, 0]
+        pos_index = functional._size_to_index(num_h_truth)
+        if self.heterogeneous_negative:
+            pos_h_type = node_type[pos_h_index[batch_size // 2:]]
+            h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
+        else:
+            h_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+        h_mask[pos_index, h_truth_index] = 0
+        neg_h_candidate = h_mask.nonzero()[:, 1]
+        num_h_candidate = h_mask.sum(dim=-1)
+        neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
+
+        neg_index = torch.cat([neg_t_index, neg_h_index])
+
+        return neg_index
+
+    def target(self, batch):
+        # test target
+        batch_size = len(batch)
+        pos_h_index, pos_t_index, pos_r_index = batch.t()
+        any = -torch.ones_like(pos_h_index)
+        node_type = self.fact_graph.node_type
+
+        pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+        edge_index, num_t_truth = self.graph.match(pattern)
+        t_truth_index = self.graph.edge_list[edge_index, 1]
+        pos_index = functional._size_to_index(num_t_truth)
+        t_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
+        t_mask[pos_index, t_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            t_mask[node_type.unsqueeze(0) != node_type[pos_t_index].unsqueeze(-1)] = 0
+
+        pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+        edge_index, num_h_truth = self.graph.match(pattern)
+        h_truth_index = self.graph.edge_list[edge_index, 0]
+        pos_index = functional._size_to_index(num_h_truth)
+        h_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
+        h_mask[pos_index, h_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            h_mask[node_type.unsqueeze(0) != node_type[pos_h_index].unsqueeze(-1)] = 0
+
+        mask = torch.stack([t_mask, h_mask], dim=1)
+        target = torch.stack([pos_t_index, pos_h_index], dim=1)
+
+        # in case of GPU OOM
+        return mask.cpu(), target.cpu()
+
     def evaluate(self, pred, target):
         mask, target = target
 

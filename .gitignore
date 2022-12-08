@@ -10,3 +10,5 @@ __pycache__
 
 # macOS
 .DS_Store
+
+.ipynb_checkpoints

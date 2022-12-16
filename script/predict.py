@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
 
 
-
+@torch.no_grad()
 def get_prediction(cfg, solver):
     test_set = solver.test_set
 

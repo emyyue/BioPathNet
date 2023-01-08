@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=biomed
+#SBATCH --job-name=train
 #SBATCH --output=./slurm_out/job_output.txt
 #SBATCH --error=./slurm_out/job_error.txt
 #SBATCH --time=12:00:00 # takes around 7 hours to run

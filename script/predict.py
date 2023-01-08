@@ -11,6 +11,7 @@ from torchdrug import data, core, utils
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
+import numpy as np
 
 
 @torch.no_grad()
@@ -22,14 +23,39 @@ def get_prediction(cfg, solver):
 
     model.eval()
     preds = []
-    for batch in dataloader:
+    targets = []
+    
+    print("before loop")
+    for ith, batch in enumerate(dataloader):
+
         if solver.device.type == "cuda":
             batch = utils.cuda(batch, device=solver.device)
-
-        pred = model.predict(batch)
+            
+        print(f"We are at batch {ith}")
+        #import pdb; pdb.set_trace()
+        pred, target = model.predict_and_target(batch)
+        print(f"I got the predictions for batch {ith}")
+        
         preds.append(pred)
+        targets.append(target)
+        print("now preds")
+        print(preds)
+        print("now targets")
+        print(targets)
 
-    return preds
+
+    
+    pred = utils.cat(preds)
+    target = utils.cat(targets)
+    print("now pred")
+    print(pred)
+
+
+    print("now target")
+    print(target)
+    
+    return pred, target
+
         
 if __name__ == "__main__":
     args, vars = util.parse_args()
@@ -48,4 +74,9 @@ if __name__ == "__main__":
     relation_vocab = ["%s (%d)" % (t[t.rfind("/") + 1:].replace("_", " "), i)
                       for i, t in enumerate(dataset.relation_vocab)]
     #import ipdb; ipdb.set_trace()
-    get_prediction(cfg, solver)
+    pred, target = get_prediction(cfg, solver)
+    
+    #save
+    arr = pred.data.cpu().numpy()
+    # write CSV
+    np.savetxt('output.csv', arr)

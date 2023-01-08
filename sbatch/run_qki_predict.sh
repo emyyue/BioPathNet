@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=biomed
-#SBATCH --output=./slurm_out/job_output.txt
-#SBATCH --error=./slurm_out/job_error.txt
-#SBATCH --time=12:00:00 # takes around 7 hours to run
+#SBATCH --job-name=predict
+#SBATCH --output=./slurm_out/job_output_pred.txt
+#SBATCH --error=./slurm_out/job_error_pred.txt
+#SBATCH --time=02:00:00
 #SBATCH --mem=24Gb
 #SBATCH -c 4
 #SBATCH --gres=gpu:1

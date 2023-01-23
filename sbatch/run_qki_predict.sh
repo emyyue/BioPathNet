@@ -9,11 +9,17 @@
 #SBATCH --partition=main
 
 
-module load python
-source ~/allvirtualenvs/nbfnet/bin/activate # activate the virtualenv
-module load cuda/11.1
-cd /home/mila/y/yue.hu/github/NBFNet
+#module load python
+#source ~/allvirtualenvs/nbfnet/bin/activate # activate the virtualenv
+#module load cuda/11.1
+#cd /home/mila/y/yue.hu/github/NBFNet
 
-#python -m torch.distributed.launch --nproc_per_node=4 script/run.py -c config/knowledge_graph/biogrid.yaml --gpus [0,1]
 
-python script/predict.py -c config/knowledge_graph/qki_factgraph.yaml --gpus [0] --version v1 --checkpoint /home/mila/y/yue.hu/experiments/KnowledgeGraphComponBiomed/biomedical/NBFNet/2022-11-18-12-59-19/model_epoch_5.pth
+cd /lustre/groups/crna01/projects/genefunction/
+BASE=/lustre/groups/crna01/projects/genefunction/
+CONDA_DIR=$BASE/miniconda3
+eval "$($CONDA_DIR/bin/conda shell.bash hook)"
+conda activate env_nbfnet
+cd NBFNet
+
+python script/predict.py -c config/knowledge_graph/qki_factgraph.yaml --gpus [0] --version v1 --checkpoint /lustre/groups/crna01/projects/genefunction/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/qki_train_epoch8/model_epoch_6.pth

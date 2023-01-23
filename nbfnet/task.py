@@ -491,12 +491,14 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  metric=("mr", "mrr", "hits@1", "hits@3", "hits@10"),
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
-                 fact_ratio=None, sample_weight=True):
+                 fact_ratio=None, sample_weight=True, gene_annotation_predict=True):
         super(KnowledgeGraphCompletionBiomed, self).__init__(model, criterion, metric, num_negative, margin,
                                                              adversarial_temperature, strict_negative,
                                                              filtered_ranking,fact_ratio, sample_weight)
         self.heterogeneous_negative = heterogeneous_negative
         self.heterogeneous_evaluation = heterogeneous_evaluation
+        self.gene_annotation_predict = gene_annotation_predict
+        
 
     @torch.no_grad()
     def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
@@ -599,3 +601,51 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             metric[name] = score
 
         return metric
+    
+    def predict(self, batch, dataset, all_loss=None, metric=None):
+        pos_h_index, pos_t_index, pos_r_index = batch.t()
+        batch_size = len(batch)
+
+        if all_loss is None:
+            # test
+            # change all_index to only evaluation against GO terms
+            nodes = dataset.entity_vocab
+            nodes__dict={ix: val for ix, val in enumerate(nodes)}
+            go_id = [key for key, val in nodes__dict.items() if val.startswith('GO:')]
+            
+            if self.gene_annotation_predict:
+                all_index =torch.tensor(go_id,  device=self.device) # evaluate against only GO terms
+            else:
+                all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
+
+            t_preds = []
+            h_preds = []
+            for neg_index in all_index.split(self.num_negative):
+                r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
+                h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
+                t_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+                t_preds.append(t_pred)
+            t_pred = torch.cat(t_preds, dim=-1)
+            for neg_index in all_index.split(self.num_negative):
+                r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
+                t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
+                h_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+                h_preds.append(h_pred)
+            h_pred = torch.cat(h_preds, dim=-1)
+            pred = torch.stack([t_pred, h_pred], dim=1)
+            # in case of GPU OOM
+            pred = pred.cpu()
+        else:
+            # train
+            if self.strict_negative:
+                neg_index = self._strict_negative(pos_h_index, pos_t_index, pos_r_index)
+            else:
+                neg_index = torch.randint(self.num_entity, (batch_size, self.num_negative), device=self.device)
+            h_index = pos_h_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+            t_index = pos_t_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+            r_index = pos_r_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+            t_index[:batch_size // 2, 1:] = neg_index[:batch_size // 2]
+            h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
+            pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+
+        return pred

@@ -398,7 +398,7 @@ class biomedical(data.KnowledgeGraphDataset):
 
         assert len(node_type) == self.num_entity
         _, node_type = zip(*sorted(node_type.items()))
-
+        
         with self.graph.node():
             self.graph.node_type = torch.tensor(node_type)
 

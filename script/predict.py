@@ -108,6 +108,8 @@ if __name__ == "__main__":
     dataset = core.Configurable.load_config_dict(cfg.dataset)
     solver = util.build_solver(cfg, dataset)
     
+    import pdb; pdb.set_trace()
+    
     entity_vocab, relation_vocab = load_vocab(dataset)
 
     #relation_vocab = ["%s (%d)" % (t[t.rfind("/") + 1:].replace("_", " "), i)

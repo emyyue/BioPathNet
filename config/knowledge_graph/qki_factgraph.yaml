@@ -2,7 +2,7 @@ output_dir: /lustre/groups/crna01/projects/genefunction/experiments/
 
 dataset:
   class: biomedical
-  path: /lustre/groups/crna01/projects/genefunction/NBFNet/data/QKI/
+  path: /home/icb/yue.hu/proj/Mila/graphs/QKI/GOfun/
   include_factgraph: True
   
 task:
@@ -23,7 +23,7 @@ task:
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  gene_annotation_predict: True
+  gene_annotation_predict: False
 
 
 
@@ -37,7 +37,7 @@ engine:
   
 
 train:
-  num_epoch: 8
+  num_epoch: 10
   #batch_per_epoch: 1000
   
 metric: mrr

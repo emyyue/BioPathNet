@@ -2,7 +2,7 @@
 #SBATCH --job-name=train
 #SBATCH --output=./slurm_out/job_output.txt
 #SBATCH --error=./slurm_out/job_error.txt
-#SBATCH --time=12:00:00 # takes around 7 hours to run
+#SBATCH --time=24:00:00 # takes around 7 hours to run
 #SBATCH --mem=24Gb
 #SBATCH -c 4
 #SBATCH -w supergpu07
@@ -26,3 +26,4 @@ cd NBFNet
 #python -m torch.distributed.launch --nproc_per_node=4 script/run.py -c config/knowledge_graph/biogrid.yaml --gpus [0,1]
 
 python script/run.py -c config/knowledge_graph/qki_factgraph.yaml --gpus [0] --version v1
+

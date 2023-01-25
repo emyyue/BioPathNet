@@ -2,14 +2,14 @@ output_dir: /lustre/groups/crna01/projects/genefunction/experiments/
 
 dataset:
   class: biomedical
-  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/PC_KEGG_nofact/
+  path: /lustre/groups/crna01/projects/genefunction/NBFNet/data/datachallenge/
   include_factgraph: no
   
 task:
   class: KnowledgeGraphCompletionBiomed
   model:
     class: TransE
-    embedding_dim: 512
+    embedding_dim: 128
     max_score: 6
   criterion: bce
   num_negative: 512
@@ -28,6 +28,6 @@ engine:
   batch_size: 1024
 
 train:
-  num_epoch: 500
+  num_epoch: 100
 
 metric: mrr

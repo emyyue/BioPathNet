@@ -23,3 +23,4 @@ conda activate env_nbfnet
 cd NBFNet
 
 python script/predict.py -c config/knowledge_graph/qki_factgraph.yaml --gpus [0] --version v1 --checkpoint /lustre/groups/crna01/projects/genefunction/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/qki_train_epoch8/model_epoch_6.pth
+#python script/predict.py -c config/knowledge_graph/datachall.yaml --gpus [0] --version v1 --checkpoint /home/icb/yue.hu/proj_genefun/experiments/KnowledgeGraphCompletionBiomed/biomedical/TransE/2023-01-24-16-45-07/model_epoch_1.pth

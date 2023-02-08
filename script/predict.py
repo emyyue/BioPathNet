@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util#, reasoning_mod
 import numpy as np
 
-vocab_file = os.path.join(os.path.dirname(__file__), "../data/QKI/entity_names.txt")
+vocab_file = os.path.join(os.path.dirname(__file__), "../data/PC_KEGG_0928_predict/entity_names.txt")
 vocab_file = os.path.abspath(vocab_file)
 
 
@@ -31,7 +31,7 @@ def load_vocab(dataset):
     return entity_vocab, relation_vocab
 
 @torch.no_grad()
-def get_prediction(cfg, solver, entity_vocab, relation_vocab):
+def get_prediction(cfg, solver, relation_vocab):
     test_set = solver.test_set
 
     dataloader = data.DataLoader(test_set, solver.batch_size, sampler=None, num_workers=solver.num_worker)
@@ -45,7 +45,6 @@ def get_prediction(cfg, solver, entity_vocab, relation_vocab):
 
         if solver.device.type == "cuda":
             batch = utils.cuda(batch, device=solver.device)
-        
         logger.warning("Predicting batch %s" % ith)
         pred, (mask, target) = model.predict_and_target(batch, dataset)
         
@@ -58,14 +57,13 @@ def get_prediction(cfg, solver, entity_vocab, relation_vocab):
     
     return pred, target, mask
 
-def pred_to_dataframe(pred, dataset, entity_vocab, gene_annotation_predict=True):
-    # get goterms tail nodes
-    nodes = dataset.entity_vocab
-    nodes__dict={ix: val for ix, val in enumerate(nodes)}
-    go_terms = [val for key, val in nodes__dict.items() if val.startswith('GO:')]
+def pred_to_dataframe(pred, dataset, entity_vocab, gene_annotation_predict=False):
+
     
     # get head nodes
     testset_nodes = [dataset.entity_vocab[i] for i in [x.numpy()[0] for x in solver.test_set]]
+    nodes = dataset.entity_vocab
+    nodes__dict={ix: val for ix, val in enumerate(nodes)}
     
     # get both relation and relation^(-1)
     dflist=[]
@@ -75,6 +73,10 @@ def pred_to_dataframe(pred, dataset, entity_vocab, gene_annotation_predict=True)
         proball = prob0.flatten().cpu().numpy()
 
         if gene_annotation_predict:
+            # get goterms tail nodes
+            nodes = dataset.entity_vocab
+            nodes__dict={ix: val for ix, val in enumerate(nodes)}
+            go_terms = [val for key, val in nodes__dict.items() if val.startswith('GO:')]
             df_dict = {'head': np.repeat(testset_nodes, len(go_terms)), 'relation': j,'tail': np.tile(go_terms, len(testset_nodes)), 'probability':proball.tolist()}
         else:
             df_dict = {'head': np.repeat(testset_nodes, len(nodes)), 'relation': j,'tail': np.tile(nodes, len(testset_nodes)), 'probability':proball.tolist()}
@@ -88,6 +90,7 @@ def pred_to_dataframe(pred, dataset, entity_vocab, gene_annotation_predict=True)
     lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
         
     df = pd.merge(df, lookup, how="left", left_on="tail", right_on="short")
+    df = pd.merge(df, lookup, how="left", left_on="head", right_on="short")
     
     # sort by head node and probability
     #df = df.sort_values(by=['head', 'probability'],ascending=[True, False])
@@ -108,19 +111,18 @@ if __name__ == "__main__":
     dataset = core.Configurable.load_config_dict(cfg.dataset)
     solver = util.build_solver(cfg, dataset)
     
-    import pdb; pdb.set_trace()
     
     entity_vocab, relation_vocab = load_vocab(dataset)
 
     #relation_vocab = ["%s (%d)" % (t[t.rfind("/") + 1:].replace("_", " "), i)
     #                  for i, t in enumerate(dataset.relation_vocab)]
     logger.warning("Starting link prediction")
- 
-    pred, target, mask= get_prediction(cfg, solver, dataset.entity_vocab, relation_vocab)
+    
+    pred, target, mask= get_prediction(cfg, solver, relation_vocab)
     
     df = pred_to_dataframe(pred, dataset, entity_vocab, cfg['task']['gene_annotation_predict']) # TODO: gene_annotation_predict could be nicer
     
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
-    df.to_csv(os.path.join( cfg['output_dir'], "results.csv"), index=False)  # TODO:how to save in the dir
-    #import pdb; pdb.set_trace()
+    df.to_csv(os.path.join( cfg['output_dir'], "results_PC.csv"), index=False)  # TODO:how to save in the dir
+    import pdb; pdb.set_trace()

@@ -23,7 +23,12 @@ CONDA_DIR=$BASE/miniconda3
 eval "$($CONDA_DIR/bin/conda shell.bash hook)"
 conda activate env_nbfnet
 cd NBFNet
+
+export PATH=/usr/local/cuda-11.7/bin:$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.7/lib64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.7/targets/x86_64-linux/lib
+
 #python -m torch.distributed.launch --nproc_per_node=4 script/run.py -c config/knowledge_graph/biogrid.yaml --gpus [0,1]
 
-python script/run.py -c config/knowledge_graph/qki_factgraph.yaml --gpus [0] --version v1
+python script/run.py -c config/knowledge_graph/submission_PC_factgraph.yaml --gpus [0] --version v1
 

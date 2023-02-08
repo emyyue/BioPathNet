@@ -2,9 +2,9 @@ output_dir: /lustre/groups/crna01/projects/genefunction/experiments/
 
 dataset:
   class: biomedical
-  path: /home/icb/yue.hu/proj/Mila/graphs/QKI/GOfun/
+  path: /lustre/groups/crna01/projects/genefunction/NBFNet/data/QKI/GOfun/
   include_factgraph: True
-  
+
 task:
   class: KnowledgeGraphCompletionBiomed
   model:

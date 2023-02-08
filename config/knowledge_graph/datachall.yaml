@@ -9,15 +9,16 @@ task:
   class: KnowledgeGraphCompletionBiomed
   model:
     class: TransE
-    embedding_dim: 128
+    embedding_dim: 32
     max_score: 6
   criterion: bce
   num_negative: 512
   strict_negative: yes
-  heterogeneous_negative: yes
-  heterogeneous_evaluation: yes
+  heterogeneous_negative: no
+  heterogeneous_evaluation: no
   adversarial_temperature: 1
   sample_weight: yes
+  gene_annotation_predict: False
 
 optimizer:
   class: Adam

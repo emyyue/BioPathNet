@@ -1,8 +1,8 @@
-output_dir: ~/experiments/
+output_dir: /lustre/groups/crna01/projects/genefunction/experiments/
 
 dataset:
   class: biomedical
-  path: /home/mila/y/yue.hu/github/NBFNet/data/PC_KEGG_0928/
+  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/PC_KEGG_0602
   include_factgraph: True
   
 task:
@@ -23,6 +23,7 @@ task:
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
+  gene_annotation_predict: False
 
 
 
@@ -36,7 +37,7 @@ engine:
   
 
 train:
-  num_epoch: 1
+  num_epoch: 8
   batch_per_epoch: 1000
   
 metric: mrr

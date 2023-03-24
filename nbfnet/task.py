@@ -554,6 +554,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
         self.graph.degree_in_type = torch.stack(degree_in_type, dim=0)
         
+        
             
         return train_set, valid_set, test_set     
         

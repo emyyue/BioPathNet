@@ -501,6 +501,62 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         self.heterogeneous_evaluation = heterogeneous_evaluation
         self.gene_annotation_predict = gene_annotation_predict
         
+    def preprocess(self, train_set, valid_set, test_set):
+        if isinstance(train_set, torch_data.Subset):
+            dataset = train_set.dataset
+        else:
+            dataset = train_set
+        self.num_entity = dataset.num_entity
+        self.num_relation = dataset.num_relation
+        self.register_buffer("graph", dataset.graph)
+        fact_mask = torch.ones(len(dataset), dtype=torch.bool)
+        fact_mask[valid_set.indices] = 0
+        fact_mask[test_set.indices] = 0
+        if self.fact_ratio:
+            length = int(len(train_set) * self.fact_ratio)
+            index = torch.randperm(len(train_set))[length:]
+            train_indices = torch.tensor(train_set.indices)
+            fact_mask[train_indices[index]] = 0
+            train_set = torch_data.Subset(train_set, index)
+        self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
+
+        if self.sample_weight:
+            degree_hr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)
+            degree_tr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)
+            for h, t, r in train_set:
+                degree_hr[h, r] += 1
+                degree_tr[t, r] += 1
+            self.register_buffer("degree_hr", degree_hr)
+            self.register_buffer("degree_tr", degree_tr)
+
+        ########################
+        # add the degree_in_type
+        ########################
+
+        # get the graph, nodes, edge_list
+        graph = self.fact_graph
+        node_type = graph.node_type
+
+        
+        # get node type of tail
+        node_type_t = node_type[graph.edge_list[:, 1]]
+        
+        # count the number of occurance for each node to type t
+        all_node_types = torch.unique(node_type)
+        degree_in_type = []
+        for i in all_node_types:
+            # get the h nodes that connect to type of t
+            node_in = graph.edge_list[:, 0][node_type_t == i]
+            # count how many edges per h node
+            x_degree_in = torch.bincount(node_in, minlength=self.graph.num_node)
+            # append
+            degree_in_type.append(x_degree_in)
+            
+        self.graph.degree_in_type = torch.stack(degree_in_type, dim=0)
+        
+            
+        return train_set, valid_set, test_set     
+        
 
     @torch.no_grad()
     def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
@@ -651,4 +707,3 @@ def predict(self, batch, dataset=dataset, all_loss=None, metric=None):
 
         return pred
     
-

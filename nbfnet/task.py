@@ -493,13 +493,14 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  metric=("mr", "mrr", "hits@1", "hits@3", "hits@10"),
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
-                 fact_ratio=None, sample_weight=True, gene_annotation_predict=False):
+                 fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False):
         super(KnowledgeGraphCompletionBiomed, self).__init__(model, criterion, metric, num_negative, margin,
                                                              adversarial_temperature, strict_negative,
                                                              filtered_ranking,fact_ratio, sample_weight)
         self.heterogeneous_negative = heterogeneous_negative
         self.heterogeneous_evaluation = heterogeneous_evaluation
         self.gene_annotation_predict = gene_annotation_predict
+        self.conditional_probability = conditional_probability
         
     def preprocess(self, train_set, valid_set, test_set):
         if isinstance(train_set, torch_data.Subset):
@@ -559,72 +560,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         return train_set, valid_set, test_set     
         
 
-    @torch.no_grad()
-    def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
-        node_type = self.fact_graph.node_type
-        graph =  self.fact_graph
-        
-        # the number of nodes per type & degree_in_type
-        num_nodes_per_type = self.graph.num_nodes_per_type
-        degree_in_type = self.graph.degree_in_type
-        
-        ####################### 
-        # sample from p(h)
-        #######################
-        
-        # find the node types of pos_t
-        pos_t_type = node_type[pos_t_index]
-        pos_h_type = node_type[pos_h_index]
-        
-        # index the  degree of node h connecting to type t
-        # number of nodes of type(t) - degree of node h connecting to type t
-        
-        prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_t_type]).float()
 
-        # if type_h == type_t, remove one from prob
-        same_type_mask = pos_t_type == pos_h_type
-        prob[same_type_mask] -= 1
-        # set to 0, if not from desired node type
-        h_mask = node_type.unsqueeze(0) != pos_t_type.unsqueeze(1)
-        prob[h_mask] = 0     
-        
-        # sample from the distribution
-        neg_h_index = functional.multinomial(prob, self.num_negative, replacement=True)
-        neg_h_index = torch.flatten(neg_h_index)
-
-        ####################### 
-        # sample from p(t|h)
-        #######################
-        any = -torch.ones_like(neg_h_index)
-        
-        # find all the edges from neg_h_index that EXISTS
-        pattern = torch.stack([neg_h_index, any, pos_r_index.repeat_interleave(32)], dim=-1)
-        edge_index, num_t_truth = graph.match(pattern)
-        t_truth_index = graph.edge_list[edge_index, 1]
-        
-        # ?
-        pos_index = functional._size_to_index(num_t_truth)
-        
-        # heterogeneous
-        if self.heterogeneous_negative:
-            pos_t_type = node_type[pos_t_index[neg_h_index]]
-            t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
-        else:
-            t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
-        
-        t_mask[pos_index, t_truth_index] = 0
-        t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
-        neg_t_candidate = t_mask.nonzero()[:, 1]
-        num_t_candidate = t_mask.sum(dim=-1)
-        neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, 1).squeeze(-1)
-
-        neg_index = torch.cat([neg_t_index, neg_h_index])
-
-        
-        return neg_index
-    
-    
-    
 
     def target(self, batch):
         # test target
@@ -688,7 +624,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
 
         return metric
     
-def predict(self, batch, dataset=dataset, all_loss=None, metric=None):
+    def predict(self, batch, dataset=dataset, all_loss=None, metric=None):
         pos_h_index, pos_t_index, pos_r_index = batch.t()
         batch_size = len(batch)
 
@@ -716,63 +652,149 @@ def predict(self, batch, dataset=dataset, all_loss=None, metric=None):
                 t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
                 h_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
                 h_preds.append(h_pred)
+                
             h_pred = torch.cat(h_preds, dim=-1)
             pred = torch.stack([t_pred, h_pred], dim=1)
             # in case of GPU OOM
             pred = pred.cpu()
         else:
             # train
-            if self.strict_negative:
-                neg_index = self._strict_negative(pos_h_index, pos_t_index, pos_r_index)
-            else:
-                neg_index = torch.randint(self.num_entity, (batch_size, self.num_negative), device=self.device)
-            h_index = pos_h_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
-            t_index = pos_t_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
-            r_index = pos_r_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
-            t_index[:batch_size // 2, 1:] = neg_index[:batch_size // 2]
-            h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
-            pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+            if self.conditional_probability:
+                if self.strict_negative:
+                    neg_index = self._strict_negative(pos_h_index, pos_t_index, pos_r_index)
+                else:
+                    neg_index = torch.randint(self.num_entity, (batch_size, self.num_negative), device=self.device)
+                h_index = pos_h_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+                t_index = pos_t_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+                r_index = pos_r_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+                t_index[:batch_size // 2, 1:] = neg_index[:batch_size // 2]
+                h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
+                #import pdb; pdb.set_trace()
 
+                
+            else:
+                if self.strict_negative:
+                    neg_h_index, neg_t_index = self._strict_negative(pos_h_index, pos_t_index, pos_r_index)
+                else:
+                    neg_h_index, neg_t_index = torch.randint(self.num_node, (2, batch_size * self.num_negative), device=self.device)
+                neg_h_index = neg_h_index.view(batch_size, self.num_negative)
+                neg_t_index = neg_t_index.view(batch_size, self.num_negative)
+                # repeat one more time than the number of negative samples [32,33]
+                h_index = pos_h_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+                t_index = pos_t_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+                r_index = pos_r_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+                # first one is true head and tail, rest are the negative samples for head and tail
+                h_index[:, 1:] = neg_h_index
+                t_index[:, 1:] = neg_t_index
+
+            #import pdb; pdb.set_trace()
+            pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+            import pdb; pdb.set_trace()
         return pred
     
-    # @torch.no_grad()
-    # def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
-    #     import pdb; pdb.set_trace()
-    #     batch_size = len(pos_h_index)
-    #     any = -torch.ones_like(pos_h_index)
-    #     node_type = self.fact_graph.node_type
 
-    #     pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
-    #     pattern = pattern[:batch_size // 2]
-    #     edge_index, num_t_truth = self.fact_graph.match(pattern)
-    #     t_truth_index = self.fact_graph.edge_list[edge_index, 1]
-    #     pos_index = functional._size_to_index(num_t_truth)
-    #     if self.heterogeneous_negative:
-    #         pos_t_type = node_type[pos_t_index[:batch_size // 2]]
-    #         t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
-    #     else:
-    #         t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
-    #     t_mask[pos_index, t_truth_index] = 0
-    #     neg_t_candidate = t_mask.nonzero()[:, 1]
-    #     num_t_candidate = t_mask.sum(dim=-1)
-    #     neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
+    
+    @torch.no_grad()
+    def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
+        if self.conditional_probability:
+            # conditional probaility - classical KG setting
 
-    #     pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
-    #     pattern = pattern[batch_size // 2:]
-    #     edge_index, num_h_truth = self.fact_graph.match(pattern)
-    #     h_truth_index = self.fact_graph.edge_list[edge_index, 0]
-    #     pos_index = functional._size_to_index(num_h_truth)
-    #     if self.heterogeneous_negative:
-    #         pos_h_type = node_type[pos_h_index[batch_size // 2:]]
-    #         h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
-    #     else:
-    #         h_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
-    #     h_mask[pos_index, h_truth_index] = 0
-    #     neg_h_candidate = h_mask.nonzero()[:, 1]
-    #     num_h_candidate = h_mask.sum(dim=-1)
-    #     neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
+            batch_size = len(pos_h_index)
+            any = -torch.ones_like(pos_h_index)
+            node_type = self.fact_graph.node_type
 
-    #     neg_index = torch.cat([neg_t_index, neg_h_index])
+            pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+            pattern = pattern[:batch_size // 2]
+            edge_index, num_t_truth = self.fact_graph.match(pattern)
+            t_truth_index = self.fact_graph.edge_list[edge_index, 1]
+            pos_index = functional._size_to_index(num_t_truth)
+            if self.heterogeneous_negative:
+                pos_t_type = node_type[pos_t_index[:batch_size // 2]]
+                t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
+            else:
+                t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+            t_mask[pos_index, t_truth_index] = 0
+            neg_t_candidate = t_mask.nonzero()[:, 1]
+            num_t_candidate = t_mask.sum(dim=-1)
+            neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
 
-    #     return neg_index
+            pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+            pattern = pattern[batch_size // 2:]
+            edge_index, num_h_truth = self.fact_graph.match(pattern)
+            h_truth_index = self.fact_graph.edge_list[edge_index, 0]
+            pos_index = functional._size_to_index(num_h_truth)
+            if self.heterogeneous_negative:
+                pos_h_type = node_type[pos_h_index[batch_size // 2:]]
+                h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
+            else:
+                h_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+            h_mask[pos_index, h_truth_index] = 0
+            neg_h_candidate = h_mask.nonzero()[:, 1]
+            num_h_candidate = h_mask.sum(dim=-1)
+            neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
+
+            neg_index = torch.cat([neg_t_index, neg_h_index])
+            return neg_index
+        
+        else:
+            # joint probaility - better for finding all missing links
+            node_type = self.fact_graph.node_type
+            graph =  self.fact_graph
+            
+            # the number of nodes per type & degree_in_type
+            num_nodes_per_type = self.graph.num_nodes_per_type
+            degree_in_type = self.graph.degree_in_type
+            
+            ####################### 
+            # sample from p(h)
+            #######################
+            
+            # find the node types of pos_t
+            pos_t_type = node_type[pos_t_index]
+            pos_h_type = node_type[pos_h_index]
+            
+            # index the  degree of node h connecting to type t
+            # number of nodes of type(t) - degree of node h connecting to type t
+            
+            prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_t_type]).float()
+
+            # if type_h == type_t, remove one from prob
+            same_type_mask = pos_t_type == pos_h_type
+            prob[same_type_mask] -= 1
+            # set to 0, if not from desired node type
+            h_mask = node_type.unsqueeze(0) != pos_t_type.unsqueeze(1)
+            prob[h_mask] = 0     
+            
+            # sample from the distribution
+            neg_h_index = functional.multinomial(prob, self.num_negative, replacement=True)
+            neg_h_index = torch.flatten(neg_h_index)
+
+            ####################### 
+            # sample from p(t|h)
+            #######################
+            any = -torch.ones_like(neg_h_index)
+            
+            # find all the edges from neg_h_index that EXISTS
+            pattern = torch.stack([neg_h_index, any, pos_r_index.repeat_interleave(self.num_negative)], dim=-1)
+            edge_index, num_t_truth = graph.match(pattern)
+            t_truth_index = graph.edge_list[edge_index, 1]
+            
+            # ?
+            pos_index = functional._size_to_index(num_t_truth)
+            
+            # heterogeneous
+            if self.heterogeneous_negative:
+                pos_t_type = node_type[pos_t_index[neg_h_index]]
+                t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
+            else:
+                t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+            
+            t_mask[pos_index, t_truth_index] = 0
+            t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
+            neg_t_candidate = t_mask.nonzero()[:, 1]
+            num_t_candidate = t_mask.sum(dim=-1)
+            neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, 1).squeeze(-1)
+            
+            return neg_h_index, neg_t_index
+    
     

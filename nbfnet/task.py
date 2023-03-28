@@ -562,33 +562,37 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
     @torch.no_grad()
     def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
         node_type = self.fact_graph.node_type
-        import pdb; pdb.set_trace()
+        graph =  self.fact_graph
         
         # the number of nodes per type & degree_in_type
         num_nodes_per_type = self.graph.num_nodes_per_type
         degree_in_type = self.graph.degree_in_type
         
+        ####################### 
+        # sample from p(h)
+        #######################
+        
         # find the node types of pos_t
         pos_t_type = node_type[pos_t_index]
         pos_h_type = node_type[pos_h_index]
-        
-        # masking the pos_h
-        pos_h_index.unsqueeze(1)
         
         # index the  degree of node h connecting to type t
         # number of nodes of type(t) - degree of node h connecting to type t
         
         prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_t_type]).float()
-        
-        # TODO if type_h == type_t, remove one from prob
-        
+
+        # if type_h == type_t, remove one from prob
+        same_type_mask = pos_t_type == pos_h_type
+        prob[same_type_mask] -= 1
         # set to 0, if not from desired node type
         h_mask = node_type.unsqueeze(0) != pos_t_type.unsqueeze(1)
-        prob[h_mask] = 0
+        prob[h_mask] = 0     
         
         # sample from the distribution
         neg_h_index = functional.multinomial(prob, self.num_negative, replacement=True)
         neg_h_index = torch.flatten(neg_h_index)
+        
+
         
         return neg_index
     

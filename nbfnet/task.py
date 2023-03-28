@@ -591,7 +591,34 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # sample from the distribution
         neg_h_index = functional.multinomial(prob, self.num_negative, replacement=True)
         neg_h_index = torch.flatten(neg_h_index)
+
+        ####################### 
+        # sample from p(t|h)
+        #######################
+        any = -torch.ones_like(neg_h_index)
         
+        # find all the edges from neg_h_index that EXISTS
+        pattern = torch.stack([neg_h_index, any, pos_r_index.repeat_interleave(32)], dim=-1)
+        edge_index, num_t_truth = graph.match(pattern)
+        t_truth_index = graph.edge_list[edge_index, 1]
+        
+        # ?
+        pos_index = functional._size_to_index(num_t_truth)
+        
+        # heterogeneous
+        if self.heterogeneous_negative:
+            pos_t_type = node_type[pos_t_index[neg_h_index]]
+            t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
+        else:
+            t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+        
+        t_mask[pos_index, t_truth_index] = 0
+        t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
+        neg_t_candidate = t_mask.nonzero()[:, 1]
+        num_t_candidate = t_mask.sum(dim=-1)
+        neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, 1).squeeze(-1)
+
+        neg_index = torch.cat([neg_t_index, neg_h_index])
 
         
         return neg_index

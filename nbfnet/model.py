@@ -70,9 +70,21 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
     def negative_sample_to_tail(self, h_index, t_index, r_index):
         # convert p(h | t, r) to p(t' | h', r')
         # h' = t, r' = r^{-1}, t' = h
+        
+        # in case of classical KG setting, new_h_index consists of half h (half batch_size, num_neg +1 ) and half t
+        # bcs of how the data is ordered in predict (task.py)
+        # new_t_index: half neg_t, half neg_h
+        # new_r_index: half r, half r + num_relation (for inverse relation)
+        # constructing basically (pos_h, r, neg_t) and (pos_t, r-1, neg_h)
+        
         is_t_neg = (h_index == h_index[:, [0]]).all(dim=-1, keepdim=True)
+        import pdb; pdb.set_trace()
+
+        # if True (h_index = pos_h_index), get the h_index, else t_index
         new_h_index = torch.where(is_t_neg, h_index, t_index)
+        # if True (h_index = pos_h_index), get the t_index, else h_index
         new_t_index = torch.where(is_t_neg, t_index, h_index)
+        # if True (h_index = pos_h_index), get the r_index, else r_index + num_relation (for inverse relation)
         new_r_index = torch.where(is_t_neg, r_index, r_index + self.num_relation)
         return new_h_index, new_t_index, new_r_index
 
@@ -132,6 +144,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
 
     def forward(self, graph, h_index, t_index, r_index=None, all_loss=None, metric=None):
         if all_loss is not None:
+            # train
             graph = self.remove_easy_edges(graph, h_index, t_index, r_index)
 
         shape = h_index.shape
@@ -139,10 +152,13 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             graph = graph.undirected(add_inverse=True)
             h_index, t_index, r_index = self.negative_sample_to_tail(h_index, t_index, r_index)
         else:
+            # convert to knowledge graph with 1 relation
+            # will executed for LinkPrediction class, as num_relation is nonexistent
             graph = self.as_relational_graph(graph)
             h_index = h_index.view(-1, 1)
             t_index = t_index.view(-1, 1)
             r_index = torch.zeros_like(h_index)
+        
 
         assert (h_index[:, [0]] == h_index).all()
         assert (r_index[:, [0]] == r_index).all()

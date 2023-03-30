@@ -677,6 +677,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                     neg_h_index, neg_t_index = self._strict_negative(pos_h_index, pos_t_index, pos_r_index)
                 else:
                     neg_h_index, neg_t_index = torch.randint(self.num_node, (2, batch_size * self.num_negative), device=self.device)
+                # make dim 0 batch size and dim 1 negative samples
                 neg_h_index = neg_h_index.view(batch_size, self.num_negative)
                 neg_t_index = neg_t_index.view(batch_size, self.num_negative)
                 # repeat one more time than the number of negative samples [32,33]
@@ -686,10 +687,11 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 # first one is true head and tail, rest are the negative samples for head and tail
                 h_index[:, 1:] = neg_h_index
                 t_index[:, 1:] = neg_t_index
+                
 
             #import pdb; pdb.set_trace()
             pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
-            import pdb; pdb.set_trace()
+            
         return pred
     
 
@@ -778,8 +780,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             pattern = torch.stack([neg_h_index, any, pos_r_index.repeat_interleave(self.num_negative)], dim=-1)
             edge_index, num_t_truth = graph.match(pattern)
             t_truth_index = graph.edge_list[edge_index, 1]
-            
-            # ?
+        
             pos_index = functional._size_to_index(num_t_truth)
             
             # heterogeneous
@@ -789,6 +790,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             else:
                 t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
             
+            # exclude those that exists
             t_mask[pos_index, t_truth_index] = 0
             t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
             neg_t_candidate = t_mask.nonzero()[:, 1]

@@ -78,7 +78,6 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
         # constructing basically (pos_h, r, neg_t) and (pos_t, r-1, neg_h)
         
         is_t_neg = (h_index == h_index[:, [0]]).all(dim=-1, keepdim=True)
-        import pdb; pdb.set_trace()
 
         # if True (h_index = pos_h_index), get the h_index, else t_index
         new_h_index = torch.where(is_t_neg, h_index, t_index)
@@ -142,7 +141,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             "step_graphs": step_graphs,
         }
 
-    def forward(self, graph, h_index, t_index, r_index=None, all_loss=None, metric=None):
+    def forward(self, graph, h_index, t_index, r_index=None, all_loss=None, metric=None, conditional_probability=False):
         if all_loss is not None:
             # train
             graph = self.remove_easy_edges(graph, h_index, t_index, r_index)
@@ -150,7 +149,9 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
         shape = h_index.shape
         if graph.num_relation:
             graph = graph.undirected(add_inverse=True)
-            h_index, t_index, r_index = self.negative_sample_to_tail(h_index, t_index, r_index)
+            if conditional_probability:
+                h_index, t_index, r_index = self.negative_sample_to_tail(h_index, t_index, r_index)
+                assert (h_index[:, [0]] == h_index).all()
         else:
             # convert to knowledge graph with 1 relation
             # will executed for LinkPrediction class, as num_relation is nonexistent
@@ -158,9 +159,9 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             h_index = h_index.view(-1, 1)
             t_index = t_index.view(-1, 1)
             r_index = torch.zeros_like(h_index)
+            assert (h_index[:, [0]] == h_index).all()
         
 
-        assert (h_index[:, [0]] == h_index).all()
         assert (r_index[:, [0]] == r_index).all()
         output = self.bellmanford(graph, h_index[:, 0], r_index[:, 0])
         feature = output["node_feature"].transpose(0, 1)

@@ -561,7 +561,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         
 
 
-
     def target(self, batch):
         # test target
         batch_size = len(batch)
@@ -690,7 +689,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 
 
             #import pdb; pdb.set_trace()
-            pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+            pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
             
         return pred
     
@@ -785,12 +784,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # heterogeneous
             if self.heterogeneous_negative:
-                pos_t_type = node_type[pos_t_index[neg_h_index]]
+                pos_t_type = node_type[pos_t_index].repeat_interleave(self.num_negative)
                 t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
             else:
                 t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
             
             # exclude those that exists
+            import pdb; pdb.set_trace()
             t_mask[pos_index, t_truth_index] = 0
             t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
             neg_t_candidate = t_mask.nonzero()[:, 1]

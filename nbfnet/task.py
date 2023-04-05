@@ -167,7 +167,7 @@ class LinkPrediction(tasks.Task, core.Configurable):
         pattern = torch.stack([neg_h_index, any], dim=-1)
         edge_index, num_t_truth = graph.match(pattern)
         t_truth_index = graph.edge_list[edge_index, 1]
-        pos_index = functional._size_to_index(num_t_truth)
+        pos_index = torch.repeat_interleave(num_t_truth)
         t_mask = torch.ones(count, self.num_node, dtype=torch.bool, device=self.device)
         t_mask[pos_index, t_truth_index] = 0
         t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
@@ -303,14 +303,14 @@ class InductiveKnowledgeGraphCompletion(tasks.KnowledgeGraphCompletion, core.Con
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         edge_index, num_t_truth = graph.match(pattern)
         t_truth_index = graph.edge_list[edge_index, 1]
-        pos_index = functional._size_to_index(num_t_truth)
+        pos_index = torch.repeat_interleave(num_t_truth)
         t_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
         t_mask[pos_index, t_truth_index] = 0
 
         pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
         edge_index, num_h_truth = graph.match(pattern)
         h_truth_index = graph.edge_list[edge_index, 0]
-        pos_index = functional._size_to_index(num_h_truth)
+        pos_index = torch.repeat_interleave(num_h_truth)
         h_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
         h_mask[pos_index, h_truth_index] = 0
 
@@ -407,7 +407,7 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
         pattern = pattern[:batch_size // 2]
         edge_index, num_t_truth = self.fact_graph.match(pattern)
         t_truth_index = self.fact_graph.edge_list[edge_index, 1]
-        pos_index = functional._size_to_index(num_t_truth)
+        pos_index = torch.repeat_interleave(num_t_truth)
         if self.heterogeneous_negative:
             pos_t_type = node_type[pos_t_index[:batch_size // 2]]
             t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
@@ -422,7 +422,7 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
         pattern = pattern[batch_size // 2:]
         edge_index, num_h_truth = self.fact_graph.match(pattern)
         h_truth_index = self.fact_graph.edge_list[edge_index, 0]
-        pos_index = functional._size_to_index(num_h_truth)
+        pos_index = torch.repeat_interleave(num_h_truth)
         if self.heterogeneous_negative:
             pos_h_type = node_type[pos_h_index[batch_size // 2:]]
             h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
@@ -553,10 +553,11 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             x_degree_in = torch.bincount(node_in, minlength=self.graph.num_node)
             # append
             degree_in_type.append(x_degree_in)
-            
-        self.fact_graph.degree_in_type = torch.stack(degree_in_type, dim=0)
-        self.fact_graph.num_nodes_per_type = torch.bincount(node_type)
         
+        with self.fact_graph.graph():
+            self.fact_graph.degree_in_type = torch.stack(degree_in_type, dim=0)
+            self.fact_graph.num_nodes_per_type = torch.bincount(node_type)
+
         return train_set, valid_set, test_set     
         
 
@@ -571,7 +572,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         edge_index, num_t_truth = self.graph.match(pattern)
         t_truth_index = self.graph.edge_list[edge_index, 1]
-        pos_index = functional._size_to_index(num_t_truth)
+        pos_index = torch.repeat_interleave(num_t_truth)
         t_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
         t_mask[pos_index, t_truth_index] = 0
         if self.heterogeneous_evaluation:
@@ -580,7 +581,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
         edge_index, num_h_truth = self.graph.match(pattern)
         h_truth_index = self.graph.edge_list[edge_index, 0]
-        pos_index = functional._size_to_index(num_h_truth)
+        pos_index = torch.repeat_interleave(num_h_truth)
         h_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
         h_mask[pos_index, h_truth_index] = 0
         if self.heterogeneous_evaluation:
@@ -708,7 +709,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             pattern = pattern[:batch_size // 2]
             edge_index, num_t_truth = self.fact_graph.match(pattern)
             t_truth_index = self.fact_graph.edge_list[edge_index, 1]
-            pos_index = functional._size_to_index(num_t_truth)
+            pos_index = torch.repeat_interleave(num_t_truth)
             if self.heterogeneous_negative:
                 pos_t_type = node_type[pos_t_index[:batch_size // 2]]
                 t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
@@ -723,7 +724,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             pattern = pattern[batch_size // 2:]
             edge_index, num_h_truth = self.fact_graph.match(pattern)
             h_truth_index = self.fact_graph.edge_list[edge_index, 0]
-            pos_index = functional._size_to_index(num_h_truth)
+            pos_index = torch.repeat_interleave(num_h_truth)
             if self.heterogeneous_negative:
                 pos_h_type = node_type[pos_h_index[batch_size // 2:]]
                 h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
@@ -780,7 +781,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             edge_index, num_t_truth = graph.match(pattern)
             t_truth_index = graph.edge_list[edge_index, 1]
         
-            pos_index = functional._size_to_index(num_t_truth)
+            pos_index = torch.repeat_interleave(num_t_truth)
             
             # heterogeneous
             if self.heterogeneous_negative:
@@ -790,7 +791,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
             
             # exclude those that exists
-            import pdb; pdb.set_trace()
             t_mask[pos_index, t_truth_index] = 0
             t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
             neg_t_candidate = t_mask.nonzero()[:, 1]

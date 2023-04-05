@@ -554,8 +554,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # append
             degree_in_type.append(x_degree_in)
             
-        self.graph.degree_in_type = torch.stack(degree_in_type, dim=0)
-        self.graph.num_nodes_per_type = torch.bincount(node_type)
+        self.fact_graph.degree_in_type = torch.stack(degree_in_type, dim=0)
+        self.fact_graph.num_nodes_per_type = torch.bincount(node_type)
         
         return train_set, valid_set, test_set     
         
@@ -743,8 +743,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             graph =  self.fact_graph
             
             # the number of nodes per type & degree_in_type
-            num_nodes_per_type = self.graph.num_nodes_per_type
-            degree_in_type = self.graph.degree_in_type
+            num_nodes_per_type = self.fact_graph.num_nodes_per_type
+            degree_in_type = self.fact_graph.degree_in_type
             
             ####################### 
             # sample from p(h)

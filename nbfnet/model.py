@@ -103,7 +103,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
                             num_relation=1, meta_dict=graph.meta_dict, **graph.data_dict)
         return graph
 
-    @utils.cached
+    #@utils.cached
     def bellmanford(self, graph, h_index, r_index, separate_grad=False):
         query = self.query(r_index)
         index = h_index.unsqueeze(-1).expand_as(query)

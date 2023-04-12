@@ -641,13 +641,14 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
 
             t_preds = []
             h_preds = []
-            for neg_index in all_index.split(self.num_negative):
+            num_negative = self.num_entity if self.full_batch_eval else self.num_negative
+            for neg_index in all_index.split(num_negative):
                 r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                 h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
                 t_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
                 t_preds.append(t_pred)
             t_pred = torch.cat(t_preds, dim=-1)
-            for neg_index in all_index.split(self.num_negative):
+            for neg_index in all_index.split(num_negative):
                 r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                 t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
                 h_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)

@@ -25,6 +25,7 @@ task:
   heterogeneous_evaluation: yes
   gene_annotation_predict: False
   conditional_probability: False
+  full_batch_eval: True
 
 
 

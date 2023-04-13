@@ -495,9 +495,12 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
                  full_batch_eval=False):
-        super(KnowledgeGraphCompletionBiomed, self).__init__(model, criterion, metric, num_negative, margin,
-                                                             adversarial_temperature, strict_negative,
-                                                             filtered_ranking,fact_ratio, sample_weight, full_batch_eval)
+        super(KnowledgeGraphCompletionBiomed, self).__init__(model=model, criterion=criterion, metric=metric, 
+                                                             num_negative=num_negative, margin=margin,
+                                                             adversarial_temperature=adversarial_temperature, 
+                                                             strict_negative=strict_negative,
+                                                             filtered_ranking=filtered_ranking,fact_ratio=fact_ratio,
+                                                             sample_weight=sample_weight, full_batch_eval=full_batch_eval)
         self.heterogeneous_negative = heterogeneous_negative
         self.heterogeneous_evaluation = heterogeneous_evaluation
         self.gene_annotation_predict = gene_annotation_predict

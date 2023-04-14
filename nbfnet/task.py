@@ -550,6 +550,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # count the number of occurance for each node to type t
         all_node_types = torch.unique(node_type)
         degree_in_type = []
+        # Zhaocheng: this for loop can be vectorized using torch_scatter.scatter_add
+        # though it is not a big bottleneck here
         for i in all_node_types:
             # get the h nodes that connect to type of t
             node_in = graph.edge_list[:, 0][node_type_t == i]
@@ -629,23 +631,29 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         return metric
     
     def predict(self, batch, dataset=dataset, all_loss=None, metric=None):
+        # Zhaocheng: which dataset do you refer to here as the default argument?
+        # A better practice is to store a pointer to the dataset in preprocess()
+        # not to change the interface of predict()
         pos_h_index, pos_t_index, pos_r_index = batch.t()
         batch_size = len(batch)
 
         if all_loss is None:
             # test
             if self.gene_annotation_predict:
+                # Zhaocheng: This is invoked **every time** you make a prediction
+                # Maybe you want to put it into preprocess to save timeWW
                 # change all_index to only evaluation against GO terms
                 nodes = dataset.entity_vocab
-                nodes__dict={ix: val for ix, val in enumerate(nodes)}
+                nodes__dict = {ix: val for ix, val in enumerate(nodes)}
                 go_id = [key for key, val in nodes__dict.items() if val.startswith('GO:')]
-                all_index =torch.tensor(go_id,  device=self.device) # evaluate against only GO terms
+                all_index = torch.tensor(go_id, device=self.device) # evaluate against only GO terms
             else:
                 all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
 
             t_preds = []
             h_preds = []
             num_negative = self.num_entity if self.full_batch_eval else self.num_negative
+            # Zhaocheng: Do you want to evaluate in both directions or just a single direction?
             for neg_index in all_index.split(num_negative):
                 r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                 h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
@@ -746,11 +754,11 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         else:
             # joint probaility - better for finding all missing links
             node_type = self.fact_graph.node_type
-            graph =  self.fact_graph
+            graph = self.fact_graph
             
             # the number of nodes per type & degree_in_type
             num_nodes_per_type = self.fact_graph.num_nodes_per_type
-            degree_in_type = self.fact_graph.degree_in_type
+            degree_in_type = self.fact_graph.x
             
             ####################### 
             # sample from p(h)
@@ -762,19 +770,24 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # index the  degree of node h connecting to type t
             # number of nodes of type(t) - degree of node h connecting to type t
-            
+
+            # Zhaocheng: looks like we are assuming heterogeneous negative here
+            # I was expecting a node-type-free implementation
+            # but I guess here the heterogeneous negative setting may work better
             prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_t_type]).float()
 
             # if type_h == type_t, remove one from prob
             same_type_mask = pos_t_type == pos_h_type
             prob[same_type_mask] -= 1
             # set to 0, if not from desired node type
+            # Zhaocheng: should it be comparing node_type and **pos_h_type** here?
             h_mask = node_type.unsqueeze(0) != pos_t_type.unsqueeze(1)
             prob[h_mask] = 0     
             
             # sample from the distribution
             neg_h_index = functional.multinomial(prob, self.num_negative, replacement=True)
             neg_h_index = torch.flatten(neg_h_index)
+            # Zhaocheng: we may add an assertion here to check the node type of neg_h_index
 
             ####################### 
             # sample from p(t|h)
@@ -790,6 +803,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # heterogeneous
             if self.heterogeneous_negative:
+                # Zhaocheng: These two lines seem wrong. The shape of t_mask looks wrong.
                 pos_t_type = node_type[pos_t_index].repeat_interleave(self.num_negative)
                 t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
             else:
@@ -797,6 +811,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # exclude those that exists
             t_mask[pos_index, t_truth_index] = 0
+            # Zhaocheng: [minor] if we disable self loops, then we need to always substract 1 in the marginal distribution
+            # the current implementation we use substracts 1 only if h and t have the same type
             t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
             neg_t_candidate = t_mask.nonzero()[:, 1]
             num_t_candidate = t_mask.sum(dim=-1)

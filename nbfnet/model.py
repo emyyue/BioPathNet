@@ -151,6 +151,8 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             graph = graph.undirected(add_inverse=True)
             if conditional_probability:
                 h_index, t_index, r_index = self.negative_sample_to_tail(h_index, t_index, r_index)
+                # Zhaocheng: I don't think the conditional probability we generate can pass this assertion
+                # We changed both h_index and t_index with negative samples
                 assert (h_index[:, [0]] == h_index).all()
         else:
             # convert to knowledge graph with 1 relation

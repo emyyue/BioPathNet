@@ -11,6 +11,29 @@ from torchdrug.utils import comm
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
 
+def solver_load(checkpoint, load_optimizer=True):
+
+    if comm.get_rank() == 0:
+        logger.warning("Load checkpoint from %s" % checkpoint)
+    checkpoint = os.path.expanduser(checkpoint)
+    state = torch.load(checkpoint, map_location=solver.device)
+    # some issues with loading back the fact_graph and graph
+    # remove
+    state["model"].pop("fact_graph")
+    state["model"].pop("graph")
+    # load without
+    solver.model.load_state_dict(state["model"], strict=False)
+
+
+    if load_optimizer:
+        solver.optimizer.load_state_dict(state["optimizer"])
+        for state in solver.optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(solver.device)
+
+    comm.synchronize()
+
 
 def train_and_validate(cfg, solver):
     if cfg.train.num_epoch == 0:
@@ -33,7 +56,7 @@ def train_and_validate(cfg, solver):
             best_result = result
             best_epoch = solver.epoch
 
-    solver.load("model_epoch_%d.pth" % best_epoch)
+    solver_load("model_epoch_%d.pth" % best_epoch)
     return solver
 
 

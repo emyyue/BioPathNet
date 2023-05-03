@@ -9,6 +9,7 @@ from ogb import linkproppred
 from torchdrug import core, tasks, metrics
 from torchdrug.layers import functional
 from torchdrug.core import Registry as R
+import torch_scatter
 
 from nbfnet import dataset
 
@@ -548,21 +549,15 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         node_type_t = node_type[graph.edge_list[:, 1]]
         
         # count the number of occurance for each node to type t
-        all_node_types = torch.unique(node_type)
-        degree_in_type = []
-        # Zhaocheng: this for loop can be vectorized using torch_scatter.scatter_add
-        # though it is not a big bottleneck here
-        for i in all_node_types:
-            # get the h nodes that connect to type of t
-            node_in = graph.edge_list[:, 0][node_type_t == i]
-            # count how many edges per h node
-            x_degree_in = torch.bincount(node_in, minlength=self.graph.num_node)
-            # append
-            degree_in_type.append(x_degree_in)
+        myindex = graph.edge_list[:, 0]
+        myinput = torch.t(F.one_hot(node_type_t))  # one hot encoding of node types
+        degree_in_type = myinput.new_zeros(len(node_type.unique()),  graph.num_node)
+        degree_in_type = torch_scatter.scatter_add(myinput, myindex, out=degree_in_type)
         
         with self.fact_graph.graph():
-            self.fact_graph.degree_in_type = torch.stack(degree_in_type, dim=0)
+            self.fact_graph.degree_in_type = degree_in_type
             self.fact_graph.num_nodes_per_type = torch.bincount(node_type)
+            
 
         return train_set, valid_set, test_set     
         
@@ -758,7 +753,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # the number of nodes per type & degree_in_type
             num_nodes_per_type = self.fact_graph.num_nodes_per_type
-            degree_in_type = self.fact_graph.x
+            degree_in_type = self.fact_graph.degree_in_type
             
             ####################### 
             # sample from p(h)
@@ -770,18 +765,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # index the  degree of node h connecting to type t
             # number of nodes of type(t) - degree of node h connecting to type t
-
-            # Zhaocheng: looks like we are assuming heterogeneous negative here
-            # I was expecting a node-type-free implementation
-            # but I guess here the heterogeneous negative setting may work better
             prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_t_type]).float()
 
             # if type_h == type_t, remove one from prob
             same_type_mask = pos_t_type == pos_h_type
             prob[same_type_mask] -= 1
             # set to 0, if not from desired node type
-            # Zhaocheng: should it be comparing node_type and **pos_h_type** here?
-            h_mask = node_type.unsqueeze(0) != pos_t_type.unsqueeze(1)
+            h_mask = node_type.unsqueeze(0) != pos_h_type.unsqueeze(1)
             prob[h_mask] = 0     
             
             # sample from the distribution
@@ -803,7 +793,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # heterogeneous
             if self.heterogeneous_negative:
-                # Zhaocheng: These two lines seem wrong. The shape of t_mask looks wrong.
                 pos_t_type = node_type[pos_t_index].repeat_interleave(self.num_negative)
                 t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
             else:

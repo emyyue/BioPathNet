@@ -800,8 +800,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # exclude those that exists
             t_mask[pos_index, t_truth_index] = 0
-            # Zhaocheng: [minor] if we disable self loops, then we need to always substract 1 in the marginal distribution
-            # the current implementation we use substracts 1 only if h and t have the same type
             t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
             neg_t_candidate = t_mask.nonzero()[:, 1]
             num_t_candidate = t_mask.sum(dim=-1)

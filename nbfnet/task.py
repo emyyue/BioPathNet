@@ -538,31 +538,29 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         ########################
         # add the degree_in_type
         ########################
-
-        # get the graph, nodes, edge_list
-        graph = self.fact_graph
-        node_type = graph.node_type
-
         
-        # get node type of tail
-        # TODO: check: where are the reverse edges added?
+        with self.fact_graph.graph():
+            self.fact_graph.degree_in_type = self.get_degree_in_type(self.fact_graph)
+            self.fact_graph.num_nodes_per_type = torch.bincount(self.fact_graph.node_type)
+            
+        return train_set, valid_set, test_set     
+        
+
+    def get_degree_in_type(self, graph):
+        # calculate degree_in_type based on input graph
+        node_type = graph.node_type
         node_type_t = node_type[graph.edge_list[:, 1]]
         
         # count the number of occurance for each node to type t
         myindex = graph.edge_list[:, 0]
+        # replace node type with relation
         myinput = torch.t(F.one_hot(node_type_t))  # one hot encoding of node types
         degree_in_type = myinput.new_zeros(len(node_type.unique()),  graph.num_node)
         degree_in_type = torch_scatter.scatter_add(myinput, myindex, out=degree_in_type)
         
-        with self.fact_graph.graph():
-            self.fact_graph.degree_in_type = degree_in_type
-            self.fact_graph.num_nodes_per_type = torch.bincount(node_type)
-            
-
-        return train_set, valid_set, test_set     
+        return degree_in_type
         
-
-
+        
     def target(self, batch):
         # test target
         batch_size = len(batch)
@@ -765,8 +763,10 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # index the  degree of node h connecting to type t
             # number of nodes of type(t) - degree of node h connecting to type t
+            # TODO: replace node type with relation type
             prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_t_type]).float()
 
+            # TODO: not sure?
             # if type_h == type_t, remove one from prob
             same_type_mask = pos_t_type == pos_h_type
             prob[same_type_mask] -= 1
@@ -803,6 +803,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
             neg_t_candidate = t_mask.nonzero()[:, 1]
             num_t_candidate = t_mask.sum(dim=-1)
+            # TODO: double check
             neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, 1).squeeze(-1)
             
             return neg_h_index, neg_t_index

@@ -143,14 +143,20 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
 
     def forward(self, graph, h_index, t_index, r_index=None, all_loss=None, metric=None, conditional_probability=False):
         if all_loss is not None:
-            # train
-            graph = self.remove_easy_edges(graph, h_index, t_index, r_index)
+            # remove both r and r-1 edges if conditional_probability=False
+            if conditional_probability:
+                graph = self.remove_easy_edges(graph, h_index, t_index, r_index)
+            else:
+                graph = self.remove_easy_edges(graph, h_index, t_index, r_index) # remove r
+                graph = self.remove_easy_edges(graph, t_index, h_index, (r_index + self.num_relation) % (self.num_relation * 2)) # remove r-1
 
         shape = h_index.shape
         if graph.num_relation:
-            graph = graph.undirected(add_inverse=True)
+            # if num_relation > 0 and not conditional probability, then joint: do nothing
+            # as graph already undirected
             if conditional_probability:
-                h_index, t_index, r_index = self.negative_sample_to_tail(h_index, t_index, r_index)
+                graph = graph.undirected(add_inverse=True)
+                h_index, t_index, r_index = self.negative_sample_to_tail(h_index, t_index, r_index)  
                 assert (h_index[:, [0]] == h_index).all()
         else:
             # convert to knowledge graph with 1 relation
@@ -160,16 +166,17 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             t_index = t_index.view(-1, 1)
             r_index = torch.zeros_like(h_index)
             assert (h_index[:, [0]] == h_index).all()
-        
-
-        assert (r_index[:, [0]] == r_index).all()
+            
+        #assert (r_index[:, [0]] == r_index).all()
         output = self.bellmanford(graph, h_index[:, 0], r_index[:, 0])
         feature = output["node_feature"].transpose(0, 1)
         index = t_index.unsqueeze(-1).expand(-1, -1, feature.shape[-1])
         feature = feature.gather(1, index)
+        
 
-        if self.symmetric:
-            assert (t_index[:, [0]] == t_index).all()
+        if self.symmetric and not conditional_probability:
+            # assert (t_index[:, [0]] == t_index).all()
+            r_index = (r_index + self.num_relation) % (self.num_relation * 2)
             output = self.bellmanford(graph, t_index[:, 0], r_index[:, 0])
             inv_feature = output["node_feature"].transpose(0, 1)
             index = h_index.unsqueeze(-1).expand(-1, -1, inv_feature.shape[-1])
@@ -181,6 +188,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
 
     def visualize(self, graph, h_index, t_index, r_index):
         assert h_index.numel() == 1 and h_index.ndim == 1
+        # TODO: change for joint probability
         graph = graph.undirected(add_inverse=True)
 
         output = self.bellmanford(graph, h_index, r_index, separate_grad=True)

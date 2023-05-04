@@ -554,6 +554,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # # count the number of occurance for each node to type t
         # myindex = graph.edge_list[:, 0]
         # myinput = torch.t(F.one_hot(node_type_t))  # one hot encoding of node types
+        # degree_in_type = myinput.new_zeros(len(node_type.unique()),  graph.num_node) # which output dim
+        # degree_in_type = torch_scatter.scatter_add(myinput, myindex, out=degree_in_type)
         
         ########################
         # making degree_in_type based on relations, as same nodes might have different relation types
@@ -766,15 +768,15 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             ####################### 
             # sample from p(h)
             #######################
-            
+
             # find the node types of pos_t
             pos_t_type = node_type[pos_t_index]
             pos_h_type = node_type[pos_h_index]
             
             # index the  degree of node h connecting to type t
             # number of nodes of type(t) - degree of node h connecting to type t
-            # TODO: replace node type with relation type
-            prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_t_type]).float()
+            # prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_t_type]).float()
+            prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_r_index]).float()
 
             # TODO: not sure?
             # if type_h == type_t, remove one from prob
@@ -784,6 +786,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             h_mask = node_type.unsqueeze(0) != pos_h_type.unsqueeze(1)
             prob[h_mask] = 0     
             
+
             # sample from the distribution
             neg_h_index = functional.multinomial(prob, self.num_negative, replacement=True)
             neg_h_index = torch.flatten(neg_h_index)

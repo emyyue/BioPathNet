@@ -547,15 +547,25 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         
 
     def get_degree_in_type(self, graph):
-        # calculate degree_in_type based on input graph
-        node_type = graph.node_type
-        node_type_t = node_type[graph.edge_list[:, 1]]
+        # # calculate degree_in_type based on input graph
+        # node_type = graph.node_type
+        # node_type_t = node_type[graph.edge_list[:, 1]]
         
-        # count the number of occurance for each node to type t
+        # # count the number of occurance for each node to type t
+        # myindex = graph.edge_list[:, 0]
+        # myinput = torch.t(F.one_hot(node_type_t))  # one hot encoding of node types
+        
+        ########################
+        # making degree_in_type based on relations, as same nodes might have different relation types
+        ########################
+        
+        # count the number of occurance for each relation type for each node
         myindex = graph.edge_list[:, 0]
-        # replace node type with relation
-        myinput = torch.t(F.one_hot(node_type_t))  # one hot encoding of node types
-        degree_in_type = myinput.new_zeros(len(node_type.unique()),  graph.num_node)
+        relation_type = graph.edge_list[:, 2]
+        # one hot encoding of relation types
+        myinput = torch.t(F.one_hot(relation_type)) 
+        # calculate
+        degree_in_type = myinput.new_zeros(len(relation_type.unique()),  graph.num_node) # which output dim
         degree_in_type = torch_scatter.scatter_add(myinput, myindex, out=degree_in_type)
         
         return degree_in_type

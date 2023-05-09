@@ -1,10 +1,11 @@
-output_dir: /network/scratch/s/sophie.xhonneux/NBFNet/experiments/
+output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
+
 
 dataset:
   class: biomedical
-  path: /home/mila/s/sophie.xhonneux/projects/NBFNet/data/biomedical_PC
+  path: /lustre/groups/crna01/projects/genefunction/NBFNet/data/PC_KEGG_0602
   include_factgraph: True
-  
+
 task:
   class: KnowledgeGraphCompletionBiomed
   model:

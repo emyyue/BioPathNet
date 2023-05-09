@@ -5,7 +5,7 @@ dataset:
   class: biomedical
   path: /lustre/groups/crna01/projects/genefunction/NBFNet/data/PC_KEGG_0602
   include_factgraph: True
-
+  
 task:
   class: KnowledgeGraphCompletionBiomed
   model:
@@ -17,16 +17,16 @@ task:
     short_cut: yes
     layer_norm: yes
     dependent: yes
-    symmetric: True
+    symmetric: no
   criterion: bce
-  num_negative: 512
+  num_negative: 32
   strict_negative: yes
   adversarial_temperature: 1
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
   gene_annotation_predict: False
-  conditional_probability: False
+  conditional_probability: True
   full_batch_eval: True
 
 
@@ -37,11 +37,11 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 32
+  batch_size: 64
   
 
 train:
-  num_epoch: 10
-  batch_per_epoch: 100
+  num_epoch: 8
+  #batch_per_epoch: 100
   
 metric: mrr

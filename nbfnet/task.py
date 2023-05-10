@@ -638,7 +638,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if all_loss is None:
             # test
             graph = self.fact_graph
-            graph = graph.undirected(add_inverse=True)
+            if not self.conditional_probability:
+                graph = graph.undirected(add_inverse=True)
 
             if self.gene_annotation_predict:
                 # Zhaocheng: This is invoked **every time** you make a prediction
@@ -658,13 +659,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             for neg_index in all_index.split(num_negative):
                 r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                 h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
-                t_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+                t_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability=self.conditional_probability)
                 t_preds.append(t_pred)
             t_pred = torch.cat(t_preds, dim=-1)
             for neg_index in all_index.split(num_negative):
                 r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                 t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
-                h_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+                h_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability=self.conditional_probability)
                 h_preds.append(h_pred)
                 
             h_pred = torch.cat(h_preds, dim=-1)
@@ -674,6 +675,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         else:
             # train
             if self.conditional_probability:
+                # conditional probability
                 if self.strict_negative:
                     neg_index = self._strict_negative(pos_h_index, pos_t_index, pos_r_index)
                 else:
@@ -684,10 +686,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 t_index[:batch_size // 2, 1:] = neg_index[:batch_size // 2]
                 h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
                 pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
-
-
-                
             else:
+                # joint probability
                 # calculate degree_in_type first
                 graph = self.fact_graph
                 graph = graph.undirected(add_inverse=True)
@@ -758,10 +758,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             neg_index = torch.cat([neg_t_index, neg_h_index])
             return neg_index
         
-        else:
-            # assert they are not none
-            
+        else:            
             # joint probaility - better for finding all missing links
+            
+            # assert not none
+            assert degree_in_type is not None
+            assert num_nodes_per_type is not None
+            assert graph is not None 
             node_type = graph.node_type
             # the number of nodes per type & degree_in_type
             num_nodes_per_type = torch.bincount(graph.node_type)
@@ -795,7 +798,11 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # sample from the distribution
             neg_h_index = functional.multinomial(prob, self.num_negative, replacement=True)
             neg_h_index = torch.flatten(neg_h_index)
-            # Zhaocheng: we may add an assertion here to check the node type of neg_h_index
+            
+            # assert if correct node type of neg_h_index
+            neg_h_type = node_type[neg_h_index]
+            node_type_neg_h_bool = (neg_h_type.view(len(pos_h_index), self.num_negative)) == pos_h_type.unsqueeze(-1)
+            assert torch.all(node_type_neg_h_bool)
 
             ####################### 
             # sample from p(t|h)
@@ -821,8 +828,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
             neg_t_candidate = t_mask.nonzero()[:, 1]
             num_t_candidate = t_mask.sum(dim=-1)
-            # TODO: double check
             neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, 1).squeeze(-1)
+            
+            # assert if correct node type of neg_t_index
+            neg_t_type = node_type[neg_t_index]
+            pos_t_type = node_type[pos_t_index]
+            node_type_neg_t_bool = (neg_t_type.view(len(pos_h_index), self.num_negative)) == pos_t_type.unsqueeze(-1)
+            assert torch.all(node_type_neg_t_bool)
             
             return neg_h_index, neg_t_index
     

@@ -1,5 +1,5 @@
 import os
-import time
+from datetime import datetime
 import logging
 import argparse
 
@@ -37,10 +37,11 @@ def create_working_directory(cfg):
     world_size = comm.get_world_size()
     if world_size > 1 and not dist.is_initialized():
         comm.init_process_group("nccl", init_method="env://")
-
+    curr_time = datetime.now()
     working_dir = os.path.join(os.path.expanduser(cfg.output_dir),
                                cfg.task["class"], cfg.dataset["class"], cfg.task.model["class"],
-                               time.strftime("%Y-%m-%d-%H-%M-%S"))
+                               curr_time.strftime("%Y-%m-%d-%H-%M-%S-%f"))
+
 
     # synchronize working directory
     if comm.get_rank() == 0:

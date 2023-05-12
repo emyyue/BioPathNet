@@ -143,6 +143,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
 
     def forward(self, graph, h_index, t_index, r_index=None, all_loss=None, metric=None, conditional_probability=False):
         if all_loss is not None:
+            # train
             # remove both r and r-1 edges if conditional_probability=False
             if conditional_probability:
                 graph = self.remove_easy_edges(graph, h_index, t_index, r_index)
@@ -166,7 +167,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             t_index = t_index.view(-1, 1)
             r_index = torch.zeros_like(h_index)
             assert (h_index[:, [0]] == h_index).all()
-            
+        
         #assert (r_index[:, [0]] == r_index).all()
         output = self.bellmanford(graph, h_index[:, 0], r_index[:, 0])
         feature = output["node_feature"].transpose(0, 1)

@@ -515,6 +515,10 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         self.num_entity = dataset.num_entity
         self.num_relation = dataset.num_relation
         self.register_buffer("graph", dataset.graph)
+        # Zhaocheng: Warning: If you further split valid or test dataset for fast evaluation,
+        # the following fact mask will cause test data leakage and provides unexpectedly high performance.
+        # I encountered once and it's hard to realize that...
+        # I check all your configs and it seems good for now.
         fact_mask = torch.ones(len(dataset), dtype=torch.bool)
         fact_mask[valid_set.indices] = 0
         fact_mask[test_set.indices] = 0
@@ -536,7 +540,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             self.register_buffer("degree_tr", degree_tr)
 
             
-        return train_set, valid_set, test_set     
+        return train_set, valid_set, test_set
         
 
     def get_degree_in_type(self, graph):
@@ -544,7 +548,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # node_type = graph.node_type
         # node_type_t = node_type[graph.edge_list[:, 1]]
         
-        # # count the number of occurance for each node to type t
+        # # count the number of occurrence for each node to type t
         # myindex = graph.edge_list[:, 0]
         # myinput = torch.t(F.one_hot(node_type_t))  # one hot encoding of node types
         # degree_in_type = myinput.new_zeros(len(node_type.unique()),  graph.num_node) # which output dim
@@ -553,13 +557,21 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         ########################
         # making degree_in_type based on relations, as same nodes might have different relation types
         ########################
+        # Zhaocheng: I don't quite get it here.
+        # Does it mean that even for a fixed pair of type(h) and type(t), there can be more than one relation type?
         
-        # count the number of occurance for each relation type for each node
+        # count the number of occurrence for each relation type for each node
         myindex = graph.edge_list[:, 0]
         relation_type = graph.edge_list[:, 2]
         # one hot encoding of relation types
-        myinput = torch.t(F.one_hot(relation_type)) 
+        # Zhaocheng: myinput is (|E|, |R|), potentially OOM for large graphs
+        # You may augment myindex to be relation_type * graph.num_node + my_index
+        # and scatter_add ones with the augmented index
+        # finally reshape the tensor from (num_relation * num_node,) to (num_relation, num_node)
+        myinput = torch.t(F.one_hot(relation_type))
         # calculate
+        # Zhaocheng: graph.num_relation is safer than len(relation_type.unique())
+        # in case you have some relation ids missing
         degree_in_type = myinput.new_zeros(len(relation_type.unique()),  graph.num_node) # which output dim
         degree_in_type = torch_scatter.scatter_add(myinput, myindex, out=degree_in_type)
         
@@ -639,11 +651,14 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # test
             graph = self.fact_graph
             if not self.conditional_probability:
+                # Zhaocheng: please put this into preprocess()
+                # data.Graph.match is super slow when it's called for a new instance every time
+                # hence it's better to maintain a single undirected graph instance throughout the program
                 graph = graph.undirected(add_inverse=True)
 
             if self.gene_annotation_predict:
                 # Zhaocheng: This is invoked **every time** you make a prediction
-                # Maybe you want to put it into preprocess to save timeWW
+                # Maybe you want to put it into preprocess to save time
                 # change all_index to only evaluation against GO terms
                 nodes = dataset.entity_vocab
                 nodes__dict = {ix: val for ix, val in enumerate(nodes)}
@@ -652,6 +667,10 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             else:
                 all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
 
+            # Zhaocheng: bug: the following code is used for conditional probability + MRR / HITS
+            # not for joint probability + AUPRC / AUROC
+            # please refer to LinkPrediction.predict for how to generate negative samples for
+            # evaluating joint probability
             t_preds = []
             h_preds = []
             num_negative = self.num_entity if self.full_batch_eval else self.num_negative
@@ -691,7 +710,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 # calculate degree_in_type first
                 graph = self.fact_graph
                 graph = graph.undirected(add_inverse=True)
-                
+
                 num_nodes_per_type = torch.bincount(graph.node_type)
                 degree_in_type = self.get_degree_in_type(graph)
                 
@@ -720,6 +739,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
     def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index, degree_in_type=None, num_nodes_per_type=None, graph=None):
         if self.conditional_probability:
             # conditional probaility - classical KG setting
+            # Zhaocheng: the conditional probability case doesn't consider node type
 
             batch_size = len(pos_h_index)
             any = -torch.ones_like(pos_h_index)
@@ -760,6 +780,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         
         else:            
             # joint probaility - better for finding all missing links
+            # Zhaocheng: not **all** missing links?
+            # rank each positive against negative samples from the same entity types as the positive one
             
             # assert not none
             assert degree_in_type is not None
@@ -782,7 +804,10 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # number of nodes of type(t) - degree of node h connecting to relation r
             # prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_r_index]).float()
 
-            pos_r_index_rev =(pos_r_index + self.num_relation) % (self.num_relation * 2)
+            pos_r_index_rev = (pos_r_index + self.num_relation) % (self.num_relation * 2)
+            # Zhaocheng: don't quite get the math of the following line
+            # p(h | pos_h, pos_r, pos_t) = num_type(pos_t) * 2 - degree(pos_h, pos_r) - degree(pos_h, pos_r^-1)
+            # What if there is an entity has the same type as type(pos_t) but connected to pos_h with a relation different from pos_r?
             prob = ((num_nodes_per_type[pos_t_type]*2).unsqueeze(1) - 
                     (degree_in_type[pos_r_index] + degree_in_type[pos_r_index_rev])).float()
 
@@ -800,6 +825,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             neg_h_index = torch.flatten(neg_h_index)
             
             # assert if correct node type of neg_h_index
+            # Zhaocheng: Great!
             neg_h_type = node_type[neg_h_index]
             node_type_neg_h_bool = (neg_h_type.view(len(pos_h_index), self.num_negative)) == pos_h_type.unsqueeze(-1)
             assert torch.all(node_type_neg_h_bool)
@@ -831,6 +857,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, 1).squeeze(-1)
             
             # assert if correct node type of neg_t_index
+            # Zhaocheng: Great!
             neg_t_type = node_type[neg_t_index]
             pos_t_type = node_type[pos_t_index]
             node_type_neg_t_bool = (neg_t_type.view(len(pos_h_index), self.num_negative)) == pos_t_type.unsqueeze(-1)

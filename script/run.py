@@ -47,7 +47,7 @@ def train_and_validate(cfg, solver):
         kwargs = cfg.train.copy()
         kwargs["num_epoch"] = min(step, cfg.train.num_epoch - i)
         solver.model.split = "train"
-        #solver.train(**kwargs)
+        solver.train(**kwargs)
         solver.save("model_epoch_%d.pth" % solver.epoch)
         solver.model.split = "valid"
         metric = solver.evaluate("valid")
@@ -61,8 +61,8 @@ def train_and_validate(cfg, solver):
 
 
 def test(cfg, solver):
-    #solver.model.split = "valid"
-    #solver.evaluate("valid")
+    solver.model.split = "valid"
+    solver.evaluate("valid")
     solver.model.split = "test"
     solver.evaluate("test")
 
@@ -82,5 +82,5 @@ if __name__ == "__main__":
     dataset = core.Configurable.load_config_dict(cfg.dataset)
     solver = util.build_solver(cfg, dataset)
 
-    #train_and_validate(cfg, solver)
+    train_and_validate(cfg, solver)
     test(cfg, solver)

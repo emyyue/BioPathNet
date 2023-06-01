@@ -491,7 +491,7 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
 class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Configurable):
 
     def __init__(self, model, criterion="bce",
-                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100"),
+                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "auroc", "ap"),
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
@@ -613,34 +613,54 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         return mask.cpu(), target.cpu()
 
     def evaluate(self, pred, target):
-        mask, target = target
-
-        pos_pred = pred.gather(-1, target.unsqueeze(-1))
-        if self.filtered_ranking:
-            ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
-        else:
-            ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
         
-        pred = pred.flatten()
-        target = target.flatten()
-        metric = {}
-        for _metric in self.metric:
-            if _metric == "mr":
-                score = ranking.float().mean()
-            elif _metric == "mrr":
-                score = (1 / ranking.float()).mean()
-            elif _metric.startswith("hits@"):
-                threshold = int(_metric[5:])
-                score = (ranking <= threshold).float().mean()
-            elif _metric == "auroc":
-                score = metrics.area_under_roc(pred, target)
-            elif _metric == "ap":
-                score = metrics.area_under_prc(pred, target)
+        if self.conditional_probability:
+            import pdb; pdb.set_trace()
+            mask, target = target
+
+            pos_pred = pred.gather(-1, target.unsqueeze(-1))
+            if self.filtered_ranking:
+                ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
             else:
-                raise ValueError("Unknown metric `%s`" % _metric)
+                ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
+            
+            pred = pred.flatten()
+            target = target.flatten()
+            metric = {}
+            for _metric in self.metric:
+                if _metric == "mr":
+                    score = ranking.float().mean()
+                elif _metric == "mrr":
+                    score = (1 / ranking.float()).mean()
+                elif _metric.startswith("hits@"):
+                    threshold = int(_metric[5:])
+                    score = (ranking <= threshold).float().mean()
+                elif _metric == "auroc":
+                    score = metrics.area_under_roc(pred, target)
+                elif _metric == "ap":
+                    score = metrics.area_under_prc(pred, target)
+                else:
+                    continue
+                    #raise ValueError("Unknown metric `%s`" % _metric)
+                name = tasks._get_metric_name(_metric)
+                metric[name] = score
+        else:
+            pred = pred[:,0:2]
+            target = torch.zeros_like(pred)
+            target[:, 0] = 1
+            pred = pred.flatten()
+            target = target.flatten()
+            metric = {}
+            for _metric in self.metric:
+                if _metric == "auroc":
+                    score = metrics.area_under_roc(pred, target)
+                elif _metric == "ap":
+                    score = metrics.area_under_prc(pred, target)
+                else:
+                    continue
+                    #raise ValueError("Unknown metric `%s`" % _metric)
             name = tasks._get_metric_name(_metric)
             metric[name] = score
-
         return metric
     
     def predict(self, batch, dataset=dataset, all_loss=None, metric=None):
@@ -652,52 +672,79 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
 
         if all_loss is None:
             # test
-            graph = self.fact_graph
-            if not self.conditional_probability:
+            if self.conditional_probability:
+                # conditional probability
+                if self.gene_annotation_predict:
+                    # Zhaocheng: This is invoked **every time** you make a prediction
+                    # Emy: Yes, will change
+                    # Maybe you want to put it into preprocess to save time
+                    # change all_index to only evaluation against GO terms
+                    nodes = dataset.entity_vocab
+                    nodes__dict = {ix: val for ix, val in enumerate(nodes)}
+                    go_id = [key for key, val in nodes__dict.items() if val.startswith('GO:')]
+                    all_index = torch.tensor(go_id, device=self.device) # evaluate against only GO terms
+                else:
+                    all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
+
+                # Zhaocheng: bug: the following code is used for conditional probability + MRR / HITS
+                # not for joint probability + AUPRC / AUROC
+                # please refer to LinkPrediction.predict for how to generate negative samples for
+                # evaluating joint probability
+                # Emy: It looks like the same for train and test, only w 1 neg_sam?
+                t_preds = []
+                h_preds = []
+                num_negative = self.num_entity if self.full_batch_eval else self.num_negative
+                # Zhaocheng: Do you want to evaluate in both directions or just a single direction?
+                # Emy: actually, mostly, only one direction, but keep it general?
+                for neg_index in all_index.split(num_negative):
+                    r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
+                    h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
+                    t_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability=self.conditional_probability)
+                    t_preds.append(t_pred)
+                t_pred = torch.cat(t_preds, dim=-1)
+                for neg_index in all_index.split(num_negative):
+                    r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
+                    t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
+                    h_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability=self.conditional_probability)
+                    h_preds.append(h_pred)
+                    
+                h_pred = torch.cat(h_preds, dim=-1)
+                pred = torch.stack([t_pred, h_pred], dim=1)
+                # in case of GPU OOM
+                pred = pred.cpu()
+                
+            else:
+            # joint probability
                 # Zhaocheng: please put this into preprocess()
                 # data.Graph.match is super slow when it's called for a new instance every time
                 # hence it's better to maintain a single undirected graph instance throughout the program
                 # Emy: I understand. However, we discussed that we should keep it as inductive as possible?
                 # Before this was in model.py (forward).
+                graph = self.fact_graph
                 graph = graph.undirected(add_inverse=True)
-
-            if self.gene_annotation_predict:
-                # Zhaocheng: This is invoked **every time** you make a prediction
-                # Emy: Yes, will change
-                # Maybe you want to put it into preprocess to save time
-                # change all_index to only evaluation against GO terms
-                nodes = dataset.entity_vocab
-                nodes__dict = {ix: val for ix, val in enumerate(nodes)}
-                go_id = [key for key, val in nodes__dict.items() if val.startswith('GO:')]
-                all_index = torch.tensor(go_id, device=self.device) # evaluate against only GO terms
-            else:
-                all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
-
-            # Zhaocheng: bug: the following code is used for conditional probability + MRR / HITS
-            # not for joint probability + AUPRC / AUROC
-            # please refer to LinkPrediction.predict for how to generate negative samples for
-            # evaluating joint probability
-            t_preds = []
-            h_preds = []
-            num_negative = self.num_entity if self.full_batch_eval else self.num_negative
-            # Zhaocheng: Do you want to evaluate in both directions or just a single direction?
-            # Emy: actually, mostly, only one direction, but keep it general?
-            for neg_index in all_index.split(num_negative):
-                r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
-                h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
-                t_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability=self.conditional_probability)
-                t_preds.append(t_pred)
-            t_pred = torch.cat(t_preds, dim=-1)
-            for neg_index in all_index.split(num_negative):
-                r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
-                t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
-                h_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability=self.conditional_probability)
-                h_preds.append(h_pred)
                 
-            h_pred = torch.cat(h_preds, dim=-1)
-            pred = torch.stack([t_pred, h_pred], dim=1)
-            # in case of GPU OOM
-            pred = pred.cpu()
+                num_nodes_per_type = torch.bincount(graph.node_type)
+                degree_in_type = self.get_degree_in_type(graph)
+                
+                
+                # Should it be strict_negative with 1 num_negative?
+                # sample negative samples
+                if self.strict_negative:
+                    neg_h_index, neg_t_index = self._strict_negative(pos_h_index, pos_t_index, pos_r_index, degree_in_type, num_nodes_per_type, graph)
+                else:
+                    neg_h_index, neg_t_index = torch.randint(self.num_node, (2, batch_size * batch_size * self.num_negative), device=self.device)
+                # make dim 0 batch size and dim 1 negative samples
+                neg_h_index = neg_h_index.view(batch_size, self.num_negative)
+                neg_t_index = neg_t_index.view(batch_size, self.num_negative)
+                # repeat one more time than the number of negative samples [32,33]
+                h_index = pos_h_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+                t_index = pos_t_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+                r_index = pos_r_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+                # first one is true head and tail, rest are the negative samples for head and tail
+                h_index[:, 1:] = neg_h_index
+                t_index[:, 1:] = neg_t_index
+                pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
+
         else:
             # train
             if self.conditional_probability:
@@ -720,6 +767,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
 
                 num_nodes_per_type = torch.bincount(graph.node_type)
                 degree_in_type = self.get_degree_in_type(graph)
+                
                 
                 # sample negative samples
                 if self.strict_negative:

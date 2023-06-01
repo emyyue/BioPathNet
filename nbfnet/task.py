@@ -519,6 +519,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # the following fact mask will cause test data leakage and provides unexpectedly high performance.
         # I encountered once and it's hard to realize that...
         # I check all your configs and it seems good for now.
+        # Emy: which flag would it be? full_batch_eval?
         fact_mask = torch.ones(len(dataset), dtype=torch.bool)
         fact_mask[valid_set.indices] = 0
         fact_mask[test_set.indices] = 0
@@ -559,6 +560,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         ########################
         # Zhaocheng: I don't quite get it here.
         # Does it mean that even for a fixed pair of type(h) and type(t), there can be more than one relation type?
+        # Emy: yes, this is the case. Sometimes there are more than one from h to t. Should this be investigated?
         
         # count the number of occurrence for each relation type for each node
         myindex = graph.edge_list[:, 0]
@@ -572,7 +574,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # calculate
         # Zhaocheng: graph.num_relation is safer than len(relation_type.unique())
         # in case you have some relation ids missing
-        degree_in_type = myinput.new_zeros(len(relation_type.unique()),  graph.num_node) # which output dim
+        # Emy: DONE
+        degree_in_type = myinput.new_zeros(graph.num_relation,  graph.num_node) # which output dim
         degree_in_type = torch_scatter.scatter_add(myinput, myindex, out=degree_in_type)
         
         return degree_in_type
@@ -654,10 +657,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 # Zhaocheng: please put this into preprocess()
                 # data.Graph.match is super slow when it's called for a new instance every time
                 # hence it's better to maintain a single undirected graph instance throughout the program
+                # Emy: I understand. However, we discussed that we should keep it as inductive as possible?
+                # Before this was in model.py (forward).
                 graph = graph.undirected(add_inverse=True)
 
             if self.gene_annotation_predict:
                 # Zhaocheng: This is invoked **every time** you make a prediction
+                # Emy: Yes, will change
                 # Maybe you want to put it into preprocess to save time
                 # change all_index to only evaluation against GO terms
                 nodes = dataset.entity_vocab
@@ -675,6 +681,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             h_preds = []
             num_negative = self.num_entity if self.full_batch_eval else self.num_negative
             # Zhaocheng: Do you want to evaluate in both directions or just a single direction?
+            # Emy: actually, mostly, only one direction, but keep it general?
             for neg_index in all_index.split(num_negative):
                 r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                 h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
@@ -740,6 +747,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if self.conditional_probability:
             # conditional probaility - classical KG setting
             # Zhaocheng: the conditional probability case doesn't consider node type
+            # Emy: isn't it heterogeneous_negative?
 
             batch_size = len(pos_h_index)
             any = -torch.ones_like(pos_h_index)
@@ -779,7 +787,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             return neg_index
         
         else:            
-            # joint probaility - better for finding all missing links
+            # joint probaility - rank each positive against negative samples from the same entity types as the positive one
             # Zhaocheng: not **all** missing links?
             # rank each positive against negative samples from the same entity types as the positive one
             
@@ -808,6 +816,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # Zhaocheng: don't quite get the math of the following line
             # p(h | pos_h, pos_r, pos_t) = num_type(pos_t) * 2 - degree(pos_h, pos_r) - degree(pos_h, pos_r^-1)
             # What if there is an entity has the same type as type(pos_t) but connected to pos_h with a relation different from pos_r?
+            # Emy: good question... This was the easiest way, this is not covered then. How to deal with different relation between two entities?
             prob = ((num_nodes_per_type[pos_t_type]*2).unsqueeze(1) - 
                     (degree_in_type[pos_r_index] + degree_in_type[pos_r_index_rev])).float()
 
@@ -825,7 +834,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             neg_h_index = torch.flatten(neg_h_index)
             
             # assert if correct node type of neg_h_index
-            # Zhaocheng: Great!
             neg_h_type = node_type[neg_h_index]
             node_type_neg_h_bool = (neg_h_type.view(len(pos_h_index), self.num_negative)) == pos_h_type.unsqueeze(-1)
             assert torch.all(node_type_neg_h_bool)
@@ -857,7 +865,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, 1).squeeze(-1)
             
             # assert if correct node type of neg_t_index
-            # Zhaocheng: Great!
             neg_t_type = node_type[neg_t_index]
             pos_t_type = node_type[pos_t_index]
             node_type_neg_t_bool = (neg_t_type.view(len(pos_h_index), self.num_negative)) == pos_t_type.unsqueeze(-1)

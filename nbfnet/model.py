@@ -160,6 +160,10 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
                 graph = graph.undirected(add_inverse=True)
                 h_index, t_index, r_index = self.negative_sample_to_tail(h_index, t_index, r_index)  
                 assert (h_index[:, [0]] == h_index).all()
+            else:
+                h_index = h_index.view(-1, 1)
+                t_index = t_index.view(-1, 1)
+                r_index = torch.zeros_like(h_index)
         else:
             # convert to knowledge graph with 1 relation
             # will executed for LinkPrediction class, as num_relation is nonexistent
@@ -177,10 +181,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
         
 
         if self.symmetric and not conditional_probability:
-            # Zhaocheng: same here. Why do we disable the assert here?
-            # Emy: open - link pred is different than joint?
-            # assert (t_index[:, [0]] == t_index).all()
-            # needs to follow link pred protocol: flatten the vector
+            assert (t_index[:, [0]] == t_index).all()
             r_index = (r_index + self.num_relation) % (self.num_relation * 2)
             output = self.bellmanford(graph, t_index[:, 0], r_index[:, 0])
             inv_feature = output["node_feature"].transpose(0, 1)

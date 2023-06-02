@@ -25,8 +25,8 @@ task:
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
   gene_annotation_predict: no
-  conditional_probability: no
-  full_batch_eval: True
+  conditional_probability: yes
+  full_batch_eval: False
 
 
 
@@ -37,7 +37,7 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 32
+  batch_size: 4
   
 
 train:

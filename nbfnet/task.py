@@ -491,7 +491,7 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
 class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Configurable):
 
     def __init__(self, model, criterion="bce",
-                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "auroc", "ap"),
+                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100"),
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
@@ -615,7 +615,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
     def evaluate(self, pred, target):
         
         if self.conditional_probability:
-            import pdb; pdb.set_trace()
             mask, target = target
 
             pos_pred = pred.gather(-1, target.unsqueeze(-1))

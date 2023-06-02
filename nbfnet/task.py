@@ -491,7 +491,7 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
 class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Configurable):
 
     def __init__(self, model, criterion="bce",
-                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100"),
+                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "ap"),
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
@@ -534,8 +534,12 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 degree_tr[t, r] += 1
             self.register_buffer("degree_hr", degree_hr)
             self.register_buffer("degree_tr", degree_tr)
-
             
+        self.register_buffer("undirected_fact_graph", self.fact_graph.undirected(add_inverse=True))
+        with self.undirected_fact_graph.graph():
+            self.undirected_fact_graph.degree_in_type = self.get_degree_in_type(self.undirected_fact_graph)
+            self.undirected_fact_graph.num_nodes_per_type = torch.bincount(self.undirected_fact_graph.node_type)
+                    
         return train_set, valid_set, test_set
         
 
@@ -639,6 +643,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                     #raise ValueError("Unknown metric `%s`" % _metric)
             name = tasks._get_metric_name(_metric)
             metric[name] = score
+            
         return metric
     
     def predict(self, batch, dataset=dataset, all_loss=None, metric=None):
@@ -693,11 +698,15 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 
             else:
             # joint probability
-                graph = self.fact_graph
-                graph = graph.undirected(add_inverse=True)
+                # graph = self.fact_graph
+                # graph = graph.undirected(add_inverse=True)
+                            
+                # num_nodes_per_type = torch.bincount(graph.node_type)
+                # degree_in_type = self.get_degree_in_type(graph)
                 
-                num_nodes_per_type = torch.bincount(graph.node_type)
-                degree_in_type = self.get_degree_in_type(graph)
+                graph = self.undirected_fact_graph
+                num_nodes_per_type = graph.num_nodes_per_type
+                degree_in_type = graph.degree_in_type
                 
                 
                 # Should it be strict_negative with 1 num_negative?
@@ -735,12 +744,15 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             else:
                 # joint probability
                 # calculate degree_in_type first
-                graph = self.fact_graph
-                graph = graph.undirected(add_inverse=True)
+                # graph = self.fact_graph
+                # graph = graph.undirected(add_inverse=True)
 
-                num_nodes_per_type = torch.bincount(graph.node_type)
-                degree_in_type = self.get_degree_in_type(graph)
+                # num_nodes_per_type = torch.bincount(graph.node_type)
+                # degree_in_type = self.get_degree_in_type(graph)
                 
+                graph = self.undirected_fact_graph
+                num_nodes_per_type = graph.num_nodes_per_type
+                degree_in_type = graph.degree_in_type
                 
                 # sample negative samples
                 if self.strict_negative:

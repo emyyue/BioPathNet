@@ -515,11 +515,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         self.num_entity = dataset.num_entity
         self.num_relation = dataset.num_relation
         self.register_buffer("graph", dataset.graph)
-        # Zhaocheng: Warning: If you further split valid or test dataset for fast evaluation,
-        # the following fact mask will cause test data leakage and provides unexpectedly high performance.
-        # I encountered once and it's hard to realize that...
-        # I check all your configs and it seems good for now.
-        # Emy: which flag would it be? full_batch_eval? as long as fast_test is not used, this should be fine
         fact_mask = torch.ones(len(dataset), dtype=torch.bool)
         fact_mask[valid_set.indices] = 0
         fact_mask[test_set.indices] = 0
@@ -544,25 +539,11 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         return train_set, valid_set, test_set
         
 
-    def get_degree_in_type(self, graph):
-        # # calculate degree_in_type based on input graph
-        # node_type = graph.node_type
-        # node_type_t = node_type[graph.edge_list[:, 1]]
-        
-        # # count the number of occurrence for each node to type t
-        # myindex = graph.edge_list[:, 0]
-        # myinput = torch.t(F.one_hot(node_type_t))  # one hot encoding of node types
-        # degree_in_type = myinput.new_zeros(len(node_type.unique()),  graph.num_node) # which output dim
-        # degree_in_type = torch_scatter.scatter_add(myinput, myindex, out=degree_in_type)
-        
+    def get_degree_in_type(self, graph):        
         ########################
         # making degree_in_type based on relations, as same nodes might have different relation types
         ########################
-        # Zhaocheng: I don't quite get it here.
-        # Does it mean that even for a fixed pair of type(h) and type(t), there can be more than one relation type?
-        # Emy: yes, this is the case. Sometimes there are more than one from h to t. Should this be investigated?
-        # clarified: just more fine grained version (if r instead of type t)
-        
+
         # count the number of occurrence for each relation type for each node
         myindex = graph.edge_list[:, 0]
         relation_type = graph.edge_list[:, 2]
@@ -712,12 +693,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 
             else:
             # joint probability
-                # Zhaocheng: please put this into preprocess()
-                # data.Graph.match is super slow when it's called for a new instance every time
-                # hence it's better to maintain a single undirected graph instance throughout the program
-                # Emy: I understand. However, we discussed that we should keep it as inductive as possible?
-                # Before this was in model.py (forward).
-                # clarified: cross the bridge when we're there. put into preprocess for now
                 graph = self.fact_graph
                 graph = graph.undirected(add_inverse=True)
                 
@@ -792,9 +767,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
     def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index, degree_in_type=None, num_nodes_per_type=None, graph=None):
         if self.conditional_probability:
             # conditional probaility - classical KG setting
-            # Zhaocheng: the conditional probability case doesn't consider node type
-            # Emy: isn't it heterogeneous_negative?
-            # clarified: it is fine
 
             batch_size = len(pos_h_index)
             any = -torch.ones_like(pos_h_index)
@@ -834,9 +806,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             return neg_index
         
         else:            
-            # joint probaility - rank each positive against negative samples from the same entity types as the positive one
-            # Zhaocheng: not **all** missing links?
-            # rank each positive against negative samples from the same entity types as the positive one
+            # joint probaility - rank each positive against negative samples from the same entity types as the positive ones
             
             # assert not none
             assert degree_in_type is not None
@@ -860,11 +830,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_r_index]).float()
 
             pos_r_index_rev = (pos_r_index + self.num_relation) % (self.num_relation * 2)
-            # Zhaocheng: don't quite get the math of the following line
-            # p(h | pos_h, pos_r, pos_t) = num_type(pos_t) * 2 - degree(pos_h, pos_r) - degree(pos_h, pos_r^-1)
-            # What if there is an entity has the same type as type(pos_t) but connected to pos_h with a relation different from pos_r?
-            # Emy: good question... This was the easiest way, this is not covered then. How to deal with different relation between two entities?
-            # clarified: it is fine
             prob = ((num_nodes_per_type[pos_t_type]*2).unsqueeze(1) - 
                     (degree_in_type[pos_r_index] + degree_in_type[pos_r_index_rev])).float()
 

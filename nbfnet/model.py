@@ -147,21 +147,15 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             # remove both r and r-1 edges if conditional_probability=False
             if conditional_probability:
                 assert graph.num_relation == self.num_relation
-                # Zhaocheng: I would assert graph.num_relation == self.num_relation for better readability
-                # Emy: DONE
                 graph = self.remove_easy_edges(graph, h_index, t_index, r_index)
             else:
                 assert graph.num_relation == self.num_relation * 2 
-                # Zhaocheng: I would assert graph.num_relation == self.num_relation * 2 for better readability
-                # Emy: DONE
                 graph = self.remove_easy_edges(graph, h_index, t_index, r_index) # remove r
                 graph = self.remove_easy_edges(graph, t_index, h_index, (r_index + self.num_relation) % (self.num_relation * 2)) # remove r-1
 
         shape = h_index.shape
         if graph.num_relation:
             # if num_relation > 0 and not conditional probability, then joint: do nothing
-            # as graph already undirected -> Zhaocheng: please assert it in the code
-            # Emy: as done in the assert above for num of relations?
             if conditional_probability:
                 graph = graph.undirected(add_inverse=True)
                 h_index, t_index, r_index = self.negative_sample_to_tail(h_index, t_index, r_index)  
@@ -175,10 +169,6 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             r_index = torch.zeros_like(h_index)
             assert (h_index[:, [0]] == h_index).all()
 
-        # Zhaocheng: Why do we disable the assert here?
-        # Emy: DONE - you're right for got to uncomment
-        # This line is necessary for r_index[:, 0] in the next line to be correct
-        # for single-source propagation.
         assert (r_index[:, [0]] == r_index).all()
         output = self.bellmanford(graph, h_index[:, 0], r_index[:, 0])
         feature = output["node_feature"].transpose(0, 1)
@@ -190,6 +180,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             # Zhaocheng: same here. Why do we disable the assert here?
             # Emy: open - link pred is different than joint?
             # assert (t_index[:, [0]] == t_index).all()
+            # needs to follow link pred protocol: flatten the vector
             r_index = (r_index + self.num_relation) % (self.num_relation * 2)
             output = self.bellmanford(graph, t_index[:, 0], r_index[:, 0])
             inv_feature = output["node_feature"].transpose(0, 1)

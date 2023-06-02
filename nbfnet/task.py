@@ -519,7 +519,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # the following fact mask will cause test data leakage and provides unexpectedly high performance.
         # I encountered once and it's hard to realize that...
         # I check all your configs and it seems good for now.
-        # Emy: which flag would it be? full_batch_eval?
+        # Emy: which flag would it be? full_batch_eval? as long as fast_test is not used, this should be fine
         fact_mask = torch.ones(len(dataset), dtype=torch.bool)
         fact_mask[valid_set.indices] = 0
         fact_mask[test_set.indices] = 0
@@ -561,6 +561,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # Zhaocheng: I don't quite get it here.
         # Does it mean that even for a fixed pair of type(h) and type(t), there can be more than one relation type?
         # Emy: yes, this is the case. Sometimes there are more than one from h to t. Should this be investigated?
+        # clarified: just more fine grained version (if r instead of type t)
         
         # count the number of occurrence for each relation type for each node
         myindex = graph.edge_list[:, 0]
@@ -572,9 +573,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # finally reshape the tensor from (num_relation * num_node,) to (num_relation, num_node)
         myinput = torch.t(F.one_hot(relation_type))
         # calculate
-        # Zhaocheng: graph.num_relation is safer than len(relation_type.unique())
-        # in case you have some relation ids missing
-        # Emy: DONE
         degree_in_type = myinput.new_zeros(graph.num_relation,  graph.num_node) # which output dim
         degree_in_type = torch_scatter.scatter_add(myinput, myindex, out=degree_in_type)
         
@@ -719,6 +717,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 # hence it's better to maintain a single undirected graph instance throughout the program
                 # Emy: I understand. However, we discussed that we should keep it as inductive as possible?
                 # Before this was in model.py (forward).
+                # clarified: cross the bridge when we're there. put into preprocess for now
                 graph = self.fact_graph
                 graph = graph.undirected(add_inverse=True)
                 
@@ -795,6 +794,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # conditional probaility - classical KG setting
             # Zhaocheng: the conditional probability case doesn't consider node type
             # Emy: isn't it heterogeneous_negative?
+            # clarified: it is fine
 
             batch_size = len(pos_h_index)
             any = -torch.ones_like(pos_h_index)
@@ -864,6 +864,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # p(h | pos_h, pos_r, pos_t) = num_type(pos_t) * 2 - degree(pos_h, pos_r) - degree(pos_h, pos_r^-1)
             # What if there is an entity has the same type as type(pos_t) but connected to pos_h with a relation different from pos_r?
             # Emy: good question... This was the easiest way, this is not covered then. How to deal with different relation between two entities?
+            # clarified: it is fine
             prob = ((num_nodes_per_type[pos_t_type]*2).unsqueeze(1) - 
                     (degree_in_type[pos_r_index] + degree_in_type[pos_r_index_rev])).float()
 

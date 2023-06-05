@@ -826,8 +826,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             assert graph is not None 
             node_type = graph.node_type
             # the number of nodes per type & degree_in_type
-            num_nodes_per_type = torch.bincount(graph.node_type)
-            degree_in_type = self.get_degree_in_type(graph)
+            num_nodes_per_type = graph.num_nodes_per_type
+            degree_in_type = graph.degree_in_type
             
             ####################### 
             # sample from p(h)

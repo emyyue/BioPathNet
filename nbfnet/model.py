@@ -155,7 +155,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
 
         shape = h_index.shape
         if graph.num_relation:
-            # if num_relation > 0 and not conditional probability, then joint: do nothing
+            # if num_relation > 0 and not conditional probability
             if conditional_probability:
                 graph = graph.undirected(add_inverse=True)
                 h_index, t_index, r_index = self.negative_sample_to_tail(h_index, t_index, r_index)  
@@ -166,7 +166,6 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
                 r_index = torch.zeros_like(h_index)
         else:
             # convert to knowledge graph with 1 relation
-            # will executed for LinkPrediction class, as num_relation is nonexistent
             graph = self.as_relational_graph(graph)
             h_index = h_index.view(-1, 1)
             t_index = t_index.view(-1, 1)

@@ -21,6 +21,7 @@ def solver_load(checkpoint, load_optimizer=True):
     # remove
     state["model"].pop("fact_graph")
     state["model"].pop("graph")
+    state["model"].pop("undirected_fact_graph")
     # load without
     solver.model.load_state_dict(state["model"], strict=False)
 

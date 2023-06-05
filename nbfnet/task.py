@@ -491,7 +491,7 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
 class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Configurable):
 
     def __init__(self, model, criterion="bce",
-                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "ap"),
+                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100"),
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
@@ -606,9 +606,18 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             else:
                 ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
             
+            # get neg predictions
+            m = torch.ones_like(pred).scatter(2, target.unsqueeze(-1), 0).bool()
+            mask_neg = m.logical_and(~mask).long().argmax(dim=2)
+            neg_pred = pred.gather(-1, mask_neg.unsqueeze(-1))
+            pred = torch.stack((pos_pred.flatten(), neg_pred.flatten()),1)
+            target = torch.zeros_like(pred)
+            target[:, 0] = 1
             pred = pred.flatten()
             target = target.flatten()
+            
             metric = {}
+            
             for _metric in self.metric:
                 if _metric == "mr":
                     score = ranking.float().mean()
@@ -627,6 +636,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 name = tasks._get_metric_name(_metric)
                 metric[name] = score
         else:
+            # joint
             pred = pred[:,0:2]
             target = torch.zeros_like(pred)
             target[:, 0] = 1
@@ -641,8 +651,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 else:
                     continue
                     #raise ValueError("Unknown metric `%s`" % _metric)
-            name = tasks._get_metric_name(_metric)
-            metric[name] = score
+                name = tasks._get_metric_name(_metric)
+                metric[name] = score
             
         return metric
     
@@ -669,11 +679,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 else:
                     all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
 
-                # Zhaocheng: bug: the following code is used for conditional probability + MRR / HITS
-                # not for joint probability + AUPRC / AUROC
-                # please refer to LinkPrediction.predict for how to generate negative samples for
-                # evaluating joint probability
-                # Emy: It looks like the same for train and test, only w 1 neg_sam?
+
                 t_preds = []
                 h_preds = []
                 num_negative = self.num_entity if self.full_batch_eval else self.num_negative
@@ -700,7 +706,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # joint probability
                 # graph = self.fact_graph
                 # graph = graph.undirected(add_inverse=True)
-                            
                 # num_nodes_per_type = torch.bincount(graph.node_type)
                 # degree_in_type = self.get_degree_in_type(graph)
                 
@@ -746,7 +751,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 # calculate degree_in_type first
                 # graph = self.fact_graph
                 # graph = graph.undirected(add_inverse=True)
-
                 # num_nodes_per_type = torch.bincount(graph.node_type)
                 # degree_in_type = self.get_degree_in_type(graph)
                 
@@ -825,9 +829,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             assert num_nodes_per_type is not None
             assert graph is not None 
             node_type = graph.node_type
-            # the number of nodes per type & degree_in_type
-            num_nodes_per_type = graph.num_nodes_per_type
-            degree_in_type = graph.degree_in_type
             
             ####################### 
             # sample from p(h)

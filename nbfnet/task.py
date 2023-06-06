@@ -491,7 +491,7 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
 class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Configurable):
 
     def __init__(self, model, criterion="bce",
-                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100"),
+                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "auroc", "ap"),
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
@@ -841,7 +841,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # index the  degree of node h connecting to type t
             # number of nodes of type(t) - degree of node h connecting to relation r
             # prob = (num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_type[pos_r_index]).float()
-
             pos_r_index_rev = (pos_r_index + self.num_relation) % (self.num_relation * 2)
             prob = ((num_nodes_per_type[pos_t_type]*2).unsqueeze(1) - 
                     (degree_in_type[pos_r_index] + degree_in_type[pos_r_index_rev])).float()

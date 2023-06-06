@@ -1,0 +1,12 @@
+pathway5	GO:annotation	gene4
+pathway2	GO:annotation	gene4
+pathway3	GO:annotation	gene4
+pathway4	GO:annotation	gene4
+pathway6	GO:annotation	gene5
+pathway2	GO:annotation	gene5
+pathway3	GO:annotation	gene5
+pathway4	GO:annotation	gene5
+pathway6	GO:annotation	gene6
+pathway2	GO:annotation	gene6
+pathway3	GO:annotation	gene6
+pathway4	GO:annotation	gene6

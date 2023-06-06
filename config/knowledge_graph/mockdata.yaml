@@ -20,11 +20,10 @@ task:
   criterion: bce
   num_negative: 32
   strict_negative: yes
-  adversarial_temperature: 0.1
+  adversarial_temperature: 0.5
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  gene_annotation_predict: no
   conditional_probability: yes
   full_batch_eval: False
 
@@ -37,13 +36,11 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 4
+  batch_size: 32
   
 
 train:
   num_epoch: 10
-  #batch_per_epoch: 
+  batch_per_epoch: 100
   
-metric: mrr
-
-checkpoint: /Users/yue.hu/Documents/proj/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2023-05-17-18-46-57-306989/model_epoch_0.pth
+metric: "mrr"

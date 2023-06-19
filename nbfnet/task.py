@@ -607,10 +607,20 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
             
             # get neg predictions
+            # remove the true tail and head
             m = torch.ones_like(pred).scatter(2, target.unsqueeze(-1), 0).bool()
-            mask_neg = m.logical_and(~mask).long().argmax(dim=2)
+            # use mask to get rid of other true tails and heads
+            prob =  m.logical_and(~mask).long().float()
+            # sample from neg exampels
+            neg_t = functional.multinomial(prob[:,0,:], 1, replacement=True)
+            neg_h = functional.multinomial(prob[:,1,:], 1, replacement=True)
+            # concat and get mask
+            mask_neg =  torch.cat((neg_t, neg_h), -1)
+            # get neg predictions
             neg_pred = pred.gather(-1, mask_neg.unsqueeze(-1))
+            # take random sample of neg predictions
             pred = torch.stack((pos_pred.flatten(), neg_pred.flatten()),1)
+            # construct the target out of positive (1) and negative (0)
             target = torch.zeros_like(pred)
             target[:, 0] = 1
             pred = pred.flatten()

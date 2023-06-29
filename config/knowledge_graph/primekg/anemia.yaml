@@ -1,0 +1,47 @@
+output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
+
+dataset:
+  class: biomedical
+  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/primekg/disease_split/anemia_42/
+  include_factgraph: True
+  
+task:
+  class: KnowledgeGraphCompletionBiomed
+  model:
+    class: NBFNet
+    input_dim: 32
+    hidden_dims: [32, 32, 32, 32, 32, 32]
+    message_func: distmult
+    aggregate_func: pna
+    short_cut: yes
+    layer_norm: yes
+    dependent: yes
+    symmetric: yes
+  criterion: bce
+  num_negative: {{neg_samp}}
+  strict_negative: yes
+  adversarial_temperature: {{adv_tmp}}
+  sample_weight: no
+  heterogeneous_negative: yes
+  heterogeneous_evaluation: yes
+  gene_annotation_predict: no
+  conditional_probability: {{cond_prob}}
+  full_batch_eval: True
+
+
+
+
+optimizer:
+  class: Adam
+  lr: 5.0e-3
+
+engine:
+  gpus: {{ gpus }}
+  batch_size: 8
+  
+
+train:
+  num_epoch: 1
+  batch_per_epoch: 1000
+  
+metric: mrr

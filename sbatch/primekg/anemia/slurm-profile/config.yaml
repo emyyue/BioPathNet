@@ -1,0 +1,4 @@
+jobs: 20
+latency-wait: 60
+cluster: "sbatch --exclude={resources.exclude} --ntasks 1 --parsable -p {resources.partition} --cpus-per-task {resources.cpus} --qos={resources.qos} --mem {resources.mem} --time {resources.time} --gres={resources.gres} -J snakemake.{rule}_{wildcards.negsam}_{wildcards.advtmp}_{wildcards.condprob} --output logs/{rule}_{wildcards.negsam}_{wildcards.advtmp}_{wildcards.condprob}.job --error logs/{rule}_{wildcards.negsam}_{wildcards.advtmp}_{wildcards.condprob}.job"
+use-conda: true

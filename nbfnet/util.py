@@ -33,6 +33,7 @@ def get_root_logger(file=True):
 
 
 def create_working_directory(cfg):
+    # ask ZC: how to add jobID to working_dir.tmp; bug in program; make unique when run in parallel
     file_name = "working_dir.tmp"
     world_size = comm.get_world_size()
     if world_size > 1 and not dist.is_initialized():
@@ -41,7 +42,6 @@ def create_working_directory(cfg):
     working_dir = os.path.join(os.path.expanduser(cfg.output_dir),
                                cfg.task["class"], cfg.dataset["class"], cfg.task.model["class"],
                                curr_time.strftime("%Y-%m-%d-%H-%M-%S-%f"))
-
 
     # synchronize working directory
     if comm.get_rank() == 0:
@@ -120,6 +120,30 @@ def build_solver(cfg, dataset):
     solver = core.Engine(task, train_set, valid_set, test_set, optimizer, **cfg.engine)
 
     if "checkpoint" in cfg:
-        solver.load(cfg.checkpoint)
+        #solver.load(cfg.checkpoint)
+        solver_load(solver, cfg.checkpoint)
 
     return solver
+
+def solver_load(solver, checkpoint, load_optimizer=True):
+
+    if comm.get_rank() == 0:
+        logger.warning("Load checkpoint from %s" % checkpoint)
+    checkpoint = os.path.expanduser(checkpoint)
+    state = torch.load(checkpoint, map_location=solver.device)
+    # some issues with loading back the fact_graph and graph
+    # remove
+    state["model"].pop("fact_graph")
+    state["model"].pop("graph")
+    # load without
+    solver.model.load_state_dict(state["model"], strict=False)
+
+
+    if load_optimizer:
+        solver.optimizer.load_state_dict(state["optimizer"])
+        for state in solver.optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(solver.device)
+
+    comm.synchronize()

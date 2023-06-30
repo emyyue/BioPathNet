@@ -42,6 +42,6 @@ engine:
 
 train:
   num_epoch: 1
-  batch_per_epoch: 1
+  batch_per_epoch: 1000
   
 metric: mrr

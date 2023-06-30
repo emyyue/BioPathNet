@@ -12,7 +12,7 @@ task:
     input_dim: 32
     hidden_dims: [32, 32, 32, 32, 32, 32]
     message_func: distmult
-    aggregate_func: pna
+    aggregate_func: {{agg_fun}}
     short_cut: yes
     layer_norm: yes
     dependent: yes
@@ -42,6 +42,6 @@ engine:
 
 train:
   num_epoch: 1
-  batch_per_epoch: 1000 
+  batch_per_epoch: 1
   
 metric: mrr

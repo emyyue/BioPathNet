@@ -24,7 +24,7 @@ task:
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  conditional_probability: no
+  conditional_probability: yes
   full_batch_eval: False
 
 
@@ -40,7 +40,7 @@ engine:
   
 
 train:
-  num_epoch: 10
+  num_epoch: 5
   #batch_per_epoch: 10
   
-metric: "auroc"
+metric: mrr

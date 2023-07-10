@@ -14,9 +14,45 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util#, reasoning_mod
 import numpy as np
 
-vocab_file = os.path.join(os.path.dirname(__file__), "../data/PC_KEGG_0928_predict/entity_names.txt")
+vocab_file = os.path.join(os.path.dirname(__file__), "../data/mock/entity_names.txt")
 vocab_file = os.path.abspath(vocab_file)
 
+def solver_load(checkpoint, load_optimizer=True):
+
+    if comm.get_rank() == 0:
+        logger.warning("Load checkpoint from %s" % checkpoint)
+    checkpoint = os.path.expanduser(checkpoint)
+    state = torch.load(checkpoint, map_location=solver.device)
+    # some issues with loading back the fact_graph and graph
+    # remove
+    state["model"].pop("fact_graph")
+    state["model"].pop("graph")
+    state["model"].pop("undirected_fact_graph")
+    # load without
+    solver.model.load_state_dict(state["model"], strict=False)
+
+
+    if load_optimizer:
+        solver.optimizer.load_state_dict(state["optimizer"])
+        for state in solver.optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(solver.device)
+
+    comm.synchronize()
+
+
+def build_solver(cfg):
+    cfg.task.model.num_relation = _dataset.num_relation
+    _task = core.Configurable.load_config_dict(cfg.task)
+    cfg.optimizer.params = _task.parameters()
+    optimizer = core.Configurable.load_config_dict(cfg.optimizer)
+    if "scheduler" in cfg:
+        cfg.scheduler.optimizer = optimizer
+        scheduler = core.Configurable.load_config_dict(cfg.scheduler)
+    else:
+        scheduler = None
+    return core.Engine(_task, train_set, valid_set, test_set, optimizer, scheduler, **cfg.engine)
 
 def load_vocab(dataset):
     entity_mapping = {}
@@ -27,7 +63,7 @@ def load_vocab(dataset):
     entity_vocab = [entity_mapping[t] for t in dataset.entity_vocab]
     relation_vocab = ["%s (%d)" % (t[t.rfind("/") + 1:].replace("_", " "), i)
                       for i, t in enumerate(dataset.relation_vocab)]
-
+    
     return entity_vocab, relation_vocab
 
 @torch.no_grad()
@@ -40,6 +76,7 @@ def get_prediction(cfg, solver, relation_vocab):
     model.eval()
     preds = []
     targets = []
+    masks = []
     
     for ith, batch in enumerate(dataloader):
 
@@ -50,50 +87,42 @@ def get_prediction(cfg, solver, relation_vocab):
         
         preds.append(pred)
         targets.append(target)
+        masks.append(mask)
     
     pred = utils.cat(preds)
     target = utils.cat(targets)
+    mask = utils.cat(masks)
 
     
     return pred, target, mask
 
-def pred_to_dataframe(pred, dataset, entity_vocab, gene_annotation_predict=False):
-
-    
+def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
     # get head nodes
-    testset_nodes = [dataset.entity_vocab[i] for i in [x.numpy()[0] for x in solver.test_set]]
+    
+    #testset_nodes = [dataset.entity_vocab[i] for i in [x.numpy()[0] for x in solver.test_set]]
+    testset_relation =  [relation_vocab[i] for i in [x.numpy()[2] for x in solver.test_set]]
     nodes = dataset.entity_vocab
-    nodes__dict={ix: val for ix, val in enumerate(nodes)}
     
     # get both relation and relation^(-1)
     dflist=[]
-    for j in [0,1]:
+    for j in [0, 1]:
         sigmoid = torch.nn.Sigmoid()
-        prob0= sigmoid(pred[:, j, :])
-        proball = prob0.flatten().cpu().numpy()
-
-        if gene_annotation_predict:
-            # get goterms tail nodes
-            nodes = dataset.entity_vocab
-            nodes__dict={ix: val for ix, val in enumerate(nodes)}
-            go_terms = [val for key, val in nodes__dict.items() if val.startswith('GO:')]
-            df_dict = {'head': np.repeat(testset_nodes, len(go_terms)), 'relation': j,'tail': np.tile(go_terms, len(testset_nodes)), 'probability':proball.tolist()}
-        else:
-            df_dict = {'head': np.repeat(testset_nodes, len(nodes)), 'relation': j,'tail': np.tile(nodes, len(testset_nodes)), 'probability':proball.tolist()}
+        prob= sigmoid(pred[:, j, :])
+        prob = prob.flatten().cpu().numpy()
+        
+        df_dict = {'query_node': np.repeat([dataset.entity_vocab[i] for i in [x.numpy()[j] for x in solver.test_set]], len(nodes)),
+                   'query_relation': np.repeat(testset_relation, len(nodes)),
+                   'reverse': j,
+                   'prediction_node': np.tile(nodes, len(testset_relation)),
+                   'probability':prob.tolist()}
             
         dflist.append(df_dict)
-    
-    #append both dataframes    
-    df = pd.DataFrame(dflist[0]).append(pd.DataFrame(dflist[1]))
-    
-    # fuse with entity vocab given externally
-    lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
         
-    df = pd.merge(df, lookup, how="left", left_on="tail", right_on="short")
-    df = pd.merge(df, lookup, how="left", left_on="head", right_on="short")
-    
-    # sort by head node and probability
-    #df = df.sort_values(by=['head', 'probability'],ascending=[True, False])
+    df = pd.concat([pd.DataFrame(dflist[0]),pd.DataFrame(dflist[1])])
+    lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
+
+    df = pd.merge(df, lookup, how="left", left_on="query_node", right_on="short", sort=False)
+    df = pd.merge(df, lookup, how="left", left_on="prediction_node", right_on="short", sort=False)
     return df
 
         
@@ -105,24 +134,27 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed + comm.get_rank())
 
     logger = util.get_root_logger()
-    logger.warning("Config file: %s" % args.config)
-    logger.warning(pprint.pformat(cfg))
+    if comm.get_rank() == 0:
+        logger.warning("Config file: %s" % args.config)
+        logger.warning(pprint.pformat(cfg))
 
-    dataset = core.Configurable.load_config_dict(cfg.dataset)
-    solver = util.build_solver(cfg, dataset)
-    
-    
-    entity_vocab, relation_vocab = load_vocab(dataset)
+    _dataset = core.Configurable.load_config_dict(cfg.dataset)
+    train_set, valid_set, test_set = _dataset.split()
+    full_valid_set = valid_set
+    if comm.get_rank() == 0:
+        logger.warning(_dataset)
+        logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
 
-    #relation_vocab = ["%s (%d)" % (t[t.rfind("/") + 1:].replace("_", " "), i)
-    #                  for i, t in enumerate(dataset.relation_vocab)]
+    solver = build_solver(cfg)
+
+    if "checkpoint" in cfg:
+        solver_load(cfg.checkpoint)
+    entity_vocab, relation_vocab = load_vocab(_dataset)
+
     logger.warning("Starting link prediction")
     
-    pred, target, mask= get_prediction(cfg, solver, relation_vocab)
-    
-    df = pred_to_dataframe(pred, dataset, entity_vocab, cfg['task']['gene_annotation_predict']) # TODO: gene_annotation_predict could be nicer
-    
+    pred, target, mask = get_prediction(cfg, solver, relation_vocab)
+    df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
-    df.to_csv(os.path.join( cfg['output_dir'], "results_PC.csv"), index=False)  # TODO:how to save in the dir
-    import pdb; pdb.set_trace()
+    df.to_csv(os.path.join( cfg['output_dir'], "predictions.csv"), index=False, sep="\t")

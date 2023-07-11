@@ -677,19 +677,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # test
             if self.conditional_probability:
                 # conditional probability
-                if self.gene_annotation_predict:
-                    # Zhaocheng: This is invoked **every time** you make a prediction
-                    # Emy: Yes, will change
-                    # Maybe you want to put it into preprocess to save time
-                    # change all_index to only evaluation against GO terms
-                    nodes = dataset.entity_vocab
-                    nodes__dict = {ix: val for ix, val in enumerate(nodes)}
-                    go_id = [key for key, val in nodes__dict.items() if val.startswith('GO:')]
-                    all_index = torch.tensor(go_id, device=self.device) # evaluate against only GO terms
-                else:
-                    all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
-
-
+                all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
                 t_preds = []
                 h_preds = []
                 num_negative = self.num_entity if self.full_batch_eval else self.num_negative
@@ -713,12 +701,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 pred = pred.cpu()
                 
             else:
-            # joint probability
-                # graph = self.fact_graph
-                # graph = graph.undirected(add_inverse=True)
-                # num_nodes_per_type = torch.bincount(graph.node_type)
-                # degree_in_type = self.get_degree_in_type(graph)
-                
+            # joint probability                
                 graph = self.undirected_fact_graph
                 num_nodes_per_type = graph.num_nodes_per_type
                 degree_in_type = graph.degree_in_type

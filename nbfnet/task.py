@@ -10,6 +10,7 @@ from torchdrug import core, tasks, metrics
 from torchdrug.layers import functional
 from torchdrug.core import Registry as R
 import torch_scatter
+import numpy.ma as ma
 
 from nbfnet import dataset
 
@@ -595,8 +596,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # in case of GPU OOM
         return mask.cpu(), target.cpu()
 
-    def evaluate(self, pred, target):
-        
+    def evaluate(self, pred, target):        
         if self.conditional_probability:
             mask, target = target
 
@@ -605,29 +605,60 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
             else:
                 ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
+            import pdb; pdb.set_trace()
             
-            # get neg predictions
-            # remove the true tail and head
-            m = torch.ones_like(pred).scatter(2, target.unsqueeze(-1), 0).bool()
-            # use mask to get rid of other true tails and heads
-            prob =  m.logical_and(~mask).long().float()
-            # sample from neg exampels
-            neg_t = functional.multinomial(prob[:,0,:], 1, replacement=True)
-            neg_h = functional.multinomial(prob[:,1,:], 1, replacement=True)
-            # concat and get mask
-            mask_neg =  torch.cat((neg_t, neg_h), -1)
-            # get neg predictions
-            neg_pred = pred.gather(-1, mask_neg.unsqueeze(-1))
-            # take random sample of neg predictions
-            pred = torch.stack((pos_pred.flatten(), neg_pred.flatten()),1)
-            # construct the target out of positive (1) and negative (0)
-            target = torch.zeros_like(pred)
-            target[:, 0] = 1
-            pred = pred.flatten()
-            target = target.flatten()
-            
-            metric = {}
-            
+            if self.eval_per_node:
+                ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
+                import pdb; pdb.set_trace()
+                # the ranking per tail and head node - dim [2, # nodes]
+                ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.transpose(target, 0, 1), out=ranking_filt)
+                valid_ranking =  ma.masked_where(ranking_filt == 0, ranking_filt)
+                
+                metric = {}   
+                for _metric in self.metric:
+                    if _metric == "mr":
+                        score = valid_ranking.mean(1).data
+                    elif _metric == "mrr":
+                        score = 1/valid_ranking.mean(1).data
+                    elif _metric.startswith("hits@"):
+                        threshold = int(_metric[5:])
+                        ma.masked_where(valid_ranking < threshold, valid_ranking)
+                        ranking_t = (ranking <= threshold).float()
+                        ranking_filt_t = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
+                        ranking_filt_t = torch_scatter.scatter_mean(torch.transpose(ranking_t, 0, 1).float(), torch.transpose(target, 0, 1), out=ranking_filt_t)
+                    elif _metric == "auroc":
+                        score = metrics.area_under_roc(pred, target)
+                    elif _metric == "ap":
+                        score = metrics.area_under_prc(pred, target)
+                    else:
+                        continue
+                        #raise ValueError("Unknown metric `%s`" % _metric)
+                    name = tasks._get_metric_name(_metric)
+                    metric[name] = score
+                
+            else:
+                # get neg predictions
+                # remove the true tail and head
+                m = torch.ones_like(pred).scatter(2, target.unsqueeze(-1), 0).bool()
+                # use mask to get rid of other true tails and heads
+                prob =  m.logical_and(~mask).long().float()
+                # sample from neg exampels
+                neg_t = functional.multinomial(prob[:,0,:], 1, replacement=True)
+                neg_h = functional.multinomial(prob[:,1,:], 1, replacement=True)
+                # concat and get mask
+                mask_neg =  torch.cat((neg_t, neg_h), -1)
+                # get neg predictions
+                neg_pred = pred.gather(-1, mask_neg.unsqueeze(-1))
+                # take random sample of neg predictions
+                pred = torch.stack((pos_pred.flatten(), neg_pred.flatten()),1)
+                # construct the target out of positive (1) and negative (0)
+                target = torch.zeros_like(pred)
+                target[:, 0] = 1
+                pred = pred.flatten()
+                target = target.flatten()
+                
+                
+            metric = {}   
             for _metric in self.metric:
                 if _metric == "mr":
                     score = ranking.float().mean()
@@ -676,6 +707,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if all_loss is None:
             # test
             if self.conditional_probability:
+                import pdb; pdb.set_trace()
                 # conditional probability
                 all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
                 t_preds = []
@@ -740,13 +772,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
                 pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
             else:
-                # joint probability
-                # calculate degree_in_type first
-                # graph = self.fact_graph
-                # graph = graph.undirected(add_inverse=True)
-                # num_nodes_per_type = torch.bincount(graph.node_type)
-                # degree_in_type = self.get_degree_in_type(graph)
-                
+                # joint probability                
                 graph = self.undirected_fact_graph
                 num_nodes_per_type = graph.num_nodes_per_type
                 degree_in_type = graph.degree_in_type

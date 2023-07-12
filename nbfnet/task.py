@@ -596,7 +596,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # in case of GPU OOM
         return mask.cpu(), target.cpu()
 
-    def evaluate(self, pred, target):        
+    def evaluate(self, pred, target):     
         if self.conditional_probability:
             mask, target = target
 
@@ -605,36 +605,33 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
             else:
                 ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
-            import pdb; pdb.set_trace()
             
-            if self.eval_per_node:
-                ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
-                import pdb; pdb.set_trace()
-                # the ranking per tail and head node - dim [2, # nodes]
-                ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.transpose(target, 0, 1), out=ranking_filt)
-                valid_ranking =  ma.masked_where(ranking_filt == 0, ranking_filt)
-                
-                metric = {}   
-                for _metric in self.metric:
-                    if _metric == "mr":
-                        score = valid_ranking.mean(1).data
-                    elif _metric == "mrr":
-                        score = 1/valid_ranking.mean(1).data
-                    elif _metric.startswith("hits@"):
-                        threshold = int(_metric[5:])
-                        ma.masked_where(valid_ranking < threshold, valid_ranking)
-                        ranking_t = (ranking <= threshold).float()
-                        ranking_filt_t = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
-                        ranking_filt_t = torch_scatter.scatter_mean(torch.transpose(ranking_t, 0, 1).float(), torch.transpose(target, 0, 1), out=ranking_filt_t)
-                    elif _metric == "auroc":
-                        score = metrics.area_under_roc(pred, target)
-                    elif _metric == "ap":
-                        score = metrics.area_under_prc(pred, target)
-                    else:
-                        continue
-                        #raise ValueError("Unknown metric `%s`" % _metric)
-                    name = tasks._get_metric_name(_metric)
-                    metric[name] = score
+            
+            ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
+            ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.transpose(target, 0, 1),
+                                                        out=ranking_filt)
+            valid_ranking =  ma.masked_where(ranking_filt == 0, ranking_filt)
+            import pdb; pdb.set_trace()
+            metric = {}   
+            for _metric in self.metric:
+                if _metric == "mr":
+                    score = valid_ranking.mean(1).data
+                elif _metric == "mrr":
+                    score = 1/valid_ranking.mean(1).data
+                elif _metric.startswith("hits@"):
+                    threshold = int(_metric[5:])
+                    score = ((1 - ma.masked_where(valid_ranking >= threshold,
+                                            valid_ranking).mask).sum(1))/((1- valid_ranking.mask).sum(1))
+                    
+                elif _metric == "auroc":
+                    score = metrics.area_under_roc(pred, target)
+                elif _metric == "ap":
+                    score = metrics.area_under_prc(pred, target)
+                else:
+                    continue
+                    #raise ValueError("Unknown metric `%s`" % _metric)
+                name = tasks._get_metric_name(_metric)
+                metric[name] = score
                 
             else:
                 # get neg predictions

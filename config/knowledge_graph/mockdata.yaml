@@ -40,7 +40,7 @@ engine:
   
 
 train:
-  num_epoch: 10
+  num_epoch: 5
   #batch_per_epoch: 10
   
-metric: "auroc"
+metric: mrr

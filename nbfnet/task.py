@@ -10,7 +10,7 @@ from torchdrug import core, tasks, metrics
 from torchdrug.layers import functional
 from torchdrug.core import Registry as R
 import torch_scatter
-import numpy.ma as ma
+import numpy as np
 
 from nbfnet import dataset
 
@@ -487,51 +487,6 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
             new_metric[new_key] = metric[key].mean()
 
         return new_metric
-
-@R.register("tasks.KnowledgeGraphCompletionBiomedEval")
-class KnowledgeGraphCompletionBiomedEval(tasks.KnowledgeGraphCompletionBiomed, core.Configurable):
-    def __init__(self, model, criterion="bce",
-                metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "auroc", "ap"),
-                num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
-                heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
-                fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
-                full_batch_eval=False):
-        super(KnowledgeGraphCompletionBiomedEval, self).__init__(model=model, criterion=criterion, metric=metric, 
-                                                                num_negative=num_negative, margin=margin,
-                                                                adversarial_temperature=adversarial_temperature, 
-                                                                strict_negative=strict_negative,
-                                                                heterogeneous_negative=heterogeneous_negative,
-                                                                heterogeneous_evaluation=heterogeneous_evaluation,
-                                                                gene_annotation_predict=gene_annotation_predict,
-                                                                conditional_probability=conditional_probability,
-                                                                filtered_ranking=filtered_ranking,fact_ratio=fact_ratio,
-                                                                sample_weight=sample_weight, full_batch_eval=full_batch_eval)
-    
-    def evaluate(self, pred, target): 
-        mask, target = target
-
-        pos_pred = pred.gather(-1, target.unsqueeze(-1))
-        if self.filtered_ranking:
-            ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
-        else:
-            ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
-        
-        
-        ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
-        ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.transpose(target, 0, 1),
-                                                    out=ranking_filt)
-        valid_ranking =  ma.masked_where(ranking_filt == 0, ranking_filt)
-        metric = {}   
-        for _metric in self.metric:
-            if _metric == "mr":
-                score = valid_ranking.mean(1).data
-            elif _metric == "mrr":
-                score = 1/valid_ranking.mean(1).data
-            elif _metric.startswith("hits@"):
-                threshold = int(_metric[5:])
-                score = ((1 - ma.masked_where(valid_ranking >= threshold,
-                                        valid_ranking).mask).sum(1))/((1- valid_ranking.mask).sum(1))
-
     
 @R.register("tasks.KnowledgeGraphCompletionBiomed")
 class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Configurable):
@@ -721,7 +676,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if all_loss is None:
             # test
             if self.conditional_probability:
-                import pdb; pdb.set_trace()
                 # conditional probability
                 all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
                 t_preds = []
@@ -931,3 +885,77 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             return neg_h_index, neg_t_index
     
     
+@R.register("tasks.KnowledgeGraphCompletionBiomedEval")
+class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Configurable):
+    def __init__(self, model, criterion="bce",
+                metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "auroc", "ap"),
+                num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
+                heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
+                fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
+                full_batch_eval=False):
+        super(KnowledgeGraphCompletionBiomedEval, self).__init__(model=model, criterion=criterion, metric=metric, 
+                                                                num_negative=num_negative, margin=margin,
+                                                                adversarial_temperature=adversarial_temperature, 
+                                                                strict_negative=strict_negative,
+                                                                heterogeneous_negative=heterogeneous_negative,
+                                                                heterogeneous_evaluation=heterogeneous_evaluation,
+                                                                gene_annotation_predict=gene_annotation_predict,
+                                                                conditional_probability=conditional_probability,
+                                                                filtered_ranking=filtered_ranking,fact_ratio=fact_ratio,
+                                                                sample_weight=sample_weight, full_batch_eval=full_batch_eval)
+    
+    def evaluate(self, pred, target): 
+        mask, target = target
+
+        pos_pred = pred.gather(-1, target.unsqueeze(-1))
+        if self.filtered_ranking:
+            ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
+        else:
+            ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
+        # get ranking per node
+        ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
+        ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.transpose(target, 0, 1),
+                                                    out=ranking_filt)
+        valid_ranking =  np.ma.masked_where(ranking_filt == 0, ranking_filt)
+        
+        # get neg_pred
+        mask_inv_target = torch.ones_like(pred, dtype=torch.bool)
+        mask_inv_target.scatter_(-1, target.unsqueeze(-1), False)
+        if self.filtered_ranking:
+            mask_inv_target = mask_inv_target & mask
+        # neg_pred = pred.masked_select(mask_inv_target).view(pred.size(0), pred.size(1), pred.size(-1) - 1) # rearrange [12,2,27]
+        neg_pred_t = pred[:,0,:].masked_select(mask_inv_target[:,0,:]) 
+        neg_pred_h = pred[:,1,:].masked_select(mask_inv_target[:,1,:]) 
+        # get for t and h the predictions
+        pred_metric_t = torch.cat([pos_pred[:,0,:].flatten(), neg_pred_t.flatten()])
+        pred_metric_h = torch.cat([pos_pred[:,1,:].flatten(), neg_pred_h.flatten()])
+        # construct for t and h, the pos and neg labels
+        target_metric_t = torch.cat([torch.ones_like(pos_pred[:,0,:].flatten()),torch.zeros_like(neg_pred_t)])
+        target_metric_h = torch.cat([torch.ones_like(pos_pred[:,1,:].flatten()),torch.zeros_like(neg_pred_h)])
+
+        metric = {}
+        for _metric in self.metric:
+            if _metric == "mr":
+                score = valid_ranking.mean(1).data
+            elif _metric == "mrr":
+                score = 1/valid_ranking.mean(1).data
+            elif _metric.startswith("hits@"):
+                threshold = int(_metric[5:])
+                score = ((1 - np.ma.masked_where(valid_ranking >= threshold,
+                                        valid_ranking).mask).sum(1))/((1- valid_ranking.mask).sum(1))
+            elif _metric == "auroc":
+                score = np.array([metrics.area_under_roc(pred_metric_t, target_metric_t),
+                                  metrics.area_under_roc(pred_metric_h, target_metric_h)])
+            elif _metric == "ap":
+                score = np.array([metrics.area_under_prc(pred_metric_t, target_metric_t),
+                                  metrics.area_under_prc(pred_metric_h, target_metric_h)])
+            else:
+                continue
+                #raise ValueError("Unknown metric `%s`" % _metric)
+            name = tasks._get_metric_name(_metric)
+            name_t = name + '_t'
+            name_h = name + '_h'
+            metric[name_t] = score[0]
+            metric[name_h] = score[1]
+            
+        return metric

@@ -912,6 +912,7 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
             ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
         else:
             ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
+            
         # get ranking per node
         ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
         ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.transpose(target, 0, 1),
@@ -923,7 +924,7 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         mask_inv_target.scatter_(-1, target.unsqueeze(-1), False)
         if self.filtered_ranking:
             mask_inv_target = mask_inv_target & mask
-        # neg_pred = pred.masked_select(mask_inv_target).view(pred.size(0), pred.size(1), pred.size(-1) - 1) # rearrange [12,2,27]
+        # split into t and h neg_pred
         neg_pred_t = pred[:,0,:].masked_select(mask_inv_target[:,0,:]) 
         neg_pred_h = pred[:,1,:].masked_select(mask_inv_target[:,1,:]) 
         # get for t and h the predictions
@@ -950,8 +951,7 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
                 score = np.array([metrics.area_under_prc(pred_metric_t, target_metric_t),
                                   metrics.area_under_prc(pred_metric_h, target_metric_h)])
             else:
-                continue
-                #raise ValueError("Unknown metric `%s`" % _metric)
+                raise ValueError("Unknown metric `%s`" % _metric)
             name = tasks._get_metric_name(_metric)
             name_t = name + '_t'
             name_h = name + '_h'

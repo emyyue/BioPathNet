@@ -908,10 +908,7 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         mask, target = target
 
         pos_pred = pred.gather(-1, target.unsqueeze(-1))
-        if self.filtered_ranking:
-            ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
-        else:
-            ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
+        ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
             
         # get ranking per node
         ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
@@ -922,8 +919,7 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         # get neg_pred
         mask_inv_target = torch.ones_like(pred, dtype=torch.bool)
         mask_inv_target.scatter_(-1, target.unsqueeze(-1), False)
-        if self.filtered_ranking:
-            mask_inv_target = mask_inv_target & mask
+        mask_inv_target = mask_inv_target & mask
         # split into t and h neg_pred
         neg_pred_t = pred[:,0,:].masked_select(mask_inv_target[:,0,:]) 
         neg_pred_h = pred[:,1,:].masked_select(mask_inv_target[:,1,:]) 
@@ -958,3 +954,39 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
             metric[name_h] = score[1]
             
         return metric
+    
+    
+    
+    
+    def target(self, batch):
+        # test target
+        batch_size = len(batch)
+        pos_h_index, pos_t_index, pos_r_index = batch.t()
+        any = -torch.ones_like(pos_h_index)
+        node_type = self.fact_graph.node_type
+
+        t_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
+        if self.filtered_ranking:
+            pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+            edge_index, num_t_truth = self.graph.match(pattern)
+            t_truth_index = self.graph.edge_list[edge_index, 1]
+            pos_index = torch.repeat_interleave(num_t_truth)
+            t_mask[pos_index, t_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            t_mask[node_type.unsqueeze(0) != node_type[pos_t_index].unsqueeze(-1)] = 0
+
+        h_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
+        if self.filtered_ranking:
+            pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+            edge_index, num_h_truth = self.graph.match(pattern)
+            h_truth_index = self.graph.edge_list[edge_index, 0]
+            pos_index = torch.repeat_interleave(num_h_truth)
+            h_mask[pos_index, h_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            h_mask[node_type.unsqueeze(0) != node_type[pos_h_index].unsqueeze(-1)] = 0
+
+        mask = torch.stack([t_mask, h_mask], dim=1)
+        target = torch.stack([pos_t_index, pos_h_index], dim=1)
+
+        # in case of GPU OOM
+        return mask.cpu(), target.cpu()

@@ -933,13 +933,13 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         # construct for t and h, the pos and neg labels
         target_metric_t = torch.cat([torch.ones_like(pos_pred[:,0,:].flatten()),torch.zeros_like(neg_pred_t)])
         target_metric_h = torch.cat([torch.ones_like(pos_pred[:,1,:].flatten()),torch.zeros_like(neg_pred_h)])
-
+        import pdb; pdb.set_trace()
         metric = {}
         for _metric in self.metric:
             if _metric == "mr":
                 score = valid_ranking.mean(1).data
             elif _metric == "mrr":
-                score = 1/valid_ranking.mean(1).data
+                score = 1/(valid_ranking.mean(1)).data
             elif _metric.startswith("hits@"):
                 threshold = int(_metric[5:])
                 score = ((1 - np.ma.masked_where(valid_ranking >= threshold,

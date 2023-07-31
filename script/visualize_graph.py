@@ -175,37 +175,6 @@ def load_vocab(dataset):
     return entity_vocab, relation_vocab
 
 if __name__ == "__main__":
-#    args = parse_args()
-#    args.config = os.path.realpath(args.config)
-#    cfgs = util.load_config(args.config, context=vars)
-#
-#    output_dir = util.create_working_directory(cfg)
-#    if comm.get_rank() == 0:
-#        logger = util.get_root_logger()    
-#
-#    logger.warning("Config file: %s" % args.config)
-#
-#    start = args.start or 0
-#    end = args.end or len(cfg)
-#    if comm.get_rank() == 0:
-#        logger.warning("Config file: %s" % args.config)
-#        logger.warning("Hyperparameter grid size: %d" % len(cfg))
-#        logger.warning("Current job search range: [%d, %d)" % (start, end))
-#        shutil.copyfile(args.config, os.path.basename(args.config))
-#
-#    cfg = cfg[start: end]
-#    for job_id, cfg in enumerate(cfg):
-#    for job_id, cfg in enumerate(cfg):
-#    working_dir = output_dir
-#    if len(cfg) > 1:
-#        working_dir = os.path.join(working_dir, str(job_id))
-#    if comm.get_rank() == 0:
-#        #logger.warning("<<<<<<<<<< Job %d / %d start <<<<<<<<<<" % (job_id, len(cfg)))
-#        logger.warning(pprint.pformat(cfg))
-#        os.makedirs(working_dir, exist_ok=True)
-#    comm.synchronize()
-#    os.chdir(working_dir)
-
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
@@ -230,18 +199,13 @@ if __name__ == "__main__":
 
     if "checkpoint" in cfg:
         solver_load(cfg.checkpoint)
-#        state = torch.load(os.path.expanduser(cfg.checkpoint), map_location=solver.device)
-#        state["model"].pop("fact_graph")
-#        state["model"].pop("degree_hr")
-#        state["model"].pop("degree_tr")
-#        solver.model.load_state_dict(state["model"], strict=False)
+
 
     if "FB15k237" in cfg.dataset["class"]:
         entity_vocab, relation_vocab = 0(_dataset)
     else:
         entity_vocab, relation_vocab = load_vocab(_dataset)
-#        entity_vocab = _dataset.entity_vocab
-#        relation_vocab = _dataset.relation_vocab
+
 
     task = solver.model
     task.eval()

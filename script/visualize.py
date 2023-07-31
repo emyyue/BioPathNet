@@ -12,8 +12,47 @@ from nbfnet import dataset, layer, model, task, util
 
 
 #vocab_file = os.path.join(os.path.dirname(__file__), "../data/fb15k237_entity.txt")
-vocab_file = os.path.join(os.path.dirname(__file__), "../data/PC_KEGG_0928/PC_KEGG_CHEBI_entities.txt")
+vocab_file = os.path.join(os.path.dirname(__file__), "../data/mock/entity_names.txt")
 vocab_file = os.path.abspath(vocab_file)
+
+
+
+def solver_load(checkpoint, load_optimizer=True):
+
+    if comm.get_rank() == 0:
+        logger.warning("Load checkpoint from %s" % checkpoint)
+    checkpoint = os.path.expanduser(checkpoint)
+    state = torch.load(checkpoint, map_location=solver.device)
+    # some issues with loading back the fact_graph and graph
+    # remove
+    state["model"].pop("fact_graph")
+    state["model"].pop("graph")
+    state["model"].pop("undirected_fact_graph")
+    # load without
+    solver.model.load_state_dict(state["model"], strict=False)
+
+
+    if load_optimizer:
+        solver.optimizer.load_state_dict(state["optimizer"])
+        for state in solver.optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(solver.device)
+
+    comm.synchronize()
+    
+def build_solver(cfg):
+    cfg.task.model.num_relation = _dataset.num_relation
+    _task = core.Configurable.load_config_dict(cfg.task)
+    cfg.optimizer.params = _task.parameters()
+    optimizer = core.Configurable.load_config_dict(cfg.optimizer)
+    if "scheduler" in cfg:
+        cfg.scheduler.optimizer = optimizer
+        scheduler = core.Configurable.load_config_dict(cfg.scheduler)
+    else:
+        scheduler = None
+    return core.Engine(_task, train_set, valid_set, test_set, optimizer, scheduler, **cfg.engine)
+
 
 
 def load_vocab(dataset):
@@ -27,7 +66,6 @@ def load_vocab(dataset):
                       for i, t in enumerate(dataset.relation_vocab)]
 
     return entity_vocab, relation_vocab
-
 
 def visualize_path(solver, triplet, entity_vocab, relation_vocab):
     num_relation = len(relation_vocab)
@@ -76,16 +114,14 @@ if __name__ == "__main__":
     logger.warning("Config file: %s" % args.config)
     logger.warning(pprint.pformat(cfg))
 
-    #if cfg.dataset["class"] != "FB15k237":
-     #   raise ValueError("Visualization is only implemented for FB15k237")
-    #import pickle
-    #with open('/home/mila/y/yue.hu/proj/NBFNet/saved_dictionary.pkl', 'wb') as f:
-     #   pickle.dump(cfg, f)
-
-    dataset = core.Configurable.load_config_dict(cfg.dataset)
-    solver = util.build_solver(cfg, dataset)
-
-    entity_vocab, relation_vocab = load_vocab(dataset)
+    _dataset = core.Configurable.load_config_dict(cfg.dataset)
+    train_set, valid_set, test_set = _dataset.split()
+    solver = build_solver(cfg)
+    
+    if "checkpoint" in cfg:
+        solver_load(cfg.checkpoint)
+        
+    entity_vocab, relation_vocab = load_vocab(_dataset)
 
     for i in range(500):
         visualize_path(solver, solver.test_set[i], entity_vocab, relation_vocab)

@@ -31,6 +31,31 @@ def parse_args():
     return parser.parse_known_args()[0]
 
 
+def solver_load(checkpoint, load_optimizer=True):
+
+    if comm.get_rank() == 0:
+        logger.warning("Load checkpoint from %s" % checkpoint)
+    checkpoint = os.path.expanduser(checkpoint)
+    state = torch.load(checkpoint, map_location=solver.device)
+    # some issues with loading back the fact_graph and graph
+    # remove
+    state["model"].pop("fact_graph")
+    state["model"].pop("graph")
+    state["model"].pop("undirected_fact_graph")
+    # load without
+    solver.model.load_state_dict(state["model"], strict=False)
+
+
+    if load_optimizer:
+        solver.optimizer.load_state_dict(state["optimizer"])
+        for state in solver.optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(solver.device)
+
+    comm.synchronize()
+
+
 def build_solver(cfg):
     cfg.task.model.num_relation = _dataset.num_relation
     _task = core.Configurable.load_config_dict(cfg.task)
@@ -104,7 +129,7 @@ def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_voca
 
     graph = graph.edge_mask(edge_index)
     with graph.node():
-        graph.original_node = torch.arange(graph.num_node)
+        graph.original_node = torch.arange(graph.num_node, device=graph.device)
     graph = graph.compact()
     graph._edge_weight = torch.tensor(edge_weight, device=graph.device)
 
@@ -134,7 +159,7 @@ torch.manual_seed(1024 + comm.get_rank())
 logger = logging.getLogger(__name__)
 
 
-vocab_file = os.path.join(os.path.dirname(__file__), "../data/PC_KEGG/PC_KEGG_CHEBI_entities.txt")
+vocab_file = os.path.join(os.path.dirname(__file__), "../data/mock/entity_names.txt")
 vocab_file = os.path.abspath(vocab_file)
 
 def load_vocab(dataset):
@@ -150,37 +175,6 @@ def load_vocab(dataset):
     return entity_vocab, relation_vocab
 
 if __name__ == "__main__":
-#    args = parse_args()
-#    args.config = os.path.realpath(args.config)
-#    cfgs = util.load_config(args.config, context=vars)
-#
-#    output_dir = util.create_working_directory(cfg)
-#    if comm.get_rank() == 0:
-#        logger = util.get_root_logger()    
-#
-#    logger.warning("Config file: %s" % args.config)
-#
-#    start = args.start or 0
-#    end = args.end or len(cfg)
-#    if comm.get_rank() == 0:
-#        logger.warning("Config file: %s" % args.config)
-#        logger.warning("Hyperparameter grid size: %d" % len(cfg))
-#        logger.warning("Current job search range: [%d, %d)" % (start, end))
-#        shutil.copyfile(args.config, os.path.basename(args.config))
-#
-#    cfg = cfg[start: end]
-#    for job_id, cfg in enumerate(cfg):
-#    for job_id, cfg in enumerate(cfg):
-#    working_dir = output_dir
-#    if len(cfg) > 1:
-#        working_dir = os.path.join(working_dir, str(job_id))
-#    if comm.get_rank() == 0:
-#        #logger.warning("<<<<<<<<<< Job %d / %d start <<<<<<<<<<" % (job_id, len(cfg)))
-#        logger.warning(pprint.pformat(cfg))
-#        os.makedirs(working_dir, exist_ok=True)
-#    comm.synchronize()
-#    os.chdir(working_dir)
-
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
@@ -204,19 +198,14 @@ if __name__ == "__main__":
     solver = build_solver(cfg)
 
     if "checkpoint" in cfg:
-        solver.load(cfg.checkpoint)
-#        state = torch.load(os.path.expanduser(cfg.checkpoint), map_location=solver.device)
-#        state["model"].pop("fact_graph")
-#        state["model"].pop("degree_hr")
-#        state["model"].pop("degree_tr")
-#        solver.model.load_state_dict(state["model"], strict=False)
+        solver_load(cfg.checkpoint)
+
 
     if "FB15k237" in cfg.dataset["class"]:
         entity_vocab, relation_vocab = 0(_dataset)
     else:
         entity_vocab, relation_vocab = load_vocab(_dataset)
-#        entity_vocab = _dataset.entity_vocab
-#        relation_vocab = _dataset.relation_vocab
+
 
     task = solver.model
     task.eval()
@@ -257,5 +246,6 @@ if __name__ == "__main__":
             if ranking[j, 1] <= 10 and not os.path.exists(save_file):
                 paths, weights = task.visualize(sample)
                 if paths:
-                        visualize_echarts(task.fact_graph, sample, paths, weights, entity_vocab, 
+                    visualize_echarts(task.fact_graph, sample, paths, weights, entity_vocab, 
                                           relation_vocab, ranking[j, 1], save_file)
+

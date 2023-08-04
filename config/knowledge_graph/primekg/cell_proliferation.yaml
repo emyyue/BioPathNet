@@ -1,8 +1,8 @@
-output_dir: ./experiments/
+output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
 
 dataset:
   class: biomedical
-  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/mock
+  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/primekg/disease_split/cell_proliferation_42/
   include_factgraph: True
   
 task:
@@ -18,14 +18,15 @@ task:
     dependent: yes
     symmetric: yes
   criterion: bce
-  num_negative: 32
+  num_negative: {{neg_samp}}
   strict_negative: yes
-  adversarial_temperature: 0.5
+  adversarial_temperature: {{adv_tmp}}
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  conditional_probability: yes
-  full_batch_eval: False
+  gene_annotation_predict: no
+  conditional_probability: {{cond_prob}}
+  full_batch_eval: True
 
 
 
@@ -36,11 +37,11 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 32
+  batch_size: 8
   
 
 train:
-  num_epoch: 5
-  #batch_per_epoch: 10
+  num_epoch: 1
+  batch_per_epoch: 1000
   
 metric: mrr

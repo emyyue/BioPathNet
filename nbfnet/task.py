@@ -10,6 +10,7 @@ from torchdrug import core, tasks, metrics
 from torchdrug.layers import functional
 from torchdrug.core import Registry as R
 import torch_scatter
+import numpy as np
 
 from nbfnet import dataset
 
@@ -604,13 +605,22 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             if self.filtered_ranking:
                 ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
             else:
-                ranking = torch.sum(pos_pred <= pred, dim=-1) + 1
-            
+                ranking = torch.sum(pos_pred <= pred, dim=-1) + 1 
             # get neg predictions
+            # remove the true tail and head
             m = torch.ones_like(pred).scatter(2, target.unsqueeze(-1), 0).bool()
-            mask_neg = m.logical_and(~mask).long().argmax(dim=2)
+            # use mask to get rid of other true tails and heads
+            prob =  m.logical_and(~mask).long().float()
+            # sample from neg exampels
+            neg_t = functional.multinomial(prob[:,0,:], 1, replacement=True)
+            neg_h = functional.multinomial(prob[:,1,:], 1, replacement=True)
+            # concat and get mask
+            mask_neg =  torch.cat((neg_t, neg_h), -1)
+            # get neg predictions
             neg_pred = pred.gather(-1, mask_neg.unsqueeze(-1))
+            # take random sample of neg predictions
             pred = torch.stack((pos_pred.flatten(), neg_pred.flatten()),1)
+            # construct the target out of positive (1) and negative (0)
             target = torch.zeros_like(pred)
             target[:, 0] = 1
             pred = pred.flatten()
@@ -667,19 +677,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # test
             if self.conditional_probability:
                 # conditional probability
-                if self.gene_annotation_predict:
-                    # Zhaocheng: This is invoked **every time** you make a prediction
-                    # Emy: Yes, will change
-                    # Maybe you want to put it into preprocess to save time
-                    # change all_index to only evaluation against GO terms
-                    nodes = dataset.entity_vocab
-                    nodes__dict = {ix: val for ix, val in enumerate(nodes)}
-                    go_id = [key for key, val in nodes__dict.items() if val.startswith('GO:')]
-                    all_index = torch.tensor(go_id, device=self.device) # evaluate against only GO terms
-                else:
-                    all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
-
-
+                all_index = torch.arange(self.num_entity, device=self.device) # evaluate against all nodes
                 t_preds = []
                 h_preds = []
                 num_negative = self.num_entity if self.full_batch_eval else self.num_negative
@@ -703,12 +701,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 pred = pred.cpu()
                 
             else:
-            # joint probability
-                # graph = self.fact_graph
-                # graph = graph.undirected(add_inverse=True)
-                # num_nodes_per_type = torch.bincount(graph.node_type)
-                # degree_in_type = self.get_degree_in_type(graph)
-                
+            # joint probability                
                 graph = self.undirected_fact_graph
                 num_nodes_per_type = graph.num_nodes_per_type
                 degree_in_type = graph.degree_in_type
@@ -747,13 +740,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
                 pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
             else:
-                # joint probability
-                # calculate degree_in_type first
-                # graph = self.fact_graph
-                # graph = graph.undirected(add_inverse=True)
-                # num_nodes_per_type = torch.bincount(graph.node_type)
-                # degree_in_type = self.get_degree_in_type(graph)
-                
+                # joint probability                
                 graph = self.undirected_fact_graph
                 num_nodes_per_type = graph.num_nodes_per_type
                 degree_in_type = graph.degree_in_type
@@ -898,3 +885,108 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             return neg_h_index, neg_t_index
     
     
+@R.register("tasks.KnowledgeGraphCompletionBiomedEval")
+class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Configurable):
+    def __init__(self, model, criterion="bce",
+                metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "auroc", "ap"),
+                num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
+                heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
+                fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
+                full_batch_eval=False):
+        super(KnowledgeGraphCompletionBiomedEval, self).__init__(model=model, criterion=criterion, metric=metric, 
+                                                                num_negative=num_negative, margin=margin,
+                                                                adversarial_temperature=adversarial_temperature, 
+                                                                strict_negative=strict_negative,
+                                                                heterogeneous_negative=heterogeneous_negative,
+                                                                heterogeneous_evaluation=heterogeneous_evaluation,
+                                                                gene_annotation_predict=gene_annotation_predict,
+                                                                conditional_probability=conditional_probability,
+                                                                filtered_ranking=filtered_ranking,fact_ratio=fact_ratio,
+                                                                sample_weight=sample_weight, full_batch_eval=full_batch_eval)
+    
+    def evaluate(self, pred, target): 
+        mask, target = target
+
+        pos_pred = pred.gather(-1, target.unsqueeze(-1))
+        ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
+            
+        # get ranking per node
+        ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
+        ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.transpose(target, 0, 1),
+                                                    out=ranking_filt)
+        valid_ranking =  np.ma.masked_where(ranking_filt == 0, ranking_filt)
+        
+        # get neg_pred
+        mask_inv_target = torch.ones_like(pred, dtype=torch.bool)
+        mask_inv_target.scatter_(-1, target.unsqueeze(-1), False)
+        mask_inv_target = mask_inv_target & mask
+        # split into t and h neg_pred
+        neg_pred_t = pred[:,0,:].masked_select(mask_inv_target[:,0,:]) 
+        neg_pred_h = pred[:,1,:].masked_select(mask_inv_target[:,1,:]) 
+        # get for t and h the predictions
+        pred_metric_t = torch.cat([pos_pred[:,0,:].flatten(), neg_pred_t.flatten()])
+        pred_metric_h = torch.cat([pos_pred[:,1,:].flatten(), neg_pred_h.flatten()])
+        # construct for t and h, the pos and neg labels
+        target_metric_t = torch.cat([torch.ones_like(pos_pred[:,0,:].flatten()),torch.zeros_like(neg_pred_t)])
+        target_metric_h = torch.cat([torch.ones_like(pos_pred[:,1,:].flatten()),torch.zeros_like(neg_pred_h)])
+        metric = {}
+        for _metric in self.metric:
+            if _metric == "mr":
+                score = valid_ranking.mean(1).data
+            elif _metric == "mrr":
+                score = (1/valid_ranking).mean(1).data
+            elif _metric.startswith("hits@"):
+                threshold = int(_metric[5:])
+                score = ((1 - np.ma.masked_where(valid_ranking >= threshold,
+                                        valid_ranking).mask).sum(1))/((1- valid_ranking.mask).sum(1))
+            elif _metric == "auroc":
+                score = np.array([metrics.area_under_roc(pred_metric_t, target_metric_t),
+                                  metrics.area_under_roc(pred_metric_h, target_metric_h)])
+            elif _metric == "ap":
+                score = np.array([metrics.area_under_prc(pred_metric_t, target_metric_t),
+                                  metrics.area_under_prc(pred_metric_h, target_metric_h)])
+            else:
+                raise ValueError("Unknown metric `%s`" % _metric)
+            name = tasks._get_metric_name(_metric)
+            name_t = name + '_t'
+            name_h = name + '_h'
+            metric[name_t] = score[0]
+            metric[name_h] = score[1]
+            
+        return metric
+    
+    
+    
+    
+    def target(self, batch):
+        # test target
+        batch_size = len(batch)
+        pos_h_index, pos_t_index, pos_r_index = batch.t()
+        any = -torch.ones_like(pos_h_index)
+        node_type = self.fact_graph.node_type
+
+        t_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
+        if self.filtered_ranking:
+            pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+            edge_index, num_t_truth = self.graph.match(pattern)
+            t_truth_index = self.graph.edge_list[edge_index, 1]
+            pos_index = torch.repeat_interleave(num_t_truth)
+            t_mask[pos_index, t_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            t_mask[node_type.unsqueeze(0) != node_type[pos_t_index].unsqueeze(-1)] = 0
+
+        h_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
+        if self.filtered_ranking:
+            pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+            edge_index, num_h_truth = self.graph.match(pattern)
+            h_truth_index = self.graph.edge_list[edge_index, 0]
+            pos_index = torch.repeat_interleave(num_h_truth)
+            h_mask[pos_index, h_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            h_mask[node_type.unsqueeze(0) != node_type[pos_h_index].unsqueeze(-1)] = 0
+
+        mask = torch.stack([t_mask, h_mask], dim=1)
+        target = torch.stack([pos_t_index, pos_h_index], dim=1)
+
+        # in case of GPU OOM
+        return mask.cpu(), target.cpu()

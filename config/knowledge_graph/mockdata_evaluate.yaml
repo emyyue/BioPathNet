@@ -1,12 +1,12 @@
-output_dir: ./experiments/
+output_dir: /Users/yue.hu/Documents/proj/NBFNet/experiments/
 
 dataset:
   class: biomedical
-  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/mock
+  path: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/data/mock
   include_factgraph: True
   
 task:
-  class: KnowledgeGraphCompletionBiomed
+  class: KnowledgeGraphCompletionBiomedEval
   model:
     class: NBFNet
     input_dim: 32
@@ -41,6 +41,7 @@ engine:
 
 train:
   num_epoch: 5
-  #batch_per_epoch: 10
   
 metric: mrr
+
+checkpoint: {{checkpoint}}

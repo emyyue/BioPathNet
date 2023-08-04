@@ -244,7 +244,7 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             message = message[order].flatten()
             msg_source = msg_source[order].flatten(0, -2)
             size = scatter_add(torch.ones_like(node_out), node_out, dim_size=num_node)
-            msg2out = functional._size_to_index(size[node_out_set] * num_beam)
+            msg2out = torch.repeat_interleave(size[node_out_set] * num_beam)
             # deduplicate
             is_duplicate = (msg_source[1:] == msg_source[:-1]).all(dim=-1)
             is_duplicate = torch.cat([torch.zeros(1, dtype=torch.bool, device=self.device), is_duplicate])

@@ -909,11 +909,9 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
 
         pos_pred = pred.gather(-1, target.unsqueeze(-1))
         ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
-            
         # get ranking per node
         ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
-        ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.transpose(target, 0, 1),
-                                                    out=ranking_filt)
+        ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.flip(torch.transpose(target, 0, 1), [0]), out=ranking_filt)
         valid_ranking =  np.ma.masked_where(ranking_filt == 0, ranking_filt)
         
         # get neg_pred

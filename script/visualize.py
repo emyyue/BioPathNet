@@ -42,7 +42,7 @@ def solver_load(checkpoint, load_optimizer=True):
     comm.synchronize()
     
 def build_solver(cfg):
-    cfg.task.model.num_relation = _dataset.num_relation
+    cfg.task.model.num_relation = dataset.num_relation
     _task = core.Configurable.load_config_dict(cfg.task)
     cfg.optimizer.params = _task.parameters()
     optimizer = core.Configurable.load_config_dict(cfg.optimizer)

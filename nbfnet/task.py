@@ -959,18 +959,6 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         
         import pdb; pdb.set_trace()
         
-        ############################################
-        # split into t and h neg_pred
-        neg_pred_t = pred[:,0,:].masked_select(mask_inv_target[:,0,:]) 
-        neg_pred_h = pred[:,1,:].masked_select(mask_inv_target[:,1,:]) 
-        # get for t and h the predictions
-        pred_metric_t = torch.cat([pos_pred[:,0,:].flatten(), neg_pred_t.flatten()])
-        pred_metric_h = torch.cat([pos_pred[:,1,:].flatten(), neg_pred_h.flatten()])
-        # construct for t and h, the pos and neg labels
-        target_metric_t = torch.cat([torch.ones_like(pos_pred[:,0,:].flatten()),torch.zeros_like(neg_pred_t)])
-        target_metric_h = torch.cat([torch.ones_like(pos_pred[:,1,:].flatten()),torch.zeros_like(neg_pred_h)])
-        ############################################
-        
         
         metric = {}
         for _metric in self.metric:

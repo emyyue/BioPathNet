@@ -1,10 +1,10 @@
-output_dir: /Users/yue.hu/Documents/proj/NBFNet/experiments/
+output_dir: /home/icb/yue.hu/proj_genefun/NBFNet/experiments/
 
 dataset:
   class: biomedical
-  path: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/data/mock
+  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/mock
   include_factgraph: True
-  
+
 task:
   class: KnowledgeGraphCompletionBiomed
   model:

@@ -12,7 +12,8 @@ from nbfnet import dataset, layer, model, task, util
 
 
 #vocab_file = os.path.join(os.path.dirname(__file__), "../data/fb15k237_entity.txt")
-vocab_file = os.path.join(os.path.dirname(__file__), "../data/mock/entity_names.txt")
+#vocab_file = os.path.join(os.path.dirname(__file__), "../data/mock/entity_names.txt")
+vocab_file = os.path.join(os.path.dirname(__file__), "/lustre/groups/crna01/datasets/primekg/alzheimers/entity_names.txt")
 vocab_file = os.path.abspath(vocab_file)
 
 

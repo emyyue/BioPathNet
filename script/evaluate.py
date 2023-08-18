@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
 import numpy as np
 
-vocab_file = os.path.join(os.path.dirname(__file__), "../data/mock/entity_names.txt")
+vocab_file = os.path.join(os.path.dirname(__file__), "/home/icb/yue.hu/proj_genefun/NBFNet/data/primekg/disease_split/cardiovascular_42/entity_names.txt")
 vocab_file = os.path.abspath(vocab_file)
 
 def solver_load(checkpoint, load_optimizer=True):

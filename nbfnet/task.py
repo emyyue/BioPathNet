@@ -922,6 +922,7 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         mask_inv_target.scatter_(-1, target.unsqueeze(-1), False)
         mask_inv_target = mask_inv_target & mask
         
+        import pdb; pdb.set_trace()
         # nodes t
         trans_target = torch.transpose(torch.flip(torch.transpose(target, 0, 1), [0]), 0,1)
         nodes_t = trans_target[:,0].unique()
@@ -929,9 +930,9 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         pred_t_auroc = []
         for i in nodes_t:
             idx1 = (target[:,1] == i).nonzero().squeeze(-1)
-            idx2 = target[idx1][:,0]
-            pos_pred_node = pred[idx1, 0, idx2]
-            neg_pred_node = pred[0,:].masked_select(mask_inv_target[idx1[0], 0,:])
+            idx3 = target[idx1][:,0]
+            pos_pred_node = pred[idx1, 0, idx3]
+            neg_pred_node = pred[idx1, 0, :].masked_select(mask_inv_target[idx1[0], 0,:])
             pred_node = torch.concat([pos_pred_node, neg_pred_node])
             gt = torch.cat([torch.ones_like(pos_pred_node),torch.zeros_like(neg_pred_node)])
             pred_t_auprc.append(metrics.area_under_prc(pred_node, gt))
@@ -946,9 +947,9 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         pred_h_auroc = []
         for i in nodes_t:
             idx1 = (target[:,0] == i).nonzero().squeeze(-1)# 
-            idx2 = target[idx1][:,1] # 
-            pos_pred_node = pred[idx1, 1, idx2] #
-            neg_pred_node = pred[1,:].masked_select(mask_inv_target[idx1[0], 1,:]) # # 
+            idx3 = target[idx1][:,1] # 
+            pos_pred_node = pred[idx1, 1, idx3] #
+            neg_pred_node = pred[idx1, 1, :].masked_select(mask_inv_target[idx1[0], 1,:]) #
             pred_node = torch.concat([pos_pred_node, neg_pred_node])
             gt = torch.cat([torch.ones_like(pos_pred_node),torch.zeros_like(neg_pred_node)])
             pred_h_auprc.append(metrics.area_under_prc(pred_node, gt))

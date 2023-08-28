@@ -989,6 +989,11 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
     
     
     def target(self, batch):
+        ####
+        # for evaluation of TxGNN, heterogeneous evaluation should be switched on
+        # filtered ranking is not important to be on yes, 
+        # as there should be no drugs in training data at all
+        ####
         # test target
         batch_size = len(batch)
         pos_h_index, pos_t_index, pos_r_index = batch.t()

@@ -19,16 +19,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", help="yaml configuration file",
-                        default="config/knowledge_graph/wn18rr.yaml")
-    parser.add_argument("-s", "--start", help="start config id for hyperparmeter search", type=int,
-                        default=None)
-    parser.add_argument("-e", "--end", help="end config id for hyperparmeter search", type=int,
-                        default=None)
-
-    return parser.parse_known_args()[0]
 
 
 def solver_load(checkpoint, load_optimizer=True):
@@ -67,46 +57,6 @@ def build_solver(cfg):
     else:
         scheduler = None
     return core.Engine(_task, train_set, valid_set, test_set, optimizer, scheduler, **cfg.engine)
-
-
-def get_freebase_vocab(_dataset, freebase2wikidata="~/kg-datasets/freebase2wikidata.txt",
-                       wikidata_alias="~/kg-datasets/wikidata5m_entity.txt"):
-    entity_fb2wiki = {}
-    freebase2wikidata = os.path.expanduser(freebase2wikidata)
-    with open(freebase2wikidata, "r") as fin:
-        for i in range(4):
-            fin.readline()
-        for line in fin:
-            tokens = line.strip().split("\t")
-            freebase_id = re.search(r"<http://rdf.freebase.com/ns(.+)>", tokens[0]).groups()[0]
-            freebase_id = freebase_id.replace(".", "/")
-            wikidata_id = re.search(r"<http://www.wikidata.org/entity/(.+)>", tokens[2]).groups()[0]
-            entity_fb2wiki[freebase_id] = wikidata_id
-
-    entity2alias = {}
-    wikidata_alias = os.path.expanduser(wikidata_alias)
-    with open(wikidata_alias, "r") as fin:
-        for line in fin:
-            tokens = line.strip().split("\t")
-            entity_id = tokens[0]
-            alias = tokens[1]
-            entity2alias[entity_id] = "%s (%s)" % (alias, entity_id)
-
-    entity_vocab = _dataset.entity_vocab
-    new_entity_vocab = {}
-    for i, token in enumerate(entity_vocab):
-        if token in entity_fb2wiki and entity_fb2wiki[token] in entity2alias:
-            new_entity_vocab[i] = entity2alias[entity_fb2wiki[token]]
-        elif token in entity_fb2wiki:
-            new_entity_vocab[i] = entity_fb2wiki[token]
-        else:
-            new_entity_vocab[i] = token
-
-    relation_vocab = _dataset.relation_vocab
-    new_relation_vocab = {i: "%s (%d)" % (token[token.rfind("/") + 1:].replace("_", " "), i)
-                          for i, token in enumerate(relation_vocab)}
-
-    return new_entity_vocab, new_relation_vocab
 
 
 def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_vocab, ranking=None, save_file=None):
@@ -159,9 +109,6 @@ torch.manual_seed(1024 + comm.get_rank())
 logger = logging.getLogger(__name__)
 
 
-vocab_file = os.path.join(os.path.dirname(__file__), "../data/mock/entity_names.txt")
-vocab_file = os.path.abspath(vocab_file)
-
 def load_vocab(dataset):
     entity_mapping = {}
     with open(vocab_file, "r") as fin:
@@ -178,7 +125,8 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
-
+    vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
+    vocab_file = os.path.abspath(vocab_file)
     torch.manual_seed(args.seed + comm.get_rank())
 
     logger = util.get_root_logger()

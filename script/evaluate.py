@@ -14,8 +14,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
 import numpy as np
 
-vocab_file = os.path.join(os.path.dirname(__file__), "/home/icb/yue.hu/proj_genefun/NBFNet/data/primekg/disease_split/cardiovascular_42/entity_names.txt")
-vocab_file = os.path.abspath(vocab_file)
 
 def solver_load(checkpoint, load_optimizer=True):
 
@@ -75,6 +73,8 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
+    vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
+    vocab_file = os.path.abspath(vocab_file)
 
     torch.manual_seed(args.seed + comm.get_rank())
 

@@ -20,6 +20,7 @@ task:
   criterion: bce
   num_negative: 32
   strict_negative: yes
+  filtered_ranking: yes
   adversarial_temperature: 0.5
   sample_weight: no
   heterogeneous_negative: yes
@@ -36,7 +37,7 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 32
+  batch_size: 4
   
 
 train:

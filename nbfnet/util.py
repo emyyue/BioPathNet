@@ -110,9 +110,14 @@ def build_solver(cfg, dataset):
         valid_set = torch_data.random_split(valid_set, [cfg.fast_test, len(valid_set) - cfg.fast_test], generator=g)[0]
         test_set = torch_data.random_split(test_set, [cfg.fast_test, len(test_set) - cfg.fast_test], generator=g)[0]
     if hasattr(dataset, "num_relation"):
-        cfg.task.model.num_relation = dataset.num_relation
+        if not (cfg.task.model["class"] in ["NodeEncoder"]):
+            cfg.task.model.num_relation = dataset.num_relation
         if cfg.task.model["class"] in ["TransE", "DistMult", "ComplEx", "RotatE"]:
             cfg.task.model.num_entity = dataset.num_entity
+        if cfg.task.model["class"] in ["NodeEncoder"]:
+            cfg.task.model.gnn_model.num_relation = dataset.num_relation*2 if cfg.task.model.flip_edge else data.num_relation
+            cfg.task.model.score_model.num_entity = dataset.num_entity
+            cfg.task.model.score_model.num_relation = dataset.num_relation
 
     task = core.Configurable.load_config_dict(cfg.task)
     cfg.optimizer.params = task.parameters()

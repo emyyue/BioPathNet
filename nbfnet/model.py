@@ -1,4 +1,9 @@
 from collections.abc import Sequence
+from decorator import decorator
+import copy
+import math
+import types
+import inspect
 
 import torch
 from torch import nn
@@ -6,7 +11,7 @@ from torch import autograd
 
 from torch_scatter import scatter_add
 
-from torchdrug import core, layers, utils
+from torchdrug import core, layers, utils, data
 from torchdrug.layers import functional
 from torchdrug.core import Registry as R
 
@@ -292,3 +297,184 @@ class NeuralBellmanFordNetwork(nn.Module, core.Configurable):
             average_lengths, paths = zip(*sorted(zip(average_lengths, paths), reverse=True)[:k])
 
         return paths, average_lengths
+
+def cached(model, debug=False):
+
+    @decorator
+    def wrapper(forward, self, *args, **kwargs):
+
+        def equal(x, y):
+            if isinstance(x, nn.Parameter):
+                x = x.data
+            if isinstance(y, nn.Parameter):
+                y = y.data
+            if type(x) != type(y):
+                return False
+            if isinstance(x, torch.Tensor):
+                return x.shape == y.shape and (x == y).all()
+            elif isinstance(x, data.Graph):
+                if x.num_node != y.num_node or x.num_edge != y.num_edge or x.num_relation != y.num_relation:
+                    return False
+                edge_feature = getattr(x, "edge_feature", torch.tensor(0, device=x.device))
+                y_edge_feature = getattr(y, "edge_feature", torch.tensor(0, device=y.device))
+                if edge_feature.shape != y_edge_feature.shape:
+                    return False
+                return (x.edge_list == y.edge_list).all() and (x.edge_weight == y.edge_weight).all() \
+                       and (edge_feature == y_edge_feature).all()
+            else:
+                return x == y
+
+        if self.training:
+            return forward(self, *args, **kwargs)
+
+        func = inspect.signature(forward)
+        func = func.bind(self, *args, **kwargs)
+        func.apply_defaults()
+        arguments = func.arguments.copy()
+        arguments.pop(next(iter(arguments.keys())))
+
+        if hasattr(self, "_forward_cache"):
+            hit = True
+            message = []
+            for k, v in arguments.items():
+                if not equal(self._forward_cache[k], v):
+                    hit = False
+                    message.append("%s: miss" % k)
+                    break
+                message.append("%s: hit" % k)
+            if debug:
+                print("[cache] %s" % ", ".join(message))
+        else:
+            hit = False
+            if debug:
+                print("[cache] cold start")
+        if hit:
+            return self._forward_cache["result"]
+        else:
+            self._forward_cache = {}
+
+        for k, v in arguments.items():
+            if isinstance(v, torch.Tensor) or isinstance(v, data.Graph):
+                v = v.detach()
+            self._forward_cache[k] = v
+        result = forward(self, *args, **kwargs)
+        self._forward_cache["result"] = result
+        return result
+
+    model = copy.copy(model)
+    model.forward = types.MethodType(wrapper(model.forward.__func__), model)
+    return model
+
+
+# TODO: faster implemenation of remove
+@torch.no_grad()
+def remove(graph, edges, ratio=1):
+    if ratio == 0:
+        return graph
+    in_edge = torch.zeros(graph.num_edge, dtype=torch.bool, device=graph.device)
+    for edges_ in edges.split(2048):
+        if edges.shape[-1] == 3:
+            in_edge_ = (graph.edge_list.unsqueeze(0) == edges_.unsqueeze(1)).all(dim=-1).any(dim=0)
+        elif edges.shape[-1] == 2:
+            in_edge_ = (graph.edge_list[:, :2].unsqueeze(0) == edges_.unsqueeze(1)).all(dim=-1).any(dim=0)
+        elif edges.shape[-1] == 1:
+            in_edge_ = (graph.edge_list[:, :2].unsqueeze(0) == edges_.unsqueeze(1)).any(dim=-1).any(dim=0)
+        else:
+            raise ValueError
+        in_edge = in_edge | in_edge_
+    if ratio < 1:
+        in_edge = in_edge & (torch.rand(len(in_edge), device=graph.device) < ratio)
+    graph = graph.edge_mask(~in_edge)
+    return graph
+
+@R.register("model.MLPScore")
+class MLPScore(layers.MLP, core.Configurable):
+
+    def __init__(self, num_entity, num_relation, embedding_dim, hidden_dims, activation="relu", dropout=0,
+                 num_feature=3):
+        super(MLPScore, self).__init__(embedding_dim * num_feature, hidden_dims, activation, dropout)
+        self.num_entity = num_entity
+        self.num_relation = num_relation
+        self.num_feature = num_feature
+
+        self.entity = nn.Embedding(num_entity, embedding_dim)
+        self.relation = nn.Embedding(num_relation, embedding_dim)
+        self.entity_norm = nn.LayerNorm(embedding_dim)
+        self.relation_norm = nn.LayerNorm(embedding_dim)
+
+        nn.init.kaiming_uniform_(self.entity.weight, a=math.sqrt(5), mode="fan_in")
+        nn.init.kaiming_uniform_(self.relation.weight, a=math.sqrt(5), mode="fan_in")
+
+    def forward(self, head, tail, relation, h_index=None, t_index=None, r_index=None, all_loss=None, metric=None):
+        head = self.entity_norm(head)
+        tail = self.entity_norm(tail)
+        relation = self.relation_norm(relation)
+        if h_index is not None:
+            h = head[h_index]
+            r = relation[r_index]
+            t = tail[t_index]
+        else:
+            h = head
+            r = relation
+            t = tail
+        x = torch.cat([h, r, t], dim=-1)
+        score = super(MLPScore, self).forward(x)
+        score = score.squeeze(-1)
+        return score
+
+    def forward_feature(self, feature):
+        score = super(MLPScore, self).forward(feature)
+        score = score.squeeze(-1)
+        return score
+
+    def flip_relation(self, relation):
+        # TODO: Is it reasonable?
+        return -relation
+
+@R.register("model.NodeEncoder")
+class NodeEncoder(nn.Module, core.Configurable):
+
+    def __init__(self, gnn_model, score_model, flip_edge=False):
+        super(NodeEncoder, self).__init__()
+        self.gnn_model = cached(gnn_model)
+        self.score_model = score_model
+        self.flip_edge = flip_edge
+
+    def get_undirected(self, graph):
+        edge_list = graph.edge_list[:, [1, 0, 2]]
+        if graph.num_relation > 1: # knowledge graph
+            edge_list[:, 2] += graph.num_relation
+            num_relation = graph.num_relation * 2
+        else:
+            num_relation = graph.num_relation
+        edge_list = torch.cat((graph.edge_list, edge_list))
+        edge_feature = self.score_model.flip_relation(graph.edge_feature)
+        edge_feature = torch.cat((graph.edge_feature, edge_feature))
+        return type(graph)(edge_list, edge_feature=edge_feature, num_node=graph.num_node, num_relation=num_relation)
+
+    def forward(self, graph, h_index, t_index, r_index, all_loss=None, metric=None, conditional_probability=False):
+        if isinstance(self.score_model.relation, torch.nn.Parameter):
+            entity_weight = self.score_model.entity
+            relation_weight = self.score_model.relation
+        else:
+            entity_weight = self.score_model.entity.weight
+            relation_weight = self.score_model.relation.weight
+
+        with graph.edge():
+            graph.edge_feature = relation_weight[graph.edge_list[:, 2]]
+        if all_loss is not None:
+            edges = torch.stack((h_index, t_index, r_index), dim=-1).flatten(0, -2)
+            graph = remove(graph, edges)
+        if self.flip_edge:
+            graph = self.get_undirected(graph)
+
+        feature = self.gnn_model(graph, entity_weight, all_loss, metric)["node_feature"]
+        if isinstance(self.gnn_model, MLPScore):
+            features = [feature[h_index], relation_weight[r_index], feature[t_index]]
+            features = torch.cat(features, dim=-1)
+            score = self.score_model.forward_feature(features)
+        else:
+            score = self.score_model(feature, feature, relation_weight, h_index, t_index, r_index,
+                                    all_loss, metric)
+        
+        return score

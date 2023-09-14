@@ -1,8 +1,8 @@
-output_dir: /Users/yue.hu/Documents/proj/NBFNet/experiments/
+output_dir: /network/scratch/s/sophie.xhonneux/NBFNet/experiments/
 
 dataset:
   class: biomedical
-  path: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/data/PC_KEGG_0602
+  path: /home/mila/s/sophie.xhonneux/projects/NBFNet/data/biomedical_PC
   include_factgraph: True
   
 task:

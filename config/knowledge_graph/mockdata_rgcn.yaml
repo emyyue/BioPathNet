@@ -7,20 +7,26 @@ dataset:
   
 task:
   class: KnowledgeGraphCompletionBiomed
+  # class: KnowledgeGraphEmbeddingEx
   model:
-    class: NBFNet
-    input_dim: 32
-    hidden_dims: [32, 32, 32, 32, 32, 32]
-    message_func: distmult
-    aggregate_func: pna
-    short_cut: yes
-    layer_norm: yes
-    dependent: yes
-    symmetric: yes
+    class: NodeEncoder
+    gnn_model:
+      class: BatchedRGCN
+      input_dim: 128
+      hidden_dims: [128, 128]
+      layer_norm: yes
+      short_cut: yes
+      batch_norm: yes
+    score_model:
+      class: RotatEScore
+      embedding_dim: 128
+      max_score: 9
+    flip_edge: yes
   criterion: bce
   num_negative: 32
   strict_negative: yes
   adversarial_temperature: 0.5
+  # evaluation_target: both
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
@@ -44,3 +50,4 @@ train:
   #batch_per_epoch: 10
   
 metric: mrr
+

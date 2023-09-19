@@ -368,7 +368,9 @@ class biomedical(data.KnowledgeGraphDataset):
 
     entity_vocab_file = "entity_types.txt"
 
-    def __init__(self, path, include_factgraph=True, fact_as_train=False, verbose=1):
+    def __init__(self, path, include_factgraph=True, fact_as_train=False, verbose=1, files=None):
+        if files:
+            self.files = files
         path = os.path.expanduser(path)
         self.path = path
         self.include_factgraph = include_factgraph

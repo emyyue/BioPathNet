@@ -141,7 +141,7 @@ if __name__ == "__main__":
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
         
-    test_files = ['test_contra.txt', 'test_indication.txt', 'test_off.txt']    
+    test_files = ['test_contra.txt', 'test_indi.txt', 'test_off.txt']  
     for test_f in test_files:
         cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', test_f]
         _dataset = core.Configurable.load_config_dict(cfg.dataset)
@@ -152,18 +152,18 @@ if __name__ == "__main__":
             logger.warning(_dataset)
             logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
 
-        solver = build_solver(cfg)
+        # solver = build_solver(cfg)
 
-        if "checkpoint" in cfg:
-            solver_load(cfg.checkpoint)
-        entity_vocab, relation_vocab = load_vocab(_dataset)
+        # if "checkpoint" in cfg:
+        #     solver_load(cfg.checkpoint)
+        # entity_vocab, relation_vocab = load_vocab(_dataset)
 
-        logger.warning("Starting link prediction")
+        # logger.warning("Starting link prediction")
         
-        pred, target, mask = get_prediction(cfg, solver, relation_vocab)
-        df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
-        logger.warning("Link prediction done")
-        logger.warning("Saving to file")
-        print(os.path.join( cfg['output_dir'], "predictions.csv"))
-        df = df.loc[df.pred_node_type==4]
-        df.to_csv(os.path.join( cfg['output_dir'], "predictions.csv"), index=False, sep="\t")
+        # pred, target, mask = get_prediction(cfg, solver, relation_vocab)
+        # df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
+        # logger.warning("Link prediction done")
+        # logger.warning("Saving to file")
+        # print(os.path.join( cfg['output_dir'], "predictions.csv"))
+        # df = df.loc[df.pred_node_type==4]
+        # df.to_csv(os.path.join( cfg['output_dir'], "predictions.csv"), index=False, sep="\t")

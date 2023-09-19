@@ -14,8 +14,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util#, reasoning_mod
 import numpy as np
 
-vocab_file = os.path.join(os.path.dirname(__file__), "../data/mock/entity_names.txt")
-vocab_file = os.path.abspath(vocab_file)
 
 def solver_load(checkpoint, load_optimizer=True):
 
@@ -102,18 +100,21 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
     #testset_nodes = [dataset.entity_vocab[i] for i in [x.numpy()[0] for x in solver.test_set]]
     testset_relation =  [relation_vocab[i] for i in [x.numpy()[2] for x in solver.test_set]]
     nodes = dataset.entity_vocab
+    node_type = dataset.graph.node_type
     
     # get both relation and relation^(-1)
     dflist=[]
     for j in [0, 1]:
         sigmoid = torch.nn.Sigmoid()
-        prob= sigmoid(pred[:, j, :])
+        #prob= sigmoid(pred[:, j, :])
+        prob = (pred[:, j, :])
         prob = prob.flatten().cpu().numpy()
         
         df_dict = {'query_node': np.repeat([dataset.entity_vocab[i] for i in [x.numpy()[j] for x in solver.test_set]], len(nodes)),
                    'query_relation': np.repeat(testset_relation, len(nodes)),
                    'reverse': j,
-                   'prediction_node': np.tile(nodes, len(testset_relation)),
+                   'pred_node': np.tile(nodes, len(testset_relation)),
+                   'pred_node_type': np.tile(node_type, len(testset_relation)),
                    'probability':prob.tolist()}
             
         dflist.append(df_dict)
@@ -122,7 +123,7 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
     lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
 
     df = pd.merge(df, lookup, how="left", left_on="query_node", right_on="short", sort=False)
-    df = pd.merge(df, lookup, how="left", left_on="prediction_node", right_on="short", sort=False)
+    df = pd.merge(df, lookup, how="left", left_on="pred_node", right_on="short", sort=False)
     return df
 
         
@@ -130,6 +131,8 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
+    vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
+    vocab_file = os.path.abspath(vocab_file)
 
     torch.manual_seed(args.seed + comm.get_rank())
 
@@ -157,4 +160,6 @@ if __name__ == "__main__":
     df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
+    print(os.path.join( cfg['output_dir'], "predictions.csv"))
+    df = df.loc[df.pred_node_type==4]
     df.to_csv(os.path.join( cfg['output_dir'], "predictions.csv"), index=False, sep="\t")

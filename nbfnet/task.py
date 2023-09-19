@@ -909,26 +909,61 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
 
         pos_pred = pred.gather(-1, target.unsqueeze(-1))
         ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
-            
-        # get ranking per node
+        # get ranking per source node
+
         ranking_filt = ranking.new_zeros(mask.shape[1], mask.shape[2]).float()
-        ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(), torch.transpose(target, 0, 1),
-                                                    out=ranking_filt)
+        ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(),
+                                                  torch.flip(torch.transpose(target, 0, 1), [0]), out=ranking_filt)
         valid_ranking =  np.ma.masked_where(ranking_filt == 0, ranking_filt)
         
+
         # get neg_pred
         mask_inv_target = torch.ones_like(pred, dtype=torch.bool)
-        mask_inv_target.scatter_(-1, target.unsqueeze(-1), False)
-        mask_inv_target = mask_inv_target & mask
-        # split into t and h neg_pred
-        neg_pred_t = pred[:,0,:].masked_select(mask_inv_target[:,0,:]) 
-        neg_pred_h = pred[:,1,:].masked_select(mask_inv_target[:,1,:]) 
-        # get for t and h the predictions
-        pred_metric_t = torch.cat([pos_pred[:,0,:].flatten(), neg_pred_t.flatten()])
-        pred_metric_h = torch.cat([pos_pred[:,1,:].flatten(), neg_pred_h.flatten()])
-        # construct for t and h, the pos and neg labels
-        target_metric_t = torch.cat([torch.ones_like(pos_pred[:,0,:].flatten()),torch.zeros_like(neg_pred_t)])
-        target_metric_h = torch.cat([torch.ones_like(pos_pred[:,1,:].flatten()),torch.zeros_like(neg_pred_h)])
+        mask_inv_target.scatter_(-1, target.unsqueeze(-1), False) # filtered setting: add testing mask
+        mask_inv_target = mask_inv_target & mask # add mask from previous
+        
+        
+        # nodes t
+        trans_target = torch.transpose(torch.flip(torch.transpose(target, 0, 1), [0]), 0,1)
+        nodes_t = trans_target[:,0].unique()
+        pred_t_auprc = []
+        pred_t_auroc = []
+        for i in nodes_t:
+            # pos pred per h node
+            idx1 = (trans_target[:,0] == i).nonzero().squeeze(-1)
+            idx3 = target[idx1][:,0]
+            print(idx1, 0, idx3)
+            pos_pred_node = pred[idx1, 0, idx3]
+            # neg pred per h node
+            neg_pred_node = pred[idx1[0], 0, :].masked_select(mask_inv_target[idx1[0], 0,:])
+            # assemble
+            pred_node = torch.concat([pos_pred_node, neg_pred_node])
+            gt = torch.cat([torch.ones_like(pos_pred_node),torch.zeros_like(neg_pred_node)])
+            # calculate
+            pred_t_auprc.append(metrics.area_under_prc(pred_node, gt))
+            pred_t_auroc.append(metrics.area_under_roc(pred_node, gt))
+
+        pred_t_auprc_mean = np.array(pred_t_auprc).mean()
+        pred_t_auroc_mean = np.array(pred_t_auroc).mean()
+        
+        # nodes h
+        nodes_h = trans_target[:,1].unique()
+        pred_h_auprc = []
+        pred_h_auroc = []
+        for i in nodes_h:
+            idx1 = (trans_target[:,1] == i).nonzero().squeeze(-1)
+            idx3 = target[idx1][:,1] 
+            pos_pred_node = pred[idx1, 1, idx3]
+            neg_pred_node = pred[idx1[0], 1, :].masked_select(mask_inv_target[idx1[0], 1,:])
+            pred_node = torch.concat([pos_pred_node, neg_pred_node])
+            gt = torch.cat([torch.ones_like(pos_pred_node),torch.zeros_like(neg_pred_node)])
+            pred_h_auprc.append(metrics.area_under_prc(pred_node, gt))
+            pred_h_auroc.append(metrics.area_under_roc(pred_node, gt))
+
+        pred_h_auprc_mean = np.array(pred_h_auprc).mean()
+        pred_h_auroc_mean = np.array(pred_h_auroc).mean()
+        
+        
         metric = {}
         for _metric in self.metric:
             if _metric == "mr":
@@ -940,11 +975,9 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
                 score = ((1 - np.ma.masked_where(valid_ranking >= threshold,
                                         valid_ranking).mask).sum(1))/((1- valid_ranking.mask).sum(1))
             elif _metric == "auroc":
-                score = np.array([metrics.area_under_roc(pred_metric_t, target_metric_t),
-                                  metrics.area_under_roc(pred_metric_h, target_metric_h)])
+                score = np.array([pred_t_auroc_mean, pred_h_auroc_mean])
             elif _metric == "ap":
-                score = np.array([metrics.area_under_prc(pred_metric_t, target_metric_t),
-                                  metrics.area_under_prc(pred_metric_h, target_metric_h)])
+                score = np.array([pred_t_auprc_mean, pred_h_auprc_mean])
             else:
                 raise ValueError("Unknown metric `%s`" % _metric)
             name = tasks._get_metric_name(_metric)
@@ -959,6 +992,11 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
     
     
     def target(self, batch):
+        ####
+        # for evaluation of TxGNN, heterogeneous evaluation should be switched on
+        # filtered ranking is not important to be on yes, 
+        # as there should be no drugs in training data at all
+        ####
         # test target
         batch_size = len(batch)
         pos_h_index, pos_t_index, pos_r_index = batch.t()

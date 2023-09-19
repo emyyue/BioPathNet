@@ -354,8 +354,6 @@ class OGBLBioKG(data.KnowledgeGraphDataset):
             neg_offset += num_sample_with_neg
         return splits
 
-    
-
 @R.register("datasets.biomedical")
 class biomedical(data.KnowledgeGraphDataset):
     """
@@ -394,11 +392,10 @@ class biomedical(data.KnowledgeGraphDataset):
                 entity_token, type_token = line.strip().split()
                 if type_token not in inv_type_vocab:
                     inv_type_vocab[type_token] = len(inv_type_vocab)
-                node_type[self.inv_entity_vocab[entity_token]] = inv_type_vocab[type_token]
-
+                if entity_token in self.inv_entity_vocab:
+                    node_type[self.inv_entity_vocab[entity_token]] = inv_type_vocab[type_token]
         assert len(node_type) == self.num_entity
         _, node_type = zip(*sorted(node_type.items()))
-        
         with self.graph.node():
             self.graph.node_type = torch.tensor(node_type)
 
@@ -419,6 +416,15 @@ class biomedical(data.KnowledgeGraphDataset):
             return splits
         
     def get_fact1(self):
+        offset = 0
+        splits = []
+        num_samples = self.num_samples
+        if self.include_factgraph and self.fact_as_train:
+            num_samples = [num_samples[0] + num_samples[1]] + num_samples[2:]
+        for num_sample in num_samples:
+            split = torch_data.Subset(self, range(offset, offset + num_sample))
+            splits.append(split)
+            offset += num_sample
         if self.include_factgraph:
             return splits[0]
         else:

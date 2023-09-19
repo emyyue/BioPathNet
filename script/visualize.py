@@ -11,11 +11,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
 
 
-#vocab_file = os.path.join(os.path.dirname(__file__), "../data/fb15k237_entity.txt")
-#vocab_file = os.path.join(os.path.dirname(__file__), "../data/mock/entity_names.txt")
-vocab_file = os.path.join(os.path.dirname(__file__), "/lustre/groups/crna01/datasets/primekg/alzheimers/entity_names.txt")
-vocab_file = os.path.abspath(vocab_file)
-
 
 
 def solver_load(checkpoint, load_optimizer=True):
@@ -43,7 +38,7 @@ def solver_load(checkpoint, load_optimizer=True):
     comm.synchronize()
     
 def build_solver(cfg):
-    cfg.task.model.num_relation = dataset.num_relation
+    cfg.task.model.num_relation = _dataset.num_relation
     _task = core.Configurable.load_config_dict(cfg.task)
     cfg.optimizer.params = _task.parameters()
     optimizer = core.Configurable.load_config_dict(cfg.optimizer)
@@ -108,7 +103,8 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
-
+    vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
+    vocab_file = os.path.abspath(vocab_file)
     torch.manual_seed(args.seed + comm.get_rank())
 
     logger = util.get_root_logger()

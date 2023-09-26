@@ -191,9 +191,10 @@ if __name__ == "__main__":
 
     ##################
     for rel in ['contraindication', 'indication', 'off-label use']:
+        import pdb; pdb.set_trace()
         df_rel = df.loc[df.query_relation==rel]
         myworkingdir = cfg.output_directory
-        obj = pd.read_pickle(os.path.join(myworkingdir, "preds_indication.pickle"))        
+        obj = pd.read_pickle(os.path.join(myworkingdir, "preds_" + rel +".pickle"))        
 
         # read in dictionary from TxGNN
         goal = obj.copy()

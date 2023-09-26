@@ -189,6 +189,7 @@ if __name__ == "__main__":
         di_map2[disease_df.iloc[i,:]['node_id']] = disease_df.iloc[i,:]['node_name']
         di_map1[disease_df.iloc[i,:]['node_name']] = disease_df.iloc[i,:]['node_id']
 
+    import pdb; pdb.set_trace()
     ##################
     for rel in ['contraindication', 'indication', 'off-label use']:
         df_rel = df.loc[df.query_relation==rel]
@@ -217,6 +218,7 @@ if __name__ == "__main__":
                 
         # save
         logger.warning("Save dictionary")
+        logger.warning(rel)
         filename = os.path.join(myworkingdir, 'preds_' + rel + '_nbfnet.pickle') ####
         with open(filename, 'wb') as handle: pickle.dump(goal, handle, protocol=pickle.HIGHEST_PROTOCOL)
         

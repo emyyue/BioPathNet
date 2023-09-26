@@ -144,10 +144,36 @@ if __name__ == "__main__":
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
-         
+             
+    cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', 'test_eval.txt']
+    _dataset = core.Configurable.load_config_dict(cfg.dataset)
+    train_set, valid_set, test_set = _dataset.split()
     
-    # read in entity info
-    #nodes = pd.read_csv("/Users/yue.hu/Documents/proj/functionalannotation/source/TxGNN/data/mental_health_42/nfbnet/entity_all_info.txt", sep="\t")
+    full_valid_set = valid_set
+    if comm.get_rank() == 0:
+        logger.warning(_dataset)
+        logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
+
+    solver = build_solver(cfg)
+
+    if "checkpoint" in cfg:
+        solver_load(cfg.checkpoint)
+    entity_vocab, relation_vocab = load_vocab(_dataset)
+
+    logger.warning("Starting link prediction")
+    pred, target, mask = get_prediction(cfg, solver, relation_vocab)
+    df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
+    logger.warning("Link prediction done")
+    logger.warning("Format preds into right dictionary format for TxGNN evaluation")
+    
+    # format predictions
+    df = df.loc[df.reverse==1]
+    df = df.loc[df.pred_node_type==4]
+    df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
+    df['probability'] = sig(df['probability'])
+    
+    ##################
+    # format node info
     nodes = pd.read_csv(os.path.join(cfg.dataset.path, "entity_all_info.txt"), sep="\t")
     # create lookup dictionaries
     ### for drugs
@@ -163,55 +189,13 @@ if __name__ == "__main__":
         di_map2[disease_df.iloc[i,:]['node_id']] = disease_df.iloc[i,:]['node_name']
         di_map1[disease_df.iloc[i,:]['node_name']] = disease_df.iloc[i,:]['node_id']
 
+    ##################
+    for rel in ['contraindication', 'indication', 'off-label use']:
+        df_rel = df.loc[df.query_relation==rel]
+        myworkingdir = os.path.join(working_dir.split('/')[:-1], "mental_health") ####
+        obj = pd.read_pickle(os.path.join(myworkingdir, "preds_indication.pickle"))        
 
-
-    filemap = {'test_indi.txt': 'indication', 'test_contra.txt': 'contraindication', 'test_off.txt': "off-label use"}
-
-    test_files = ['test_contra.txt', 'test_indi.txt', 'test_off.txt']  
-    test_files = ['test.txt'] 
-    
-    for test_f in test_files:
-        cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', test_f]
-        _dataset = core.Configurable.load_config_dict(cfg.dataset)
-        train_set, valid_set, test_set = _dataset.split()
-        
-        full_valid_set = valid_set
-        if comm.get_rank() == 0:
-            logger.warning(_dataset)
-            logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
-
-        solver = build_solver(cfg)
-
-        if "checkpoint" in cfg:
-            solver_load(cfg.checkpoint)
-        entity_vocab, relation_vocab = load_vocab(_dataset)
-
-        logger.warning("Starting link prediction")
-        logger.warning(test_f)
-        pred, target, mask = get_prediction(cfg, solver, relation_vocab)
-        df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
-        logger.warning("Link prediction done")
-        logger.warning("Format preds into right dictionary format for TxGNN evaluation")
-        ### only for test
-        # df  = pd.read_csv(os.path.join("/Users/yue.hu/Documents/proj/functionalannotation/source/TxGNN/results/mental_health/", "predictions.csv"), sep="\t")
-        # test_f= 'test_indi.txt'
-        ###
-        
-        # only reverse preds
-        df = df.loc[df.reverse==1]
-        # only drugs
-        df = df.loc[df.pred_node_type==4]
-        # only relation of interest
-        df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
-        df = df.loc[df.query_relation==filemap[test_f]]
-        # sigmoid on predictions
-        df['probability'] = sig(df['probability'])
-        
-
-        ##################
         # read in dictionary from TxGNN
-        import pdb; pdb.set_trace()
-        obj = pd.read_pickle(r"/Users/yue.hu/Documents/proj/functionalannotation/source/TxGNN/results/mental_health/preds_indication.pickle")        
         goal = obj.copy()
         # get the txgnn prediction dictionaries
         for dis in goal.keys(): # for each disease in disease area split
@@ -233,7 +217,6 @@ if __name__ == "__main__":
                 
         # save
         logger.warning("Save dictionary")
-        myworkingdir = os.path.join(working_dir.split('/')[:-1], "mental_health")
-        filename = os.path.join(myworkingdir, 'preds_' + filemap[test_f]+ '_nbfnet.pickle')
+        filename = os.path.join(myworkingdir, 'preds_' + rel + '_nbfnet.pickle') ####
         with open(filename, 'wb') as handle: pickle.dump(goal, handle, protocol=pickle.HIGHEST_PROTOCOL)
         

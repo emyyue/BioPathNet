@@ -13,6 +13,7 @@ import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util#, reasoning_mod
 import numpy as np
+import pickle
 
 
 def solver_load(checkpoint, load_optimizer=True):
@@ -126,6 +127,9 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
     df = pd.merge(df, lookup, how="left", left_on="pred_node", right_on="short", sort=False)
     return df
 
+def sig(x):
+ return 1/(1 + np.exp(-x))
+
         
 if __name__ == "__main__":
     args, vars = util.parse_args()
@@ -140,30 +144,96 @@ if __name__ == "__main__":
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
-        
+         
+    
+    # read in entity info
+    #nodes = pd.read_csv("/Users/yue.hu/Documents/proj/functionalannotation/source/TxGNN/data/mental_health_42/nfbnet/entity_all_info.txt", sep="\t")
+    nodes = pd.read_csv(os.path.join(cfg.dataset.path, "entity_all_info.txt"), sep="\t")
+    # create lookup dictionaries
+    ### for drugs
+    drug_map1 = {}
+    drug_df = nodes.loc[nodes.node_type=="drug"]
+    for i in range(len(drug_df)):
+        drug_map1[drug_df.iloc[i,:]['node_name']] = drug_df.iloc[i,:]['node_id']
+    ### for diseases
+    di_map2 = {}
+    di_map1 = {}
+    disease_df = nodes.loc[nodes.node_type=="disease"]
+    for i in range(len(disease_df)):
+        di_map2[disease_df.iloc[i,:]['node_id']] = disease_df.iloc[i,:]['node_name']
+        di_map1[disease_df.iloc[i,:]['node_name']] = disease_df.iloc[i,:]['node_id']
+
+
+
+    filemap = {'test_indi.txt': 'indication', 'test_contra.txt': 'contraindication', 'test_off.txt': "off-label use"}
+
     test_files = ['test_contra.txt', 'test_indi.txt', 'test_off.txt']  
+    test_files = ['test.txt'] 
+    
     for test_f in test_files:
         cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', test_f]
         _dataset = core.Configurable.load_config_dict(cfg.dataset)
         train_set, valid_set, test_set = _dataset.split()
-        import pdb; pdb.set_trace()
+        
         full_valid_set = valid_set
         if comm.get_rank() == 0:
             logger.warning(_dataset)
             logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
 
-        # solver = build_solver(cfg)
+        solver = build_solver(cfg)
 
-        # if "checkpoint" in cfg:
-        #     solver_load(cfg.checkpoint)
-        # entity_vocab, relation_vocab = load_vocab(_dataset)
+        if "checkpoint" in cfg:
+            solver_load(cfg.checkpoint)
+        entity_vocab, relation_vocab = load_vocab(_dataset)
 
-        # logger.warning("Starting link prediction")
+        logger.warning("Starting link prediction")
+        logger.warning(test_f)
+        pred, target, mask = get_prediction(cfg, solver, relation_vocab)
+        df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
+        logger.warning("Link prediction done")
+        logger.warning("Format preds into right dictionary format for TxGNN evaluation")
+        ### only for test
+        # df  = pd.read_csv(os.path.join("/Users/yue.hu/Documents/proj/functionalannotation/source/TxGNN/results/mental_health/", "predictions.csv"), sep="\t")
+        # test_f= 'test_indi.txt'
+        ###
         
-        # pred, target, mask = get_prediction(cfg, solver, relation_vocab)
-        # df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
-        # logger.warning("Link prediction done")
-        # logger.warning("Saving to file")
-        # print(os.path.join( cfg['output_dir'], "predictions.csv"))
-        # df = df.loc[df.pred_node_type==4]
-        # df.to_csv(os.path.join( cfg['output_dir'], "predictions.csv"), index=False, sep="\t")
+        # only reverse preds
+        df = df.loc[df.reverse==1]
+        # only drugs
+        df = df.loc[df.pred_node_type==4]
+        # only relation of interest
+        df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
+        df = df.loc[df.query_relation==filemap[test_f]]
+        # sigmoid on predictions
+        df['probability'] = sig(df['probability'])
+        
+
+        ##################
+        # read in dictionary from TxGNN
+        import pdb; pdb.set_trace()
+        obj = pd.read_pickle(r"/Users/yue.hu/Documents/proj/functionalannotation/source/TxGNN/results/mental_health/preds_indication.pickle")        
+        goal = obj.copy()
+        # get the txgnn prediction dictionaries
+        for dis in goal.keys(): # for each disease in disease area split
+            goal[dis] = dict.fromkeys(goal[dis], 0)
+            if (dis in di_map2):
+                df = pred.loc[(pred.long_x == di_map2[(dis)])]
+                print(dis)
+                for i in df['long_y']: # for each drug
+                    goal[dis][drug_map1[i]] = df.loc[df.long_y == i].iloc[0]['probability']
+            elif(dis.split(".")[0] in di_map2):
+                dis_m = dis.split(".")[0]
+                print(dis_m)
+                df = pred.loc[(pred.long_x == di_map2[(dis_m)])]
+                for i in df['long_y']:
+                    goal[dis][drug_map1[i]] = df.loc[df.long_y == i].iloc[0]['probability']
+            else:
+                print(f"not found", dis)
+
+                
+        # save
+        logger.warning("Save dictionary")
+        myworkingdir = os.path.join(working_dir.split('/')[:-1], "mental_health")
+        filename = os.path.join(myworkingdir, 'preds_' + filemap[test_f]+ '_nbfnet.pickle')
+        with open(filename, 'wb') as handle: pickle.dump(goal, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        

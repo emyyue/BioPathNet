@@ -144,7 +144,7 @@ if __name__ == "__main__":
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
-             
+                 
     cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', 'test_eval.txt']
     _dataset = core.Configurable.load_config_dict(cfg.dataset)
     train_set, valid_set, test_set = _dataset.split()
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
     logger.warning("Link prediction done")
     logger.warning("Format preds into right dictionary format for TxGNN evaluation")
-    
+
     # format predictions
     df = df.loc[df.reverse==1]
     df = df.loc[df.pred_node_type==4]
@@ -189,11 +189,10 @@ if __name__ == "__main__":
         di_map2[disease_df.iloc[i,:]['node_id']] = disease_df.iloc[i,:]['node_name']
         di_map1[disease_df.iloc[i,:]['node_name']] = disease_df.iloc[i,:]['node_id']
 
-    import pdb; pdb.set_trace()
     ##################
     for rel in ['contraindication', 'indication', 'off-label use']:
         df_rel = df.loc[df.query_relation==rel]
-        myworkingdir = os.path.join(working_dir.split('/')[:-1], "mental_health") ####
+        myworkingdir = cfg.output_directory
         obj = pd.read_pickle(os.path.join(myworkingdir, "preds_indication.pickle"))        
 
         # read in dictionary from TxGNN
@@ -219,6 +218,6 @@ if __name__ == "__main__":
         # save
         logger.warning("Save dictionary")
         logger.warning(rel)
-        filename = os.path.join(myworkingdir, 'preds_' + rel + '_nbfnet.pickle') ####
+        filename = os.path.join(myworkingdir, 'preds_' + rel + '_nbfnet.pickle')
         with open(filename, 'wb') as handle: pickle.dump(goal, handle, protocol=pickle.HIGHEST_PROTOCOL)
         

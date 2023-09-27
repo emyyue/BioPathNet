@@ -118,7 +118,7 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
                    'probability':prob.tolist()}
          
         # mask out unwanted
-        mymask = temp['pred_node_type'] == 0
+        mymask = temp['pred_node_type'] == 4
         df_dict = {'query_node': temp['query_node'][mymask],
                    'query_relation': temp['query_relation'][mymask],
                    'reverse': j,
@@ -127,7 +127,7 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
                    'probability': prob[mymask]}
            
         dflist.append(df_dict)
-    
+    import pdb; pdb.set_trace()
     df = pd.concat([pd.DataFrame(dflist[0]),pd.DataFrame(dflist[1])])
     lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
 

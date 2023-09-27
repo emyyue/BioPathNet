@@ -107,19 +107,27 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
     dflist=[]
     for j in [0, 1]:
         sigmoid = torch.nn.Sigmoid()
-        #prob= sigmoid(pred[:, j, :])
-        prob = (pred[:, j, :])
+        prob= sigmoid(pred[:, j, :])
+        # prob = (pred[:, j, :])
         prob = prob.flatten().cpu().numpy()
-        
-        df_dict = {'query_node': np.repeat([dataset.entity_vocab[i] for i in [x.numpy()[j] for x in solver.test_set]], len(nodes)),
+        temp = {'query_node': np.repeat([dataset.entity_vocab[i] for i in [x.numpy()[j] for x in solver.test_set]], len(nodes)),
                    'query_relation': np.repeat(testset_relation, len(nodes)),
                    'reverse': j,
                    'pred_node': np.tile(nodes, len(testset_relation)),
                    'pred_node_type': np.tile(node_type, len(testset_relation)),
                    'probability':prob.tolist()}
-            
+         
+        # mask out unwanted
+        mymask = temp['pred_node_type'] == 0
+        df_dict = {'query_node': temp['query_node'][mymask],
+                   'query_relation': temp['query_relation'][mymask],
+                   'reverse': j,
+                   'pred_node':  temp['pred_node'][mymask],
+                   'pred_node_type':  temp['pred_node_type'][mymask],
+                   'probability': prob[mymask]}
+           
         dflist.append(df_dict)
-        
+    
     df = pd.concat([pd.DataFrame(dflist[0]),pd.DataFrame(dflist[1])])
     lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
 
@@ -170,7 +178,7 @@ if __name__ == "__main__":
     df = df.loc[df.reverse==1]
     df = df.loc[df.pred_node_type==4]
     df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
-    df['probability'] = sig(df['probability'])
+    #df['probability'] = sig(df['probability'])
     
     ##################
     # format node info

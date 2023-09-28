@@ -186,6 +186,7 @@ if __name__ == "__main__":
     # create lookup dictionaries
     ### for drugs
     drug_map1 = {}
+    import pdb; pdb.set_trace()
     drug_df = nodes.loc[nodes.node_type=="drug"]
     for i in range(len(drug_df)):
         drug_map1[drug_df.iloc[i,:]['node_name']] = drug_df.iloc[i,:]['node_id']
@@ -210,16 +211,16 @@ if __name__ == "__main__":
         for dis in goal.keys(): # for each disease in disease area split
             goal[dis] = dict.fromkeys(goal[dis], 0)
             if (dis in di_map2):
-                df = pred.loc[(pred.long_x == di_map2[(dis)])]
+                df_rel_dis = df_rel.loc[(df_rel.long_x == di_map2[(dis)])]
                 print(dis)
-                for i in df['long_y']: # for each drug
-                    goal[dis][drug_map1[i]] = df.loc[df.long_y == i].iloc[0]['probability']
+                for i in df_rel_dis['long_y']: # for each drug
+                    goal[dis][drug_map1[i]] = df_rel_dis.loc[df_rel_dis.long_y == i].iloc[0]['probability']
             elif(dis.split(".")[0] in di_map2):
                 dis_m = dis.split(".")[0]
                 print(dis_m)
-                df = pred.loc[(pred.long_x == di_map2[(dis_m)])]
-                for i in df['long_y']:
-                    goal[dis][drug_map1[i]] = df.loc[df.long_y == i].iloc[0]['probability']
+                df_rel_dis = df_rel.loc[(df_rel.long_x == di_map2[(dis_m)])]
+                for i in df_rel_dis['long_y']:
+                    goal[dis][drug_map1[i]] = df_rel_dis.loc[df_rel_dis.long_y == i].iloc[0]['probability']
             else:
                 print(f"not found", dis)
 

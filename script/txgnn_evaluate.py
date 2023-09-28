@@ -106,9 +106,9 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
     # get both relation and relation^(-1)
     dflist=[]
     for j in [0, 1]:
-        sigmoid = torch.nn.Sigmoid()
-        prob= sigmoid(pred[:, j, :])
-        # prob = (pred[:, j, :])
+        #sigmoid = torch.nn.Sigmoid()
+        #prob= sigmoid(pred[:, j, :])
+        prob = (pred[:, j, :])
         prob = prob.flatten().cpu().numpy()
         temp = {'query_node': np.repeat([dataset.entity_vocab[i] for i in [x.numpy()[j] for x in solver.test_set]], len(nodes)),
                    'query_relation': np.repeat(testset_relation, len(nodes)),
@@ -127,7 +127,6 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
                    'probability': prob[mymask]}
            
         dflist.append(df_dict)
-    import pdb; pdb.set_trace()
     df = pd.concat([pd.DataFrame(dflist[0]),pd.DataFrame(dflist[1])])
     lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
 
@@ -178,7 +177,7 @@ if __name__ == "__main__":
     df = df.loc[df.reverse==1]
     df = df.loc[df.pred_node_type==4]
     df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
-    #df['probability'] = sig(df['probability'])
+    df['probability'] = sig(df['probability'])
     
     ##################
     # format node info
@@ -186,7 +185,6 @@ if __name__ == "__main__":
     # create lookup dictionaries
     ### for drugs
     drug_map1 = {}
-    import pdb; pdb.set_trace()
     drug_df = nodes.loc[nodes.node_type=="drug"]
     for i in range(len(drug_df)):
         drug_map1[drug_df.iloc[i,:]['node_name']] = drug_df.iloc[i,:]['node_id']
@@ -200,11 +198,11 @@ if __name__ == "__main__":
 
     ##################
     for rel in ['contraindication', 'indication', 'off-label use']:
-        import pdb; pdb.set_trace()
+        
         df_rel = df.loc[df.query_relation==rel]
         myworkingdir = cfg.output_directory
         obj = pd.read_pickle(os.path.join(myworkingdir, "preds_" + rel +".pickle"))        
-
+        import pdb; pdb.set_trace()
         # read in dictionary from TxGNN
         goal = obj.copy()
         # get the txgnn prediction dictionaries

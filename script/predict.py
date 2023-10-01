@@ -105,8 +105,8 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
     # get both relation and relation^(-1)
     dflist=[]
     for j in [0, 1]:
-        sigmoid = torch.nn.Sigmoid()
-        #prob= sigmoid(pred[:, j, :])
+        # sigmoid = torch.nn.Sigmoid()
+        # prob = sigmoid(pred[:, j, :])
         prob = (pred[:, j, :])
         prob = prob.flatten().cpu().numpy()
         
@@ -141,6 +141,7 @@ if __name__ == "__main__":
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
 
+    cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', 'test_eval.txt']
     _dataset = core.Configurable.load_config_dict(cfg.dataset)
     train_set, valid_set, test_set = _dataset.split()
     full_valid_set = valid_set
@@ -161,5 +162,7 @@ if __name__ == "__main__":
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
     print(os.path.join( cfg['output_dir'], "predictions.csv"))
+    df = df.loc[df.reverse==1]
     df = df.loc[df.pred_node_type==4]
-    df.to_csv(os.path.join( cfg['output_dir'], "predictions.csv"), index=False, sep="\t")
+    df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
+    df.to_csv(os.path.join( cfg['output_dir'], "predictions_predict.csv"), index=False, sep="\t")

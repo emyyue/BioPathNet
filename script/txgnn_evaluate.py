@@ -106,8 +106,8 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
     # get both relation and relation^(-1)
     dflist=[]
     for j in [0, 1]:
-        #sigmoid = torch.nn.Sigmoid()
-        #prob= sigmoid(pred[:, j, :])
+        # sigmoid = torch.nn.Sigmoid()
+        # prob = sigmoid(pred[:, j, :])
         prob = (pred[:, j, :])
         prob = prob.flatten().cpu().numpy()
         temp = {'query_node': np.repeat([dataset.entity_vocab[i] for i in [x.numpy()[j] for x in solver.test_set]], len(nodes)),
@@ -170,62 +170,59 @@ if __name__ == "__main__":
     logger.warning("Starting link prediction")
     pred, target, mask = get_prediction(cfg, solver, relation_vocab)
     df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
-    logger.warning("Link prediction done")
-    logger.warning("Format preds into right dictionary format for TxGNN evaluation")
-
-    # format predictions
     df = df.loc[df.reverse==1]
     df = df.loc[df.pred_node_type==4]
     df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
-    df['probability'] = sig(df['probability'])
+    df.to_csv(os.path.join( cfg['output_dir'], "predictions_txgnn.csv"), index=False, sep="\t")
     
-    ##################
-    # format node info
-    nodes = pd.read_csv(os.path.join(cfg.dataset.path, "entity_all_info.txt"), sep="\t")
-    # create lookup dictionaries
-    ### for drugs
-    drug_map1 = {}
-    drug_df = nodes.loc[nodes.node_type=="drug"]
-    for i in range(len(drug_df)):
-        drug_map1[drug_df.iloc[i,:]['node_name']] = drug_df.iloc[i,:]['node_id']
-    ### for diseases
-    di_map2 = {}
-    di_map1 = {}
-    disease_df = nodes.loc[nodes.node_type=="disease"]
-    for i in range(len(disease_df)):
-        di_map2[disease_df.iloc[i,:]['node_id']] = disease_df.iloc[i,:]['node_name']
-        di_map1[disease_df.iloc[i,:]['node_name']] = disease_df.iloc[i,:]['node_id']
+    # logger.warning("Link prediction done")
+    # logger.warning("Format preds into right dictionary format for TxGNN evaluation")
+    # ##################
+    # # format node info
+    # nodes = pd.read_csv(os.path.join(cfg.dataset.path, "entity_all_info.txt"), sep="\t")
+    # # create lookup dictionaries
+    # ### for drugs
+    # drug_map1 = {}
+    # drug_df = nodes.loc[nodes.node_type=="drug"]
+    # for i in range(len(drug_df)):
+    #     drug_map1[drug_df.iloc[i,:]['node_name']] = drug_df.iloc[i,:]['node_id']
+    # ### for diseases
+    # di_map2 = {}
+    # di_map1 = {}
+    # disease_df = nodes.loc[nodes.node_type=="disease"]
+    # for i in range(len(disease_df)):
+    #     di_map2[disease_df.iloc[i,:]['node_id']] = disease_df.iloc[i,:]['node_name']
+    #     di_map1[disease_df.iloc[i,:]['node_name']] = disease_df.iloc[i,:]['node_id']
 
-    ##################
-    for rel in ['contraindication', 'indication', 'off-label use']:
+    # ##################
+    # for rel in ['contraindication', 'indication', 'off-label use']:
         
-        df_rel = df.loc[df.query_relation==rel]
-        myworkingdir = cfg.output_directory
-        obj = pd.read_pickle(os.path.join(myworkingdir, "preds_" + rel +".pickle"))        
-        import pdb; pdb.set_trace()
-        # read in dictionary from TxGNN
-        goal = obj.copy()
-        # get the txgnn prediction dictionaries
-        for dis in goal.keys(): # for each disease in disease area split
-            goal[dis] = dict.fromkeys(goal[dis], 0)
-            if (dis in di_map2):
-                df_rel_dis = df_rel.loc[(df_rel.long_x == di_map2[(dis)])]
-                print(dis)
-                for i in df_rel_dis['long_y']: # for each drug
-                    goal[dis][drug_map1[i]] = df_rel_dis.loc[df_rel_dis.long_y == i].iloc[0]['probability']
-            elif(dis.split(".")[0] in di_map2):
-                dis_m = dis.split(".")[0]
-                print(dis_m)
-                df_rel_dis = df_rel.loc[(df_rel.long_x == di_map2[(dis_m)])]
-                for i in df_rel_dis['long_y']:
-                    goal[dis][drug_map1[i]] = df_rel_dis.loc[df_rel_dis.long_y == i].iloc[0]['probability']
-            else:
-                print(f"not found", dis)
+    #     df_rel = df.loc[df.query_relation==rel]
+    #     myworkingdir = cfg.output_directory
+    #     obj = pd.read_pickle(os.path.join(myworkingdir, "preds_" + rel +".pickle"))        
+    #     # read in dictionary from TxGNN
+    #     goal = obj.copy()
+    #     # get the txgnn prediction dictionaries
+    #     for dis in goal.keys(): # for each disease in disease area split
+    #         goal[dis] = dict.fromkeys(goal[dis], 0)
+    #         if (dis in di_map2):
+    #             df_rel_dis = df_rel.loc[(df_rel.long_x == di_map2[(dis)])]
+    #             print(dis)
+    #             for i in df_rel_dis['long_y']: # for each drug
+    #                 goal[dis][drug_map1[i]] = df_rel_dis.loc[df_rel_dis.long_y == i].iloc[0]['probability']
+    #         elif(dis.split(".")[0] in di_map2):
+    #             dis_m = dis.split(".")[0]
+    #             print(dis_m)
+    #             df_rel_dis = df_rel.loc[(df_rel.long_x == di_map2[(dis_m)])]
+    #             for i in df_rel_dis['long_y']:
+    #                 goal[dis][drug_map1[i]] = df_rel_dis.loc[df_rel_dis.long_y == i].iloc[0]['probability']
+    #         else:
+    #             print(f"not found", dis)
 
                 
-        # save
-        logger.warning("Save dictionary")
-        logger.warning(rel)
-        filename = os.path.join(myworkingdir, 'preds_' + rel + '_nbfnet.pickle')
-        with open(filename, 'wb') as handle: pickle.dump(goal, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    #     # save
+    #     logger.warning("Save dictionary")
+    #     logger.warning(rel)
+    #     filename = os.path.join(myworkingdir, 'preds_' + rel + '_nbfnet.pickle')
+    #     with open(filename, 'wb') as handle: pickle.dump(goal, handle, protocol=pickle.HIGHEST_PROTOCOL)
         

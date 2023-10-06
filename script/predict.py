@@ -161,8 +161,8 @@ if __name__ == "__main__":
     df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
-    print(os.path.join( cfg['output_dir'], "predictions.csv"))
-    df = df.loc[df.reverse==1]
-    df = df.loc[df.pred_node_type==4]
-    df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
-    df.to_csv(os.path.join( cfg['output_dir'], "predictions_predict.csv"), index=False, sep="\t")
+    print(os.path.join(working_dir, "predictions.csv"))
+    #df = df.loc[df.reverse==1]
+    #df = df.loc[df.pred_node_type==4]
+    #df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
+    df.to_csv(os.path.join( working_dir, "predictions_predict.csv"), index=False, sep="\t")

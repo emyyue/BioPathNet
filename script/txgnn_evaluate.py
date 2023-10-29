@@ -219,7 +219,8 @@ if __name__ == "__main__":
                     goal[dis][drug_map1[i]] = df_rel_dis.loc[df_rel_dis.long_y == i].iloc[0]['probability']
             else:
                 print(f"not found", dis)
-
+        print(goal[dis][drug_map1[i]])
+        print(df_rel_dis.loc[df_rel_dis.long_y == i].iloc[0])
                 
         # save
         logger.warning("Save dictionary")

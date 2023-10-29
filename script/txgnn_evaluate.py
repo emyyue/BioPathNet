@@ -144,6 +144,8 @@ if __name__ == "__main__":
     working_dir = util.create_working_directory(cfg)
     vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
     vocab_file = os.path.abspath(vocab_file)
+    myworkingdir = cfg.output_directory
+    print(myworkingdir)
 
     torch.manual_seed(args.seed + comm.get_rank())
 
@@ -173,7 +175,7 @@ if __name__ == "__main__":
     df = df.loc[df.reverse==1]
     df = df.loc[df.pred_node_type==4]
     df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
-    df.to_csv(os.path.join( cfg['output_dir'], "predictions_txgnn.csv"), index=False, sep="\t")
+    df.to_csv(os.path.join(myworkingdir, "predictions_txgnn.csv"), index=False, sep="\t")
     
     logger.warning("Link prediction done")
     logger.warning("Format preds into right dictionary format for TxGNN evaluation")
@@ -198,7 +200,6 @@ if __name__ == "__main__":
     for rel in ['contraindication', 'indication', 'off-label use']:
         
         df_rel = df.loc[df.query_relation==rel]
-        myworkingdir = cfg.output_directory
         obj = pd.read_pickle(os.path.join(myworkingdir, "preds_" + rel +".pickle"))        
         # read in dictionary from TxGNN
         goal = obj.copy()

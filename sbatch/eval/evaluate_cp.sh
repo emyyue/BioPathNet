@@ -22,7 +22,7 @@ export PATH=/usr/local/cuda-11.8/bin:$PATH
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/lib64
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/targets/x86_64-linux/lib
 
-mkdir /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
+mkdir -p /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
 python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
     -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval.yaml \
     --gpus [0] \

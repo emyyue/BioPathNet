@@ -11,8 +11,8 @@
 #SBATCH --constraint=a100_80gb
 ##SBATCH -w gpusrv61
 
-split="cell_proliferation"
-model="2023-10-11-18-20-38-815410"
+split="adrenal_gland"
+model="2023-10-12-15-36-16-006985"
 epoch=10
 layers=4
 

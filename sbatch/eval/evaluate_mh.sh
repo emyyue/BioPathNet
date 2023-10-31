@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/eval_cp.txt
-#SBATCH --error=./slurm_out/eval_cp.txt
+#SBATCH --output=./slurm_out/eval_mh.txt
+#SBATCH --error=./slurm_out/eval_mh.txt
 #SBATCH --time=2:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4
@@ -11,10 +11,10 @@
 ##SBATCH --constraint=a100_80gb
 ##SBATCH -w gpusrv61
 
-split="cell_proliferation"
-model="2023-10-11-18-20-38-815410"
-epoch=10
-layers=4
+split="mental_health"
+model="2023-09-28-16-05-20-867235"
+epoch=8
+layers=6
 
 CONDA_DIR=/home/icb/yue.hu/proj_genefun/conda-env/miniconda3
 eval "$($CONDA_DIR/bin/conda shell.bash hook)"

@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/eval_cp.txt
-#SBATCH --error=./slurm_out/eval_cp.txt
+#SBATCH --output=./slurm_out/eval_anemia.txt
+#SBATCH --error=./slurm_out/eval_anemia.txt
 #SBATCH --time=2:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4
 #SBATCH --gres=gpu:1
 #SBATCH -p gpu_p
 #SBATCH --qos=gpu_normal
-#SBATCH --constraint=a100_80gb
+##SBATCH --constraint=a100_80gb
 ##SBATCH -w gpusrv61
 
 split="anemia"

@@ -225,6 +225,6 @@ if __name__ == "__main__":
         # save
         logger.warning("Save dictionary")
         logger.warning(rel)
-        filename = os.path.join(myworkingdir, 'preds_' + rel + '_nbfnet.pickle')
+        filename = os.path.join(myworkingdir + 'preds_' + rel + '_nbfnet.pickle')
         with open(filename, 'wb') as handle: pickle.dump(goal, handle, protocol=pickle.HIGHEST_PROTOCOL)
         

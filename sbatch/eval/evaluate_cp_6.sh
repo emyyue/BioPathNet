@@ -33,7 +33,7 @@ python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
     -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval_${layers}.yaml \
     --gpus [0] \
     --checkpoint  /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/$model/model_epoch_${epoch}.pth \
-    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
+    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/${model}
 
 ### TxGNN part
 conda deactivate
@@ -42,6 +42,6 @@ conda activate txgnn_env_plotnine
 python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_evaluation.py  \
     $split \
     /home/icb/samuele.firmani/NBFNet/sbatch/primekg/$split/txgnn_logs/saved_models/${split}_model_ckpt_best_hyperparam/ \
-    /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/ \
+    /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/${model} \
     ${split}_plot_${layers}layers_${model}model.pdf
 

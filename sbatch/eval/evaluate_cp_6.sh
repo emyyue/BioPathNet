@@ -14,6 +14,8 @@
 split="cell_proliferation"
 model="2023-10-11-18-20-38-815410"
 epoch=10
+model="2023-10-11-18-20-38-624703"
+epoch=10
 layers=6
 
 CONDA_DIR=/home/icb/yue.hu/proj_genefun/conda-env/miniconda3

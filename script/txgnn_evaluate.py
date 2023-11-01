@@ -145,6 +145,7 @@ if __name__ == "__main__":
     vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
     vocab_file = os.path.abspath(vocab_file)
     myworkingdir = cfg.output_directory
+    mymodel = os.path.split(os.path.split(cfg.checkpoint)[0])[1]
     print(myworkingdir)
 
     torch.manual_seed(args.seed + comm.get_rank())
@@ -175,7 +176,7 @@ if __name__ == "__main__":
     df = df.loc[df.reverse==1]
     df = df.loc[df.pred_node_type==4]
     df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
-    df.to_csv(os.path.join(myworkingdir, "predictions_txgnn.csv"), index=False, sep="\t")
+    #df.to_csv(os.path.join(myworkingdir, mymodel + "_predictions_txgnn.csv"), index=False, sep="\t")
     
     logger.warning("Link prediction done")
     logger.warning("Format preds into right dictionary format for TxGNN evaluation")
@@ -225,6 +226,6 @@ if __name__ == "__main__":
         # save
         logger.warning("Save dictionary")
         logger.warning(rel)
-        filename = os.path.join(myworkingdir + 'preds_' + rel + '_nbfnet.pickle')
+        filename = os.path.join(myworkingdir, mymodel + 'preds_' + rel + '_nbfnet.pickle')
         with open(filename, 'wb') as handle: pickle.dump(goal, handle, protocol=pickle.HIGHEST_PROTOCOL)
         

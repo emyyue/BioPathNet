@@ -154,7 +154,7 @@ def get_auprc_oneonone(mydir, cfg, df):
     def get_preds_for_evalG(df_index, rel="contraindication", rev=1):
         df_pred = df.loc[(df.query_relation==rel) & (df.reverse==rev)]
         df_m = df_index.merge(df_pred[['probability','tomatch']], on="tomatch", how="left")
-        print("Percentage of missing probabilities replaced by zero: ", df_m.isnull().sum().sum(), "/", len(df_index))
+        print("Percentage of missing probabilities replaced by zero: ", df_m['probability'].isnull().sum(), "/", len(df_index))
         df_m["probability"] = df_m["probability"].fillna(0)
         return df_m
 

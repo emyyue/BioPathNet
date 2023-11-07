@@ -249,7 +249,7 @@ if __name__ == "__main__":
     df.loc[mask, 'tomatch'] = (df['short_y'].astype(str) + '_' +  df['short_x'].astype(str))
     # get preds in dict format
     mydict = get_auprc_oneonone(myworkingdir, cfg, df)
-    with open(os.path.join(myworkingdir, "g_pos_neg_nbfnet.pickle"), 'wb') as handle: pickle.dump(mydict, handle, protocol=pickle.HIGHEST_PROTOCOL) 
+    with open(os.path.join(myworkingdir, mymodel + "g_pos_neg_nbfnet.pickle"), 'wb') as handle: pickle.dump(mydict, handle, protocol=pickle.HIGHEST_PROTOCOL) 
     
     logger.warning("Format preds into right dictionary format for TxGNN evaluation - Recall@k")
     df = df.loc[df.reverse==1]

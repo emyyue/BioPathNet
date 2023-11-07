@@ -39,6 +39,5 @@ conda activate txgnn_env_plotnine
 python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_evaluation.py  \
     $split \
     /home/icb/samuele.firmani/NBFNet/sbatch/primekg/$split/txgnn_logs/saved_models/${split}_model_ckpt_best_hyperparam/ \
-    /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/ \
-    ${split}_plot_${layers}layers_${model}model.pdf
-
+    /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/$model \
+    ${split}_plot_${layers}layers.pdf

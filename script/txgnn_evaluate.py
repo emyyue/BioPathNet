@@ -164,7 +164,7 @@ def get_auprc_oneonone(mydir, cfg, df):
         df_m = get_preds_for_evalG(df_index, rel=rel, rev=rev)
         return torch.tensor(df_m['probability'].values)
 
-    g = pd.read_csv(os.path.join(mydir, "all_data.csv", sep=","))
+    g = pd.read_csv(os.path.join(mydir, "all_data.csv"))
     test = pd.read_csv(os.path.join(cfg.dataset.path, "../test.csv"), sep=",")
     test['x_idx'] = test['x_idx'].astype(int)
     test['y_idx'] = test['y_idx'].astype(int)

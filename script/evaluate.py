@@ -73,6 +73,7 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
+    print(working_dir)
     vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
     vocab_file = os.path.abspath(vocab_file)
 

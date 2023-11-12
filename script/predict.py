@@ -131,6 +131,7 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
+    print(working_dir)
     vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
     vocab_file = os.path.abspath(vocab_file)
 
@@ -162,7 +163,7 @@ if __name__ == "__main__":
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
     print(os.path.join(working_dir, "predictions.csv"))
-    #df = df.loc[df.reverse==1]
-    #df = df.loc[df.pred_node_type==4]
-    #df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
+    df = df.loc[df.reverse==1]
+    df = df.loc[df.pred_node_type==4]
+    df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
     df.to_csv(os.path.join( working_dir, "predictions_predict.csv"), index=False, sep="\t")

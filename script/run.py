@@ -72,7 +72,7 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
-
+    print(working_dir)
     torch.manual_seed(args.seed + comm.get_rank())
 
     logger = util.get_root_logger()

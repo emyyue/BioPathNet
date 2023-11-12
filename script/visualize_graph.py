@@ -125,6 +125,7 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
+    print(working_dir)
     vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
     vocab_file = os.path.abspath(vocab_file)
     torch.manual_seed(args.seed + comm.get_rank())
@@ -173,11 +174,12 @@ if __name__ == "__main__":
 
             entity = entity_vocab[h].replace(" ", "")
             relation = relation_vocab[r].replace(" ", "")
+            entity_t = entity_vocab[t].replace(" ", "")
            
             
 #            entity = re.search(r"(.+) \(Q\d+\)", entity_vocab[h]).groups()[0]
 #            relation = re.search(r"(.+) \(\d+\)", relation_vocab[r]).groups()[0]
-            save_file = "%s_%s.html" % (entity, relation)
+            save_file = "%s_%s_%s.html" % (entity, relation, entity_t)
             save_file = re.sub(r"[^\w().]+", "-", save_file)
             if ranking[j, 0] <= 10 and not os.path.exists(save_file):
                 paths, weights = task.visualize(sample)
@@ -187,7 +189,7 @@ if __name__ == "__main__":
 
 #            entity = re.search(r"(.+) \(Q\d+\)", entity_vocab[t]).groups()[0]
             entity = entity_vocab[h].replace(" ", "")
-            save_file = "%s_%s^(-1).html" % (entity, relation)
+            save_file = "%s_%s^(-1)_%s.html" % (entity_t, relation, entity)
             save_file = re.sub(r"[^\w().]+", "-", save_file)
             sample = sample[:, [1, 0, 2]]
             sample[:, 2] += task.num_relation

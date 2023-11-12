@@ -110,16 +110,26 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
         prob = (pred[:, j, :])
         prob = prob.flatten().cpu().numpy()
         
-        df_dict = {'query_node': np.repeat([dataset.entity_vocab[i] for i in [x.numpy()[j] for x in solver.test_set]], len(nodes)),
+        temp = {'query_node': np.repeat([dataset.entity_vocab[i] for i in [x.numpy()[j] for x in solver.test_set]], len(nodes)),
                    'query_relation': np.repeat(testset_relation, len(nodes)),
                    'reverse': j,
                    'pred_node': np.tile(nodes, len(testset_relation)),
                    'pred_node_type': np.tile(node_type, len(testset_relation)),
                    'probability':prob.tolist()}
+         
+        # mask out unwanted
+        mymask = temp['pred_node_type'] == 4
+        df_dict = {'query_node': temp['query_node'][mymask],
+                   'query_relation': temp['query_relation'][mymask],
+                   'reverse': j,
+                   'pred_node':  temp['pred_node'][mymask],
+                   'pred_node_type':  temp['pred_node_type'][mymask],
+                   'probability': prob[mymask]}
             
         dflist.append(df_dict)
         
     df = pd.concat([pd.DataFrame(dflist[0]),pd.DataFrame(dflist[1])])
+    df = df.drop_duplicates()
     lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
 
     df = pd.merge(df, lookup, how="left", left_on="query_node", right_on="short", sort=False)

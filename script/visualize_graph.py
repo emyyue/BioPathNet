@@ -92,7 +92,22 @@ def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_voca
         title = "p(%s | %s, %s)" % (entity_vocab[t], entity_vocab[h], relation_vocab[r])
     if ranking is not None:
         title = "%s\nranking = %d" % (title, ranking)
+        
+    triplet2id = {tuple(edge.tolist()): i for i, edge in enumerate(graph.edge_list)}
 
+    edge_colors = {}
+    for h, t, r in paths[0]:
+        h = graph.original_node.tolist().index(h)
+        t = graph.original_node.tolist().index(t)
+        if (h,t,r) == (0,0,0):
+            continue
+        if r >= graph.num_relation:
+            r = r - graph.num_relation.item()
+            h, t = t, h
+            print("in if", h, t, r)
+        index = triplet2id[(h, t, r)]
+        edge_colors[index] = "#1e1e24"
+    
     node_type = graph.node_type
     node_colors_dict = {0: "#72568f",
                         1: "#f9844a",
@@ -114,8 +129,8 @@ def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_voca
         elif index == t:
             node_colors[i] = "#82C4E1"
 
-        
     plot.echarts(graph, title=title, node_colors=node_colors, node_labels=node_labels, relation_labels=relation_vocab,
+                 edge_colors=edge_colors,
                  dynamic_size=True, dynamic_width=True, save_file=save_file)
 
 

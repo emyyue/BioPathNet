@@ -111,10 +111,10 @@ def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_voca
     node_type = graph.node_type
     node_colors_dict = {0: "#72568f",
                         1: "#f9844a",
-                        2: "#f94144",
+                        2: "#577590",
                         3: "#277da1",
                         4: "#f3722c",
-                        5: "#577590",
+                        5: "#f94144",
                         6: "#43aa8b",
                         7: "#f9c74f",
                         8: "#f8961e",

@@ -106,7 +106,7 @@ def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_voca
             h, t = t, h
             print("in if", h, t, r)
         index = triplet2id[(h, t, r)]
-        edge_colors[index] = "#1e1e24"
+        edge_colors[index] = "#F14167"
     
     node_type = graph.node_type
     node_colors_dict = {0: "#72568f",
@@ -122,7 +122,8 @@ def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_voca
     for i, index in enumerate(graph.original_node.tolist()):
         node_colors[i] = node_colors_dict[node_type[i].cpu().item()]
         node_labels.append(entity_vocab[index])
-        
+    
+    h, t, r = sample[0].tolist()    
     for i, index in enumerate(graph.original_node.tolist()):
         if index == h:
             node_colors[i] = "#F9B895"

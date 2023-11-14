@@ -92,13 +92,29 @@ def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_voca
         title = "p(%s | %s, %s)" % (entity_vocab[t], entity_vocab[h], relation_vocab[r])
     if ranking is not None:
         title = "%s\nranking = %d" % (title, ranking)
+
+    node_type = graph.node_type
+    node_colors_dict = {0: "#72568f",
+                        1: "#f9844a",
+                        2: "#f94144",
+                        3: "#277da1",
+                        4: "#f3722c",
+                        5: "#577590",
+                        6: "#43aa8b",
+                        7: "#f9c74f",
+                        8: "#f8961e",
+                        9: "#f94144"}
+    for i, index in enumerate(graph.original_node.tolist()):
+        node_colors[i] = node_colors_dict[node_type[i].cpu().item()]
+        node_labels.append(entity_vocab[index])
+        
     for i, index in enumerate(graph.original_node.tolist()):
         if index == h:
-            node_colors[i] = "#ee6666"
+            node_colors[i] = "#F9B895"
         elif index == t:
-            node_colors[i] = "#3ba272"
-        node_labels.append(entity_vocab[index])
+            node_colors[i] = "#82C4E1"
 
+        
     plot.echarts(graph, title=title, node_colors=node_colors, node_labels=node_labels, relation_labels=relation_vocab,
                  dynamic_size=True, dynamic_width=True, save_file=save_file)
 

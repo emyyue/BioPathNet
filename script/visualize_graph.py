@@ -13,6 +13,8 @@ from torch.utils import data as torch_data
 import torchdrug
 from torchdrug import core, data
 from torchdrug.utils import comm, plot
+import pandas as pd
+
 
 
 import os
@@ -152,7 +154,7 @@ def echarts(graph, title=None, node_colors=None, edge_colors=None, node_labels=N
     with open(json_file, "w") as fout:
         json.dump(data, fout, sort_keys=True, indent=4)
 
-def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_vocab, ranking=None, save_file=None):
+def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_vocab, ranking=None, save_file=None, node_colors_dict=None):
     triplet2id = {tuple(edge.tolist()): i for i, edge in enumerate(graph.edge_list)}
     edge_weight = defaultdict(float)
     for path, weight in zip(paths, weights):
@@ -199,22 +201,14 @@ def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_voca
             h, t = t, h
             print("in if", h, t, r)
         index = triplet2id[(h, t, r)]
-        edge_colors[index] = "#DB2E34"
+        edge_colors[index] = node_colors_dict[99]
     
     node_type = graph.node_type
-    node_colors_dict = {0: "#72568f",
-                        1: "#f9844a",
-                        2: "#577590",
-                        3: "#277da1",
-                        4: "#f3722c",
-                        5: "#f94144",
-                        6: "#43aa8b",
-                        7: "#f9c74f",
-                        8: "#f8961e",
-                        9: "#f94144"}
-    for i, index in enumerate(graph.original_node.tolist()):
-        node_colors[i] = node_colors_dict[node_type[i].cpu().item()]
-        node_labels.append(entity_vocab[index])
+    if node_colors_dict:        
+        for i, index in enumerate(graph.original_node.tolist()):
+            node_colors[i] = node_colors_dict[node_type[i].cpu().item()]
+            node_labels.append(entity_vocab[index])
+
     
     # different color for head and tail 
     # h, t, r = sample[0].tolist()    
@@ -269,6 +263,8 @@ if __name__ == "__main__":
     vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
     vocab_file = os.path.abspath(vocab_file)
     torch.manual_seed(args.seed + comm.get_rank())
+    df = pd.read_csv(os.path.join(os.path.dirname(__file__), cfg.dataset.path, "node_colors_dict.txt"), sep="\t")
+    node_colors_dict = df.set_index('type').T.to_dict(orient="index")['color']
 
     logger = util.get_root_logger()
     if comm.get_rank() == 0:
@@ -326,7 +322,7 @@ if __name__ == "__main__":
                 paths, weights = task.visualize(sample)
                 if paths:
                     visualize_echarts(task.fact_graph, sample, paths, weights, entity_vocab, relation_vocab,
-                                          ranking[j, 0], save_file)
+                                          ranking[j, 0], save_file, node_colors_dict=node_colors_dict)
 
 #            entity = re.search(r"(.+) \(Q\d+\)", entity_vocab[t]).groups()[0]
             entity = entity_vocab[h].replace(" ", "")
@@ -338,5 +334,5 @@ if __name__ == "__main__":
                 paths, weights = task.visualize(sample)
                 if paths:
                     visualize_echarts(task.fact_graph, sample, paths, weights, entity_vocab, 
-                                          relation_vocab, ranking[j, 1], save_file)
+                                          relation_vocab, ranking[j, 1], save_file, node_colors_dict=node_colors_dict)
 

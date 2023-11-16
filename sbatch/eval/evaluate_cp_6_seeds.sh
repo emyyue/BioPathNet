@@ -20,7 +20,8 @@ model="2023-10-11-18-20-27-767344" # adv 0.5; lr 0.001
 #2023-11-15-20-22-14-945251; epoch=8
 
 #############################################################
-model="2023-11-15-20-19-20-391852"; epoch = 9 # seed: 88
+model="2023-11-15-20-19-20-391852"
+epoch = 9 # seed: 88
 layers=6
 
 CONDA_DIR=/home/icb/yue.hu/proj_genefun/conda-env/miniconda3
@@ -51,7 +52,8 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 
 
 #############################################################
-model="2023-11-15-20-12-01-547997"; epoch = 9 # seed 88
+model="2023-11-15-20-12-01-547997"
+epoch = 9 # seed 88
 layers=6
 
 
@@ -81,7 +83,8 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 
 
 #############################################################
-model="2023-11-15-12-31-17-473364"; epoch = 9 # seed :1618
+model="2023-11-15-12-31-17-473364"
+epoch = 9 # seed :1618
 layers=6
 
 conda deactivate

@@ -2,7 +2,7 @@
 #SBATCH --job-name=nbfnet_biomed
 #SBATCH --output=./slurm_out/eval_cp_seeds.txt
 #SBATCH --error=./slurm_out/eval_cp_seeds.txt
-#SBATCH --time=2:00:00
+#SBATCH --time=8:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4
 #SBATCH --gres=gpu:1
@@ -18,11 +18,10 @@ model="2023-10-11-18-20-27-767344" # adv 0.5; lr 0.001
 #model="2023-10-11-18-20-27-768781" # adv 0.5; lr 0.005
 
 #2023-11-15-20-22-14-945251; epoch=8
-
-#############################################################
-model="2023-11-15-20-19-20-391852"
-epoch=9 # seed: 88
+############################################################
+model="2023-10-11-18-20-38-624703";epoch=10 # adv 1
 layers=6
+seed=42
 
 CONDA_DIR=/home/icb/yue.hu/proj_genefun/conda-env/miniconda3
 eval "$($CONDA_DIR/bin/conda shell.bash hook)"
@@ -34,11 +33,12 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/lib64
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/targets/x86_64-linux/lib
 
 mkdir -p /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
-python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
-    -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval_${layers}.yaml \
-    --gpus [0] \
-    --checkpoint  /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/$model/model_epoch_${epoch}.pth \
-    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
+#python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
+#    -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval_${layers}_seed.yaml \
+#    --gpus [0] \
+#    --datasplit_seed $seed \
+#    --checkpoint  /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/$model/model_epoch_${epoch}.pth \
+#    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
 
 ### TxGNN part
 conda deactivate
@@ -47,6 +47,42 @@ conda activate txgnn_env_plotnine
 python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_evaluation.py  \
     $split \
     /home/icb/samuele.firmani/NBFNet/sbatch/primekg/$split/txgnn_logs/saved_models/${split}_model_ckpt_best_hyperparam/ \
+    /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/$model \
+    ${split}_plot_${layers}layers.pdf
+
+
+
+
+#############################################################
+model="2023-11-15-20-19-20-391852"
+epoch=9 # seed: 88
+layers=6
+seed=88
+
+CONDA_DIR=/home/icb/yue.hu/proj_genefun/conda-env/miniconda3
+eval "$($CONDA_DIR/bin/conda shell.bash hook)"
+
+conda activate env_re_nbfnet
+
+export PATH=/usr/local/cuda-11.8/bin:$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/lib64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/targets/x86_64-linux/lib
+
+mkdir -p /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
+#python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
+#    -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval_${layers}_seed.yaml \
+#    --gpus [0] \
+#    --datasplit_seed $seed \
+#    --checkpoint  /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/$model/model_epoch_${epoch}.pth \
+#    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
+
+### TxGNN part
+conda deactivate
+conda activate txgnn_env_plotnine
+
+python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_evaluation.py  \
+    $split \
+    /home/icb/samuele.firmani/NBFNet/sbatch/primekg/$split/txgnn_logs/saved_models/${split}_model_ckpt_best_hyperparam_${seed}/ \
     /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/$model \
     ${split}_plot_${layers}layers.pdf
 
@@ -55,6 +91,7 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 model="2023-11-15-20-12-01-547997"
 epoch=9 # seed 88
 layers=6
+seed=14
 
 
 conda deactivate
@@ -65,11 +102,12 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/lib64
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/targets/x86_64-linux/lib
 
 mkdir -p /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
-python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
-    -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval_${layers}.yaml \
-    --gpus [0] \
-    --checkpoint  /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/$model/model_epoch_${epoch}.pth \
-    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
+#python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
+#    -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval_${layers}_seed.yaml \
+#    --gpus [0] \
+#    --datasplit_seed ${seed} \
+#    --checkpoint  /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/$model/model_epoch_${epoch}.pth \
+#    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
 
 ### TxGNN part
 conda deactivate
@@ -77,7 +115,7 @@ conda activate txgnn_env_plotnine
 
 python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_evaluation.py  \
     $split \
-    /home/icb/samuele.firmani/NBFNet/sbatch/primekg/$split/txgnn_logs/saved_models/${split}_model_ckpt_best_hyperparam/ \
+    /home/icb/samuele.firmani/NBFNet/sbatch/primekg/$split/txgnn_logs/saved_models/${split}_model_ckpt_best_hyperparam_${seed}/ \
     /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/$model \
     ${split}_plot_${layers}layers.pdf
 
@@ -86,6 +124,7 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 model="2023-11-15-12-31-17-473364"
 epoch=9 # seed :1618
 layers=6
+seed=1618
 
 conda deactivate
 conda activate env_re_nbfnet
@@ -95,11 +134,12 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/lib64
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/targets/x86_64-linux/lib
 
 mkdir -p /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
-python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
-    -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval_${layers}.yaml \
-    --gpus [0] \
-    --checkpoint  /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/$model/model_epoch_${epoch}.pth \
-    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
+#python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
+#    -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval_${layers}_seed.yaml \
+#    --gpus [0] \
+#    --datasplit_seed ${seed} \
+#    --checkpoint  /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/$model/model_epoch_${epoch}.pth \
+#    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
 
 ### TxGNN part
 conda deactivate
@@ -107,6 +147,40 @@ conda activate txgnn_env_plotnine
 
 python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_evaluation.py  \
     $split \
-    /home/icb/samuele.firmani/NBFNet/sbatch/primekg/$split/txgnn_logs/saved_models/${split}_model_ckpt_best_hyperparam/ \
+    /home/icb/samuele.firmani/NBFNet/sbatch/primekg/$split/txgnn_logs/saved_models/${split}_model_ckpt_best_hyperparam_${seed}/ \
     /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/$model \
     ${split}_plot_${layers}layers.pdf
+
+#############################################################
+model="2023-11-15-20-22-14-945251"
+epoch=8
+layers=6
+seed=2011
+
+CONDA_DIR=/home/icb/yue.hu/proj_genefun/conda-env/miniconda3
+eval "$($CONDA_DIR/bin/conda shell.bash hook)"
+
+conda activate env_re_nbfnet
+
+export PATH=/usr/local/cuda-11.8/bin:$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/lib64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/targets/x86_64-linux/lib
+
+mkdir -p /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
+#python /home/icb/yue.hu/proj_genefun/NBFNet/script/txgnn_evaluate.py \
+#    -c /home/icb/yue.hu/proj_genefun/NBFNet/config/knowledge_graph/primekg/eval/${split}_eval_${layers}_seed.yaml \
+#    --gpus [0] \
+#    --datasplit_seed $seed \
+#    --checkpoint  /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/$model/model_epoch_${epoch}.pth \
+#    --output_directory /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/
+
+### TxGNN part
+conda deactivate
+conda activate txgnn_env_plotnine
+
+python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_evaluation.py  \
+    $split \
+    /home/icb/samuele.firmani/NBFNet/sbatch/primekg/$split/txgnn_logs/saved_models/${split}_model_ckpt_best_hyperparam_${seed}/ \
+    /home/icb/yue.hu/proj_genefun/NBFNet/experiments/txgnn_eval/$split/$model \
+    ${split}_plot_${layers}layers.pdf
+

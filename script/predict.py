@@ -90,7 +90,7 @@ def get_prediction(cfg, solver, relation_vocab):
     pred = utils.cat(preds)
     target = utils.cat(targets)
     mask = utils.cat(masks)
-
+    logger.warning("Done")
     
     return pred, target, mask
 
@@ -116,18 +116,18 @@ def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
                    'pred_node': np.tile(nodes, len(testset_relation)),
                    'pred_node_type': np.tile(node_type, len(testset_relation)),
                    'probability':prob.tolist()}
-         
+        print("1")
         # mask out unwanted
-        mymask = temp['pred_node_type'] == 4
+        mymask = temp['pred_node_type'] == 2
         df_dict = {'query_node': temp['query_node'][mymask],
-                   'query_relation': temp['query_relation'][mymask],
-                   'reverse': j,
-                   'pred_node':  temp['pred_node'][mymask],
-                   'pred_node_type':  temp['pred_node_type'][mymask],
-                   'probability': prob[mymask]}
+                  'query_relation': temp['query_relation'][mymask],
+                  'reverse': j,
+                  'pred_node':  temp['pred_node'][mymask],
+                  'pred_node_type':  temp['pred_node_type'][mymask],
+                  'probability': prob[mymask]}
             
         dflist.append(df_dict)
-        
+    print("2")
     df = pd.concat([pd.DataFrame(dflist[0]),pd.DataFrame(dflist[1])])
     df = df.drop_duplicates()
     lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
@@ -169,11 +169,12 @@ if __name__ == "__main__":
     logger.warning("Starting link prediction")
     
     pred, target, mask = get_prediction(cfg, solver, relation_vocab)
+    print("Predictions done")
     df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
     print(os.path.join(working_dir, "predictions.csv"))
-    df = df.loc[df.reverse==1]
-    df = df.loc[df.pred_node_type==4]
+#    df = df.loc[df.reverse==1]
+#    df = df.loc[df.pred_node_type==4]
     df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
-    df.to_csv(os.path.join( working_dir, "predictions_predict.csv"), index=False, sep="\t")
+    df.to_csv(os.path.join( working_dir, "predictions.csv"), index=False, sep="\t")

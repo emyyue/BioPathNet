@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/eval_cp_seeds.txt
-#SBATCH --error=./slurm_out/eval_cp_seeds.txt
+#SBATCH --output=./slurm_out/eval_cardio_seeds.txt
+#SBATCH --error=./slurm_out/eval_cardio_seeds.txt
 #SBATCH --time=8:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4
@@ -11,12 +11,13 @@
 ##SBATCH --constraint=a100_80gb
 ##SBATCH -w gpusrv61
 
-split="cell_proliferation"
+split="cardiovascular"
 
 ############################################################
-model="2023-11-28-14-41-12-818389";epoch=9 # adv 1
+model="2023-11-30-09-03-27-134157"
+epoch=10
 layers=6
-seed=42
+seed=14
 
 CONDA_DIR=/home/icb/yue.hu/proj_genefun/conda-env/miniconda3
 eval "$($CONDA_DIR/bin/conda shell.bash hook)"
@@ -49,10 +50,10 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 
 
 #############################################################
-model="2023-11-28-14-37-54-363599"
-epoch=9 # seed: 88
+model="2023-11-30-09-09-13-617387"
+epoch=9 
 layers=6
-seed=88
+seed=42
 
 CONDA_DIR=/home/icb/yue.hu/proj_genefun/conda-env/miniconda3
 eval "$($CONDA_DIR/bin/conda shell.bash hook)"
@@ -83,10 +84,10 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 
 
 #############################################################
-model="2023-11-28-14-40-46-486490"
-epoch=9 # seed 14
+model="2023-11-30-09-14-50-521193"
+epoch=9 
 layers=6
-seed=14
+seed=88
 
 
 conda deactivate
@@ -116,8 +117,8 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 
 
 #############################################################
-model="2023-11-28-14-40-12-551111"
-epoch=9 # seed :1618
+model="2023-11-30-09-11-58-639129"
+epoch=5
 layers=6
 seed=1618
 
@@ -147,8 +148,8 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
     ${split}_plot_${layers}layers.pdf
 
 #############################################################
-model="2023-11-28-14-40-42-549856"
-epoch=10
+model="2023-11-30-10-27-38-244662"
+epoch=9
 layers=6
 seed=2011
 

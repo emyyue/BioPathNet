@@ -297,7 +297,7 @@ if __name__ == "__main__":
     task.eval()
     for i in range(20):
         batch = data.graph_collate([test_set[i * solver.batch_size + j] for j in range(solver.batch_size)])
-        #batch = torchdrug.utils.cuda(batch)
+        batch = torchdrug.utils.cuda(batch)
         with torch.no_grad():
             pred, (mask, target) = task.predict_and_target(batch)
         pos_pred = pred.gather(-1, target.unsqueeze(-1))

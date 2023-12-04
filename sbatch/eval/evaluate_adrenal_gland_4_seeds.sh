@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/eval_anemia_seeds.txt
+#SBATCH --output=./slurm_out/eval_adrenal_gland_seeds.txt
 #SBATCH --error=./slurm_out/eval_anemia_seeds.txt
 #SBATCH --time=8:00:00
 #SBATCH --mem=64Gb
@@ -11,11 +11,11 @@
 ##SBATCH --constraint=a100_80gb
 ##SBATCH -w gpusrv61
 
-split="anemia"
+split="adrenal_gland"
 layers=4
 ############################################################
-model="2023-11-29-16-53-36-882952"
-epoch=8
+model="2023-11-29-15-42-00-232275"
+epoch=10
 seed=14
 
 CONDA_DIR=/home/icb/yue.hu/proj_genefun/conda-env/miniconda3
@@ -49,7 +49,7 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 
 
 #############################################################
-model="2023-11-29-16-51-59-768399"
+model="2023-11-29-15-43-45-861740"
 epoch=9 
 seed=42
 
@@ -82,8 +82,8 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 
 
 #############################################################
-model="2023-11-29-17-05-13-269369"
-epoch=10
+model="2023-11-29-15-44-42-746626"
+epoch=8
 seed=88
 
 
@@ -114,8 +114,8 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
 
 
 #############################################################
-model="2023-11-29-17-06-44-021886"
-epoch=8
+model="2023-11-29-15-40-21-310269"
+epoch=9
 seed=1618
 
 conda deactivate
@@ -144,7 +144,7 @@ python /home/icb/yue.hu/proj_genefun/source/txgnn_nbfnet/scripts/txgnn_nbfnet_ev
     ${split}_plot_${layers}layers.pdf
 
 #############################################################
-model="2023-11-29-17-11-37-401758"
+model="2023-11-29-15-42-58-695131"
 epoch=9
 seed=2011
 

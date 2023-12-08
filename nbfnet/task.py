@@ -888,7 +888,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
 @R.register("tasks.KnowledgeGraphCompletionBiomedEval")
 class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Configurable):
     def __init__(self, model, criterion="bce",
-                metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "auroc", "ap"),
+                metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "auroc", "ap", "auroc_all", "ap_all"),
                 num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                 heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                 fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
@@ -963,6 +963,18 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         pred_h_auprc_mean = np.array(pred_h_auprc).mean()
         pred_h_auroc_mean = np.array(pred_h_auroc).mean()
         
+        # calculate auroc and auprc for all predictions (instead of 1:1)
+        # split into t and h neg_pred
+        neg_pred_t = pred[:,0,:].masked_select(mask_inv_target[:,0,:]) 
+        neg_pred_h = pred[:,1,:].masked_select(mask_inv_target[:,1,:]) 
+        # get for t and h the predictions
+        pred_metric_t = torch.cat([pos_pred[:,0,:].flatten(), neg_pred_t.flatten()])
+        pred_metric_h = torch.cat([pos_pred[:,1,:].flatten(), neg_pred_h.flatten()])
+        # construct for t and h, the pos and neg labels
+        target_metric_t = torch.cat([torch.ones_like(pos_pred[:,0,:].flatten()),torch.zeros_like(neg_pred_t)])
+        target_metric_h = torch.cat([torch.ones_like(pos_pred[:,1,:].flatten()),torch.zeros_like(neg_pred_h)])
+        
+        
         
         metric = {}
         for _metric in self.metric:
@@ -978,6 +990,12 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
                 score = np.array([pred_t_auroc_mean, pred_h_auroc_mean])
             elif _metric == "ap":
                 score = np.array([pred_t_auprc_mean, pred_h_auprc_mean])
+            elif _metric == "auroc_all":
+                score = np.array([metrics.area_under_roc(pred_metric_t, target_metric_t),
+                                  metrics.area_under_roc(pred_metric_h, target_metric_h)])
+            elif _metric == "ap_all":
+                score = np.array([metrics.area_under_prc(pred_metric_t, target_metric_t) ,
+                                  metrics.area_under_prc(pred_metric_h, target_metric_h) ])
             else:
                 raise ValueError("Unknown metric `%s`" % _metric)
             name = tasks._get_metric_name(_metric)

@@ -46,5 +46,3 @@ train:
 metric: mrr
 
 checkpoint: {{checkpoint}}
-
-output_directory: {{output_directory}}

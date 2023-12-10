@@ -496,7 +496,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
-                 full_batch_eval=False):
+                 full_batch_eval=False, remove_pos=True):
         super(KnowledgeGraphCompletionBiomed, self).__init__(model=model, criterion=criterion, metric=metric, 
                                                              num_negative=num_negative, margin=margin,
                                                              adversarial_temperature=adversarial_temperature, 
@@ -507,6 +507,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         self.heterogeneous_evaluation = heterogeneous_evaluation
         self.gene_annotation_predict = gene_annotation_predict
         self.conditional_probability = conditional_probability
+        self.remove_pos = remove_pos
         
     def preprocess(self, train_set, valid_set, test_set):
         if isinstance(train_set, torch_data.Subset):
@@ -577,7 +578,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         t_truth_index = self.graph.edge_list[edge_index, 1]
         pos_index = torch.repeat_interleave(num_t_truth)
         t_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
-        t_mask[pos_index, t_truth_index] = 0
+        if self.remove_pos:
+            t_mask[pos_index, t_truth_index] = 0
         if self.heterogeneous_evaluation:
             t_mask[node_type.unsqueeze(0) != node_type[pos_t_index].unsqueeze(-1)] = 0
 
@@ -586,7 +588,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         h_truth_index = self.graph.edge_list[edge_index, 0]
         pos_index = torch.repeat_interleave(num_h_truth)
         h_mask = torch.ones(batch_size, self.num_entity, dtype=torch.bool, device=self.device)
-        h_mask[pos_index, h_truth_index] = 0
+        if self.remove_pos:
+            h_mask[pos_index, h_truth_index] = 0
         if self.heterogeneous_evaluation:
             h_mask[node_type.unsqueeze(0) != node_type[pos_h_index].unsqueeze(-1)] = 0
 

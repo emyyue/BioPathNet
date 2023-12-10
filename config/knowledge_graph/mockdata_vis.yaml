@@ -1,8 +1,8 @@
-output_dir: /home/icb/yue.hu/proj_genefun/NBFNet/experiments/
+output_dir: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/experiments/
 
 dataset:
   class: biomedical
-  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/mock
+  path: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/data/mock
   include_factgraph: True
 
 task:
@@ -26,6 +26,7 @@ task:
   heterogeneous_evaluation: yes
   conditional_probability: yes
   full_batch_eval: False
+  remove_pos: no
 
 
 
@@ -44,4 +45,4 @@ train:
   
 metric: mrr
 
-checkpoint: {{checkpoint}}
+#checkpoint: {{checkpoint}}

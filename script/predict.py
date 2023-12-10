@@ -65,7 +65,7 @@ def load_vocab(dataset):
     return entity_vocab, relation_vocab
 
 @torch.no_grad()
-def get_prediction(cfg, solver, relation_vocab):
+def get_prediction(cfg, solver, relation_vocab, dataset):
     test_set = solver.test_set
 
     dataloader = data.DataLoader(test_set, solver.batch_size, sampler=None, num_workers=solver.num_worker)
@@ -87,49 +87,44 @@ def get_prediction(cfg, solver, relation_vocab):
         targets.append(target)
         masks.append(mask)
     
-    pred = utils.cat(preds)
-    target = utils.cat(targets)
-    mask = utils.cat(masks)
-    logger.warning("Done")
-    
-    return pred, target, mask
+    pred = utils.cat(preds).detach().cpu()
+    mask = utils.cat(masks).detach().cpu()
+    target = utils.cat(targets).detach().cpu()
+    pred = pred[mask]
 
-def pred_to_dataframe(pred, dataset, entity_vocab, relation_vocab):
+    # get nodes
+    nodes = dataset.entity_vocab
+    
+    # get prediction nodes
+    nodes_mask = np.broadcast_to(nodes, tuple(np.array(mask.shape))) # broadcast nodes to mask shape
+    pred_nodes = nodes_mask[mask] # mask out unwanted
+
+    # get query nodes
+    trans_target = torch.transpose(torch.flip(torch.transpose(target, 0, 1), [0]), 0,1) # flip target
+    idx = torch.reshape(trans_target, (-1,)).cpu().numpy() # reshape to 1D
+    target_nodes = np.array(nodes)[idx] # get nodes from index
+    rep_times = np.sum(mask.cpu().numpy(), axis=2).reshape(mask.shape[0]*mask.shape[1]) # get number of times to repeat
+    query_node = np.repeat(target_nodes, rep_times) # repeat nodes
+    
+    # test_relation
+    testset_relation =  [relation_vocab[i].split(" ")[0] for i in [x.numpy()[2] for x in solver.test_set]] # get relation from testset
+    rels = np.column_stack((testset_relation, ['rev_' + s for s in testset_relation])) # get both relation and relation^(-1)
+    query_rel = np.repeat(rels, rep_times) # repeat relations
+    
+    
+    df = {"query_node": query_node,
+          'query_relation':query_rel,
+          "pred_node": pred_nodes,
+          "probability": pred}
+
+    df = pd.DataFrame(df)
+    df = df.drop_duplicates()
+    logger.warning("Done")
+    return df
+
+def merge_with_entity_vocab(df, dataset, entity_vocab, relation_vocab):
     # get head nodes
     
-    #testset_nodes = [dataset.entity_vocab[i] for i in [x.numpy()[0] for x in solver.test_set]]
-    testset_relation =  [relation_vocab[i] for i in [x.numpy()[2] for x in solver.test_set]]
-    nodes = dataset.entity_vocab
-    node_type = dataset.graph.node_type
-    
-    # get both relation and relation^(-1)
-    dflist=[]
-    for j in [0, 1]:
-        # sigmoid = torch.nn.Sigmoid()
-        # prob = sigmoid(pred[:, j, :])
-        prob = (pred[:, j, :])
-        prob = prob.flatten().cpu().numpy()
-        
-        temp = {'query_node': np.repeat([dataset.entity_vocab[i] for i in [x.numpy()[j] for x in solver.test_set]], len(nodes)),
-                   'query_relation': np.repeat(testset_relation, len(nodes)),
-                   'reverse': j,
-                   'pred_node': np.tile(nodes, len(testset_relation)),
-                   'pred_node_type': np.tile(node_type, len(testset_relation)),
-                   'probability':prob.tolist()}
-        print("1")
-        # mask out unwanted
-        mymask = temp['pred_node_type'] == 2
-        df_dict = {'query_node': temp['query_node'][mymask],
-                  'query_relation': temp['query_relation'][mymask],
-                  'reverse': j,
-                  'pred_node':  temp['pred_node'][mymask],
-                  'pred_node_type':  temp['pred_node_type'][mymask],
-                  'probability': prob[mymask]}
-            
-        dflist.append(df_dict)
-    print("2")
-    df = pd.concat([pd.DataFrame(dflist[0]),pd.DataFrame(dflist[1])])
-    df = df.drop_duplicates()
     lookup = pd.DataFrame(list(zip( dataset.entity_vocab, entity_vocab)), columns =['short', 'long'])
 
     df = pd.merge(df, lookup, how="left", left_on="query_node", right_on="short", sort=False)
@@ -168,13 +163,10 @@ if __name__ == "__main__":
 
     logger.warning("Starting link prediction")
     
-    pred, target, mask = get_prediction(cfg, solver, relation_vocab)
+    df = get_prediction(cfg, solver, relation_vocab, _dataset)
     print("Predictions done")
-    df = pred_to_dataframe(pred, _dataset, entity_vocab, relation_vocab)
+    df = merge_with_entity_vocab(df, _dataset, entity_vocab, relation_vocab)
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
     print(os.path.join(working_dir, "predictions.csv"))
-#    df = df.loc[df.reverse==1]
-#    df = df.loc[df.pred_node_type==4]
-    df['query_relation'] = df['query_relation'].str.split(" \(").str[0]
     df.to_csv(os.path.join( working_dir, "predictions.csv"), index=False, sep="\t")

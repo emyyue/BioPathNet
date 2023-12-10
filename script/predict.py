@@ -87,10 +87,11 @@ def get_prediction(cfg, solver, relation_vocab, dataset):
         targets.append(target)
         masks.append(mask)
     
-    pred = utils.cat(preds).detach().cpu()
-    mask = utils.cat(masks).detach().cpu()
+    pred = utils.cat(preds)
+    mask = utils.cat(masks)
+    pred = pred[mask].detach().cpu()
+    mask = mask.detach().cpu()
     target = utils.cat(targets).detach().cpu()
-    pred = pred[mask]
 
     # get nodes
     nodes = dataset.entity_vocab

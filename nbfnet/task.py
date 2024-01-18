@@ -918,7 +918,9 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         ranking_filt = torch_scatter.scatter_mean(torch.transpose(ranking, 0, 1).float(),
                                                   torch.flip(torch.transpose(target, 0, 1), [0]), out=ranking_filt)
         valid_ranking =  np.ma.masked_where(ranking_filt == 0, ranking_filt)
-        
+        print(f'Rankings aggregated per tail node {valid_ranking[1][~valid_ranking[1].mask]}')
+        print(f'MRR per tail node {1/(valid_ranking[1][~valid_ranking[1].mask])}')
+
 
         # get neg_pred
         mask_inv_target = torch.ones_like(pred, dtype=torch.bool)

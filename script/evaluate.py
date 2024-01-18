@@ -84,17 +84,20 @@ if __name__ == "__main__":
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
 
-    _dataset = core.Configurable.load_config_dict(cfg.dataset)
-    train_set, valid_set, test_set = _dataset.split()
-    full_valid_set = valid_set
-    if comm.get_rank() == 0:
-        logger.warning(_dataset)
-        logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
+    for i in ['test_contra.txt', 'test_indi.txt', 'test_off.txt']:
+        cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', i]
+        _dataset = core.Configurable.load_config_dict(cfg.dataset)
+        train_set, valid_set, test_set = _dataset.split()
+        full_valid_set = valid_set
+        if comm.get_rank() == 0:
+            logger.warning(_dataset)
+            logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
 
-    solver = build_solver(cfg)
+        solver = build_solver(cfg)
 
-    if "checkpoint" in cfg:
-        solver_load(cfg.checkpoint)
-    entity_vocab, relation_vocab = load_vocab(_dataset)
-    
-    evaluate_per_node(cfg, solver)
+        if "checkpoint" in cfg:
+            solver_load(cfg.checkpoint)
+        entity_vocab, relation_vocab = load_vocab(_dataset)
+
+        logger.warning(f"Starting evaluation on {i}")
+        evaluate_per_node(cfg, solver)

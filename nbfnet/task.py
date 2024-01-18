@@ -920,7 +920,7 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
         valid_ranking =  np.ma.masked_where(ranking_filt == 0, ranking_filt)
         print(f'Rankings aggregated per tail node {valid_ranking[1][~valid_ranking[1].mask]}')
         print(f'MRR per tail node {1/(valid_ranking[1][~valid_ranking[1].mask])}')
-
+        print(f'index of tail nodes {[i for i, x in enumerate(~valid_ranking[1].mask) if x]}')
 
         # get neg_pred
         mask_inv_target = torch.ones_like(pred, dtype=torch.bool)

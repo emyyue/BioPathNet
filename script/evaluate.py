@@ -101,3 +101,7 @@ if __name__ == "__main__":
 
         logger.warning(f"Starting evaluation on {i}")
         evaluate_per_node(cfg, solver)
+        
+
+    with open(os.path.join(working_dir + '/entity_vocab.txt'), mode='wt', encoding='utf-8') as myfile:
+        myfile.write('\n'.join(entity_vocab))

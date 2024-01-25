@@ -72,11 +72,12 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
-    print(working_dir)
-    print("seed :", args.seed)
     torch.manual_seed(args.seed + comm.get_rank())
 
     logger = util.get_root_logger()
+    logger.warning("Working directory: %s" % working_dir)
+    logger.warning("Input Seed: %d" % args.seed)
+    logger.warning("Set Seed: %d" % args.seed + comm.get_rank())
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))

@@ -144,6 +144,7 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed + comm.get_rank())
 
     logger = util.get_root_logger()
+    logger.warning("Working directory: %s" % working_dir)
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))

@@ -109,10 +109,11 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed + comm.get_rank())
 
     logger = util.get_root_logger()
+    logger.warning("Working directory: %s" % working_dir)
     logger.warning("Config file: %s" % args.config)
     logger.warning(pprint.pformat(cfg))
 
-    cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', 'test_eval.txt']
+    cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', 'test_vis.txt']
     _dataset = core.Configurable.load_config_dict(cfg.dataset)
     train_set, valid_set, test_set = _dataset.split()
     solver = build_solver(cfg)

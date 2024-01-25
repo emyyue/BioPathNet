@@ -267,11 +267,12 @@ if __name__ == "__main__":
     node_colors_dict = df.set_index('type').T.to_dict(orient="index")['color']
 
     logger = util.get_root_logger()
+    logger.warning("Working directory: %s" % working_dir)
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
 
-    cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', 'test_eval.txt']
+    cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', 'test_vis.txt']
     _dataset = core.Configurable.load_config_dict(cfg.dataset)
     train_set, valid_set, test_set = _dataset.split()
     full_valid_set = valid_set

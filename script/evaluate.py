@@ -81,13 +81,11 @@ if __name__ == "__main__":
 
     logger = util.get_root_logger()
     logger.warning("Working directory: %s" % working_dir)
-    logger.warning("Input Seed: %d" % args.seed)
-    logger.warning("Set Seed: %d" % args.seed + comm.get_rank())
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
 
-    for i in ['test.txt', 'test_contra.txt', 'test_indi.txt', 'test_off.txt']:
+    for i in ['test_contra.txt', 'test_indi.txt', 'test_off.txt']:
         cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', i]
         _dataset = core.Configurable.load_config_dict(cfg.dataset)
         train_set, valid_set, test_set = _dataset.split()

@@ -937,7 +937,6 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
             # pos pred per h node
             idx1 = (trans_target[:,0] == i).nonzero().squeeze(-1)
             idx3 = target[idx1][:,0]
-            print(idx1, 0, idx3)
             pos_pred_node = pred[idx1, 0, idx3]
             # neg pred per h node
             neg_pred_node = pred[idx1[0], 0, :].masked_select(mask_inv_target[idx1[0], 0,:])

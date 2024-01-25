@@ -8,6 +8,9 @@ import torch
 from torchdrug import core, models
 from torchdrug.utils import comm
 
+import numpy as np
+import random
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
 
@@ -72,6 +75,8 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
     torch.manual_seed(args.seed + comm.get_rank())
 
     logger = util.get_root_logger()

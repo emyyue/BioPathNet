@@ -1,10 +1,10 @@
-output_dir: /network/scratch/s/sophie.xhonneux/NBFNet/experiments/
+output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
 
 dataset:
   class: biomedical
-  path: /home/mila/s/sophie.xhonneux/projects/NBFNet/NBFNet/data/mock
-  include_factgraph: True
-  
+  path: /lustre/groups/crna01/datasets/linkpred/mock
+  include_factgraph: False  
+
 task:
   class: KnowledgeGraphCompletionBiomed
   # class: KnowledgeGraphEmbeddingEx

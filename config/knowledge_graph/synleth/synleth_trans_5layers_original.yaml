@@ -2,7 +2,7 @@ output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
 
 dataset:
   class: biomedical
-  path: /lustre/groups/crna01/datasets/linkpred/synleth/transductive_noRev_threshold/
+  path: /lustre/groups/crna01/datasets/linkpred/synleth/transductive_noRev/
   include_factgraph: True
   
 task:
@@ -17,9 +17,8 @@ task:
     layer_norm: yes
     dependent: yes
     symmetric: yes
-    remove_one_hop: no
   criterion: bce
-  num_negative: 32
+  num_negative: 64
   strict_negative: yes
   adversarial_temperature: 0.5
   sample_weight: no
@@ -33,7 +32,7 @@ task:
 
 optimizer:
   class: Adam
-  lr: 1.0e-3
+  lr: 5.0e-3
 
 engine:
   gpus: {{ gpus }}
@@ -41,7 +40,7 @@ engine:
   
 
 train:
-  num_epoch: 20
+  num_epoch: 15
   
 metric: mrr
 

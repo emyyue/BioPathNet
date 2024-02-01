@@ -168,6 +168,7 @@ if __name__ == "__main__":
     df = get_prediction(cfg, solver, relation_vocab, _dataset)
     print("Predictions done")
     df = merge_with_entity_vocab(df, _dataset, entity_vocab, relation_vocab)
+    df = df.sort_values(['query_node','query_relation', 'probability'], ascending=[True, False,False])
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
     print(os.path.join(working_dir, "predictions.csv"))

@@ -23,8 +23,8 @@ task:
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  gene_annotation_predict: False
-
+  conditional_probability: yes
+  full_batch_eval: yes
 
 
 optimizer:
@@ -33,11 +33,11 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 32
+  batch_size: 8
   
 
 train:
   num_epoch: 8
-  batch_per_epoch: 1000
+  #batch_per_epoch: 1000
   
 metric: mrr

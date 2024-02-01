@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/eval_adrenal_gland_seeds.txt
-#SBATCH --error=./slurm_out/eval_adrenal_gland_seeds.txt
+#SBATCH --output=./slurm_out/eval_adrenal_gland_6_seeds.txt
+#SBATCH --error=./slurm_out/eval_adrenal_gland_6_seeds.txt
 #SBATCH --time=8:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4

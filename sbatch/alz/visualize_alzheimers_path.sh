@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/vis_alz_path.txt
-#SBATCH --error=./slurm_out/vis_alz_path.txt
+#SBATCH --output=./slurm_out/vis_alz_path_%j.txt
+#SBATCH --error=./slurm_out/vis_alz_path_%j.txt
 #SBATCH --time=2:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4

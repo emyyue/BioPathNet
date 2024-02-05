@@ -689,7 +689,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 for neg_index in all_index.split(num_negative):
                     r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                     h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
-                    if str(self.model) == "NBFNet()":
+                    if "NeuralBellmanFordNetwork" in str(self.model):
                         t_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
                     else:
                         t_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
@@ -698,7 +698,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 for neg_index in all_index.split(num_negative):
                     r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                     t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
-                    if str(self.model) == "NBFNet()":
+                    if "NeuralBellmanFordNetwork" in str(self.model):
                         h_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
                     else:
                         h_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
@@ -748,7 +748,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 r_index = pos_r_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
                 t_index[:batch_size // 2, 1:] = neg_index[:batch_size // 2]
                 h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
-                if str(self.model) == "NBFNet()":
+                if "NeuralBellmanFordNetwork" in str(self.model):
                     pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
                 else:
                     pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)

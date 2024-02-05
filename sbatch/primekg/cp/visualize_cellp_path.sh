@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/vis_cellProlif_path_all.txt
-#SBATCH --error=./slurm_out/vis_cellProlif_path_all.txt
+#SBATCH --output=./slurm_out/vis_cp_wLeak-%j.txt
+#SBATCH --error=./slurm_out/vis_cp_wLeak-%j.txt
 #SBATCH --time=10:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4
@@ -23,4 +23,4 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/targets/x86_64-linu
 cd /home/icb/yue.hu/proj_genefun/NBFNet
 
 
-python script/visualize.py -c  config/knowledge_graph/primekg/vis/cell_proliferation_vis.yaml --gpus [0] --checkpoint /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2023-11-28-14-41-12-818389/model_epoch_9.pth
+python script/visualize.py -c  config/knowledge_graph/primekg/vis/cell_proliferation_pred.yaml --gpus [0] --checkpoint /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2023-11-28-14-41-12-818389/model_epoch_9.pth

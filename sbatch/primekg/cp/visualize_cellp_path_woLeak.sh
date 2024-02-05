@@ -23,4 +23,4 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/targets/x86_64-linu
 cd /home/icb/yue.hu/proj_genefun/NBFNet
 
 
-python script/visualize.py -c  config/knowledge_graph/primekg/vis/cell_proliferation_pred_woLeak.yaml --gpus [0] --checkpoint /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2023-11-28-14-41-12-818389/model_epoch_9.pth
+python script/visualize.py -c  config/knowledge_graph/primekg/vis/cell_proliferation_vis_woLeak.yaml --gpus [0] --checkpoint /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2023-11-28-14-41-12-818389/model_epoch_9.pth

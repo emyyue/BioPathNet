@@ -2,7 +2,7 @@ output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
 
 dataset:
   class: biomedical
-  path: /lustre/groups/crna01/datasets/linkpred/txgnn/cell_proliferation_42/nfbnet
+  path: /lustre/groups/crna01/datasets/linkpred/txgnn/cell_proliferation_42_woLeak/nfbnet
   include_factgraph: True
   
 task:
@@ -26,8 +26,7 @@ task:
   heterogeneous_evaluation: yes
   gene_annotation_predict: no
   conditional_probability: yes
-  full_batch_eval: True
-  remove_pos: no
+  full_batch_eval: yes
 
 
 
@@ -38,7 +37,7 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 8
+  batch_size: 4
 
   
 train:

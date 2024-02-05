@@ -1,8 +1,8 @@
-output_dir: ~/experiments/
+output_dir: /lustre/groups/crna01/projects/genefunction/experiments/
 
 dataset:
   class: biomedical
-  path: /home/mila/y/yue.hu/github/NBFNet/data/PC_KEGG
+  path: /lustre/groups/crna01/datasets/linkpred/PC_KEGG_0602/
   include_factgraph: False
   
 task:
@@ -32,11 +32,11 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 64
+  batch_size: 32
   
 
 train:
   num_epoch: 1
-  batch_per_epoch: 1000
+  batch_per_epoch: 1
 
 metric: mrr

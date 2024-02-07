@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/vis_cellProlif_all.txt
-#SBATCH --error=./slurm_out/vis_cellProlif_all.txt
-#SBATCH --time=10:00:00
+#SBATCH --output=./slurm_out/vis_cp_%j.txt
+#SBATCH --error=./slurm_out/vis_cp_%j.txt
+#SBATCH --time=4:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4
 #SBATCH --gres=gpu:1
@@ -25,6 +25,6 @@ cd /home/icb/yue.hu/proj_genefun/NBFNet
 
 #python script/predict.py -c  config/knowledge_graph/primekg/vis/cell_proliferation_vis.yaml --gpus [0] --checkpoint /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2023-10-11-18-20-38-624703/model_epoch_10.pth
 
-python script/visualize_graph.py -c  config/knowledge_graph/primekg/vis/cell_proliferation_vis.yaml --gpus [0] --checkpoint /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2023-11-28-14-41-12-818389/model_epoch_9.pth
+python script/visualize_graph.py -c  config/knowledge_graph/primekg/vis/cell_proliferation_pred.yaml --gpus [0] --checkpoint /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2023-11-28-14-41-12-818389/model_epoch_9.pth
 
 

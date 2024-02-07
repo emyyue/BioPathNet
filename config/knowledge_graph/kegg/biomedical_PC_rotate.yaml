@@ -1,8 +1,8 @@
-output_dir: ~/scratch/experiments/
+output_dir: /home/icb/yue.hu/proj_genefun/NBFNet/experiments/
 
 dataset:
   class: biomedical
-  path: ~/nbfnet_hy/data/PC_KEGG_0928
+  path: /lustre/groups/crna01/datasets/linkpred/PC_KEGG_0602/
   include_factgraph: yes
   fact_as_train: yes
   

@@ -495,7 +495,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "hits@20","hits@50" , "auroc", "ap"),
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
-                 fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
+                 fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=True,
                  full_batch_eval=False, remove_pos=True):
         super(KnowledgeGraphCompletionBiomed, self).__init__(model=model, criterion=criterion, metric=metric, 
                                                              num_negative=num_negative, margin=margin,
@@ -689,13 +689,20 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 for neg_index in all_index.split(num_negative):
                     r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                     h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
-                    t_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability=self.conditional_probability)
+                    if "NeuralBellmanFordNetwork" in str(self.model):
+                        t_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
+                    else:
+                        t_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
                     t_preds.append(t_pred)
                 t_pred = torch.cat(t_preds, dim=-1)
                 for neg_index in all_index.split(num_negative):
                     r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
                     t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
-                    h_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability=self.conditional_probability)
+                    if "NeuralBellmanFordNetwork" in str(self.model):
+                        h_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
+                    else:
+                        h_pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+
                     h_preds.append(h_pred)
                     
                 h_pred = torch.cat(h_preds, dim=-1)
@@ -726,7 +733,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 # first one is true head and tail, rest are the negative samples for head and tail
                 h_index[:, 1:] = neg_h_index
                 t_index[:, 1:] = neg_t_index
-                pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
+                pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
 
         else:
             # train
@@ -741,7 +748,10 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 r_index = pos_r_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
                 t_index[:batch_size // 2, 1:] = neg_index[:batch_size // 2]
                 h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
-                pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
+                if "NeuralBellmanFordNetwork" in str(self.model):
+                    pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric, conditional_probability = self.conditional_probability)
+                else:
+                    pred = self.model(self.fact_graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
             else:
                 # joint probability                
                 graph = self.undirected_fact_graph
@@ -894,7 +904,7 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10", "hits@100", "auroc", "ap", "auroc_all", "ap_all"),
                 num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                 heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
-                fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=False,
+                fact_ratio=None, sample_weight=True, gene_annotation_predict=False, conditional_probability=True,
                 full_batch_eval=False):
         super(KnowledgeGraphCompletionBiomedEval, self).__init__(model=model, criterion=criterion, metric=metric, 
                                                                 num_negative=num_negative, margin=margin,

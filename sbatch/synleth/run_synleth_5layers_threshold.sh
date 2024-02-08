@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/run_synleth_5_adtemp0.5_5runs.txt
-#SBATCH --error=./slurm_out/run_synleth_5_adtemp0.5_5runs.txt
+#SBATCH --output=./slurm_out/run_synleth_5_%j.txt
+#SBATCH --error=./slurm_out/run_synleth_5_%j.txt
 #SBATCH --time=48:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4

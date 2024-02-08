@@ -670,9 +670,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         return metric
     
     def predict(self, batch, all_loss=None, metric=None):
-        # Zhaocheng: which dataset do you refer to here as the default argument?
-        # A better practice is to store a pointer to the dataset in preprocess()
-        # not to change the interface of predict()
         pos_h_index, pos_t_index, pos_r_index = batch.t()
         batch_size = len(batch)
 

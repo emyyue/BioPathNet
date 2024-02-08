@@ -1,8 +1,8 @@
-output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
+output_dir: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/experiments/
 
 dataset:
   class: biomedical
-  path: /lustre/groups/crna01/datasets/linkpred/mock
+  path: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/data/mock
   include_factgraph: False  
 
 task:

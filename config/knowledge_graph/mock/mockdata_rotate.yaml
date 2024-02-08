@@ -3,43 +3,32 @@ output_dir: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/experiments
 dataset:
   class: biomedical
   path: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/data/mock
-  include_factgraph: True
+  include_factgraph: no
+  
 
 task:
   class: KnowledgeGraphCompletionBiomed
   model:
-    class: NBFNet
-    input_dim: 32
-    hidden_dims: [32, 32, 32, 32, 32, 32]
-    message_func: distmult
-    aggregate_func: pna
-    short_cut: yes
-    layer_norm: yes
-    dependent: yes
-    symmetric: yes
+    class: RotatE
+    embedding_dim: 512
+    max_score: 6
   criterion: bce
-  num_negative: 32
+  num_negative: 512
   strict_negative: yes
-  adversarial_temperature: 0.5
-  sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  conditional_probability: yes
-  full_batch_eval: False
-
-
-
+  adversarial_temperature: 1
+  sample_weight: yes
 
 optimizer:
   class: Adam
-  lr: 5.0e-3
+  lr: 2.0e-4
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 4
-  
+  batch_size: 1024
 
 train:
-  num_epoch: 5
-  
+  num_epoch: 500
+
 metric: mrr

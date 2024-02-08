@@ -26,7 +26,7 @@ task:
   heterogeneous_evaluation: yes
   conditional_probability: yes
   full_batch_eval: False
-  remove_pos: yes
+  remove_pos: no
 
 
 

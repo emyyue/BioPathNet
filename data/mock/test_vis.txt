@@ -1,0 +1,4 @@
+pathway12	GO:annotation	gene4
+pathway13	GO:annotation	gene4
+pathway16	GO:annotation	gene6
+pathway15	GO:annotation	gene6

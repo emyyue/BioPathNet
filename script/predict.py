@@ -81,7 +81,7 @@ def get_prediction(cfg, solver, relation_vocab, dataset):
         if solver.device.type == "cuda":
             batch = utils.cuda(batch, device=solver.device)
         logger.warning("Predicting batch %s" % ith)
-        pred, (mask, target) = model.predict_and_target(batch, dataset)
+        pred, (mask, target) = model.predict_and_target(batch)
         
         preds.append(pred)
         targets.append(target)

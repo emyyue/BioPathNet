@@ -1,0 +1,2376 @@
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-13-27-704453
+12:13:27   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-13-27-704453
+12:13:27   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_pred.yaml
+12:13:27   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-09-57-55-848775/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 4, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': False,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  72%|███████▏  | 113111/156450 [00:00<00:00, 1131086.81it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1127506.89it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1332906.05it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_vis.txt:   0%|          | 0/10 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_vis.txt: 100%|██████████| 10/10 [00:00<00:00, 159479.24it/s]
+12:13:28   Preprocess training set
+12:13:28   {'batch_size': 4,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test_vis.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 160474)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_vis.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_vis.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:13:28   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-09-57-55-848775/model_epoch_14.pth
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:13:29   
+12:13:29   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:29   rank(GOT2 | ALDH18A1, SL GsG (3)) = 2
+12:13:29   weight: 0.121116
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   weight: 0.11793
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), GLS2> ->
+	<GLS2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   weight: 0.0977771
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   weight: 0.0956704
+	<ALDH18A1, involved in (9), cellular_amino_acid_biosynthetic_process> ->
+	<cellular_amino_acid_biosynthetic_process, involved in (9)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   weight: 0.0950495
+	<ALDH18A1, located in (10), mitochondrion> ->
+	<mitochondrion, part of (5)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   weight: 0.0943653
+	<ALDH18A1, located in (10), mitochondrion> ->
+	<mitochondrion, located in (10)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   weight: 0.0940899
+	<ALDH18A1, located in (10), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   weight: 0.093821
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, is a (4)^(-1), glutamine_metabolic_process> ->
+	<glutamine_metabolic_process, is a (4), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   weight: 0.0936807
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GLS2> ->
+	<GLS2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   weight: 0.0936718
+	<ALDH18A1, located in (10), mitochondrial_inner_membrane> ->
+	<mitochondrial_inner_membrane, part of (5)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2>
+12:13:29   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:29   rank(ALDH18A1 | GOT2, SL GsG (3)^(-1)) = 114
+12:13:30   weight: 0.0930778
+	<GOT2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, is a (4)^(-1), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:30   weight: 0.0518141
+	<GOT2, involved in (9), dicarboxylic_acid_metabolic_process> ->
+	<dicarboxylic_acid_metabolic_process, is a (4)^(-1), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:30   weight: 0.0340292
+	<GOT2, located in (10), mitochondrial_inner_membrane> ->
+	<mitochondrial_inner_membrane, located in (10)^(-1), ALDH18A1>
+12:13:30   weight: 0.0287608
+	<GOT2, located in (10), mitochondrial_inner_membrane> ->
+	<mitochondrial_inner_membrane, part of (5)^(-1), ALDH18A1>
+12:13:30   weight: 0.02831
+	<GOT2, located in (10), mitochondrial_inner_membrane> ->
+	<mitochondrial_inner_membrane, part of (5)^(-1), FPGS> ->
+	<FPGS, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:30   weight: 0.0283025
+	<GOT2, located in (10), mitochondrial_inner_membrane> ->
+	<mitochondrial_inner_membrane, located in (10)^(-1), FPGS> ->
+	<FPGS, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:30   weight: 0.0257199
+	<GOT2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, is a (4)^(-1), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), GOT2> ->
+	<GOT2, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), ALDH18A1>
+12:13:30   weight: 0.0246654
+	<GOT2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, is a (4)^(-1), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), GOT2> ->
+	<GOT2, located in (10), mitochondrial_inner_membrane> ->
+	<mitochondrial_inner_membrane, located in (10)^(-1), ALDH18A1>
+12:13:30   weight: 0.0245436
+	<GOT2, is active in (12), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ALDH18A1>
+12:13:30   weight: 0.0244634
+	<GOT2, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, is a (4), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, is a (4)^(-1), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:30   
+12:13:30   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:30   rank(ARG2 | ALDH18A1, SL GsG (3)) = 3
+12:13:30   weight: 0.0527415
+	<ALDH18A1, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), ARG2>
+12:13:30   weight: 0.0142513
+	<ALDH18A1, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), ODC1> ->
+	<ODC1, part of (5), cytoplasm> ->
+	<cytoplasm, part of (5)^(-1), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ARG2>
+12:13:30   weight: 0.014251
+	<ALDH18A1, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), ODC1> ->
+	<ODC1, is active in (12), cytoplasm> ->
+	<cytoplasm, part of (5)^(-1), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ARG2>
+12:13:30   weight: 0.0142494
+	<ALDH18A1, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), ODC1> ->
+	<ODC1, located in (10), cytoplasm> ->
+	<cytoplasm, part of (5)^(-1), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ARG2>
+12:13:30   weight: 0.0142424
+	<ALDH18A1, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), ODC1> ->
+	<ODC1, SL GsG (3)^(-1), KRAS> ->
+	<KRAS, part of (5), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ARG2>
+12:13:30   weight: 0.0142115
+	<ALDH18A1, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), ODC1> ->
+	<ODC1, SL GsG (3)^(-1), KRAS> ->
+	<KRAS, located in (10), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ARG2>
+12:13:30   weight: 0.0139483
+	<ALDH18A1, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), CKM> ->
+	<CKM, part of (5), cytoplasm> ->
+	<cytoplasm, part of (5)^(-1), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ARG2>
+12:13:30   weight: 0.0139443
+	<ALDH18A1, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), CKM> ->
+	<CKM, located in (10), cytoplasm> ->
+	<cytoplasm, part of (5)^(-1), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ARG2>
+12:13:30   weight: 0.0139406
+	<ALDH18A1, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), ALDH18A1> ->
+	<ALDH18A1, located in (10), cytoplasm> ->
+	<cytoplasm, part of (5)^(-1), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ARG2>
+12:13:30   weight: 0.0129184
+	<ALDH18A1, located in (10), membrane> ->
+	<membrane, is a (4), cellular_anatomical_entity> ->
+	<cellular_anatomical_entity, is a (4)^(-1), cytoplasm> ->
+	<cytoplasm, part of (5)^(-1), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ARG2>
+12:13:30   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:30   rank(ALDH18A1 | ARG2, SL GsG (3)^(-1)) = 352
+12:13:31   weight: 0.0316955
+	<ARG2, involved in (9), ureteric_bud_development> ->
+	<ureteric_bud_development, involved in (9)^(-1), ARG2> ->
+	<ARG2, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), ALDH18A1>
+12:13:31   weight: 0.0300558
+	<ARG2, enables (8), arginase_activity> ->
+	<arginase_activity, enables (8)^(-1), ARG2> ->
+	<ARG2, PARTICIPATES GpPW (11), Urea_cycle_and_metabolism_of_amino_groups> ->
+	<Urea_cycle_and_metabolism_of_amino_groups, PARTICIPATES GpPW (11)^(-1), ALDH18A1>
+12:13:31   weight: 0.0283324
+	<ARG2, is active in (12), mitochondrion> ->
+	<mitochondrion, located in (10)^(-1), GLS2> ->
+	<GLS2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.028325
+	<ARG2, is active in (12), mitochondrion> ->
+	<mitochondrion, part of (5)^(-1), GLS2> ->
+	<GLS2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0282452
+	<ARG2, part of (5), mitochondrial_matrix> ->
+	<mitochondrial_matrix, located in (10)^(-1), GLS2> ->
+	<GLS2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0281633
+	<ARG2, part of (5), mitochondrial_matrix> ->
+	<mitochondrial_matrix, part of (5)^(-1), GLS2> ->
+	<GLS2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0276597
+	<ARG2, part of (5), mitochondrion> ->
+	<mitochondrion, located in (10)^(-1), GLS2> ->
+	<GLS2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0276523
+	<ARG2, part of (5), mitochondrion> ->
+	<mitochondrion, part of (5)^(-1), GLS2> ->
+	<GLS2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0274226
+	<ARG2, is active in (12), mitochondrion> ->
+	<mitochondrion, part of (5)^(-1), GOT2> ->
+	<GOT2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0274157
+	<ARG2, is active in (12), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), GOT2> ->
+	<GOT2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   
+12:13:31   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:31   rank(GLS2 | ALDH18A1, SL GsG (3)) = 4
+12:13:31   weight: 0.144461
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), GLS2>
+12:13:31   weight: 0.107993
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GLS2>
+12:13:31   weight: 0.104881
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), GOT2> ->
+	<GOT2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GLS2>
+12:13:31   weight: 0.0757317
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), cellular_amino_acid_biosynthetic_process> ->
+	<cellular_amino_acid_biosynthetic_process, involved in (9)^(-1), GLS2>
+12:13:31   weight: 0.072168
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), GOT2> ->
+	<GOT2, involved in (9), cellular_amino_acid_biosynthetic_process> ->
+	<cellular_amino_acid_biosynthetic_process, involved in (9)^(-1), GLS2>
+12:13:31   weight: 0.0674089
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), GOT2> ->
+	<GOT2, involved in (9), cellular_amino_acid_metabolic_process> ->
+	<cellular_amino_acid_metabolic_process, involved in (9)^(-1), GLS2>
+12:13:31   weight: 0.0644336
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), ALDH18A1> ->
+	<ALDH18A1, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), GLS2>
+12:13:31   weight: 0.0621992
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), GOT2> ->
+	<GOT2, located in (10), mitochondrial_matrix> ->
+	<mitochondrial_matrix, located in (10)^(-1), GLS2>
+12:13:31   weight: 0.0621152
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), GOT2> ->
+	<GOT2, part of (5), mitochondrial_matrix> ->
+	<mitochondrial_matrix, located in (10)^(-1), GLS2>
+12:13:31   weight: 0.0599089
+	<ALDH18A1, PARTICIPATES GpPW (11), Glutamate_and_glutamine_metabolism> ->
+	<Glutamate_and_glutamine_metabolism, PARTICIPATES GpPW (11)^(-1), ALDH18A1> ->
+	<ALDH18A1, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, is a (4)^(-1), glutamine_metabolic_process> ->
+	<glutamine_metabolic_process, involved in (9)^(-1), GLS2>
+12:13:31   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:31   rank(ALDH18A1 | GLS2, SL GsG (3)^(-1)) = 391
+12:13:31   weight: 0.0482681
+	<GLS2, involved in (9), glutamine_metabolic_process> ->
+	<glutamine_metabolic_process, is a (4), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0382626
+	<GLS2, located in (10), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), ALDH18A1>
+12:13:31   weight: 0.0290876
+	<GLS2, involved in (9), glutamine_family_amino_acid_metabolic_process> ->
+	<glutamine_family_amino_acid_metabolic_process, involved in (9)^(-1), GOT2> ->
+	<GOT2, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0280104
+	<GLS2, located in (10), mitochondrion> ->
+	<mitochondrion, part of (5)^(-1), ALDH5A1> ->
+	<ALDH5A1, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0279736
+	<GLS2, located in (10), mitochondrion> ->
+	<mitochondrion, located in (10)^(-1), ALDH5A1> ->
+	<ALDH5A1, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0279133
+	<GLS2, located in (10), mitochondrion> ->
+	<mitochondrion, part of (5)^(-1), FPGS> ->
+	<FPGS, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0279096
+	<GLS2, located in (10), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), FPGS> ->
+	<FPGS, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.027888
+	<GLS2, located in (10), mitochondrion> ->
+	<mitochondrion, located in (10)^(-1), FPGS> ->
+	<FPGS, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0277093
+	<GLS2, located in (10), mitochondrion> ->
+	<mitochondrion, part of (5)^(-1), GOT2> ->
+	<GOT2, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:31   weight: 0.0275797
+	<GLS2, located in (10), mitochondrion> ->
+	<mitochondrion, is active in (12)^(-1), GOT2> ->
+	<GOT2, involved in (9), glutamate_metabolic_process> ->
+	<glutamate_metabolic_process, involved in (9)^(-1), ALDH18A1>
+12:13:32   
+12:13:32   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:32   rank(ZIM2 | AADAC, SL GsG (3)) = 3259
+12:13:32   weight: 0.0287883
+	<AADAC, part of (5), organelle_membrane> ->
+	<organelle_membrane, part of (5)^(-1), AADAC> ->
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), ZIM2>
+12:13:32   weight: 0.0285297
+	<AADAC, enables (8), deacetylase_activity> ->
+	<deacetylase_activity, enables (8)^(-1), AADAC> ->
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), ZIM2>
+12:13:32   weight: 0.0284288
+	<AADAC, involved in (9), catabolic_process> ->
+	<catabolic_process, involved in (9)^(-1), AADAC> ->
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), ZIM2>
+12:13:32   weight: 0.0282437
+	<AADAC, SL GsG (3), MYO19> ->
+	<MYO19, SL GsG (3)^(-1), AADAC> ->
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), ZIM2>
+12:13:32   weight: 0.0281923
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), AADAC> ->
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), ZIM2>
+12:13:32   weight: 0.0281728
+	<AADAC, located in (10), intracellular_membrane-bounded_organelle> ->
+	<intracellular_membrane-bounded_organelle, part of (5)^(-1), AADAC> ->
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), ZIM2>
+12:13:32   weight: 0.0281656
+	<AADAC, located in (10), membrane> ->
+	<membrane, part of (5)^(-1), AADAC> ->
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), ZIM2>
+12:13:32   weight: 0.0281619
+	<AADAC, located in (10), intracellular_membrane-bounded_organelle> ->
+	<intracellular_membrane-bounded_organelle, located in (10)^(-1), AADAC> ->
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), ZIM2>
+12:13:32   weight: 0.0281533
+	<AADAC, located in (10), membrane> ->
+	<membrane, located in (10)^(-1), AADAC> ->
+	<AADAC, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), ZIM2>
+12:13:32   weight: 0.0234838
+	<AADAC, involved in (9), xenobiotic_metabolic_process> ->
+	<xenobiotic_metabolic_process, involved in (9)^(-1), AHR> ->
+	<AHR, involved in (9), regulation_of_transcription_by_RNA_polymerase_II> ->
+	<regulation_of_transcription_by_RNA_polymerase_II, involved in (9)^(-1), ZIM2>
+12:13:32   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:32   rank(AADAC | ZIM2, SL GsG (3)^(-1)) = 2036
+12:13:32   weight: 0.0153429
+	<ZIM2, enables (8), protein_binding> ->
+	<protein_binding, is a (4)^(-1), connexin_binding> ->
+	<connexin_binding, is a (4), protein_binding> ->
+	<protein_binding, enables (8)^(-1), AADAC>
+12:13:32   weight: 0.0149722
+	<ZIM2, enables (8), protein_binding> ->
+	<protein_binding, is a (4), binding> ->
+	<binding, is a (4)^(-1), protein_binding> ->
+	<protein_binding, enables (8)^(-1), AADAC>
+12:13:32   weight: 0.0145347
+	<ZIM2, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), KRAS> ->
+	<KRAS, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), AADAC>
+12:13:32   weight: 0.0145117
+	<ZIM2, part of (5), nucleus> ->
+	<nucleus, located in (10)^(-1), AFMID> ->
+	<AFMID, involved in (9), catabolic_process> ->
+	<catabolic_process, involved in (9)^(-1), AADAC>
+12:13:32   weight: 0.0144161
+	<ZIM2, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), AFMID> ->
+	<AFMID, involved in (9), catabolic_process> ->
+	<catabolic_process, involved in (9)^(-1), AADAC>
+12:13:32   weight: 0.0143482
+	<ZIM2, part of (5), nucleus> ->
+	<nucleus, colocalizes with (17)^(-1), GSN> ->
+	<GSN, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), AADAC>
+12:13:32   weight: 0.0143394
+	<ZIM2, part of (5), nucleus> ->
+	<nucleus, part of (5)^(-1), AFMID> ->
+	<AFMID, involved in (9), catabolic_process> ->
+	<catabolic_process, involved in (9)^(-1), AADAC>
+12:13:32   weight: 0.0143135
+	<ZIM2, part of (5), nucleus> ->
+	<nucleus, part of (5)^(-1), ZNF69> ->
+	<ZNF69, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), AADAC>
+12:13:32   weight: 0.0142795
+	<ZIM2, part of (5), nucleus> ->
+	<nucleus, located in (10)^(-1), ZNF69> ->
+	<ZNF69, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), AADAC>
+12:13:32   weight: 0.0142445
+	<ZIM2, enables (8), RNA_polymerase_II_transcription_regulatory_region_sequence-specific_DNA_binding> ->
+	<RNA_polymerase_II_transcription_regulatory_region_sequence-specific_DNA_binding, has part (7)^(-1), DNA-binding_transcription_factor_activity,_RNA_polymerase_II-specific> ->
+	<DNA-binding_transcription_factor_activity,_RNA_polymerase_II-specific, enables (8)^(-1), ZIM2> ->
+	<ZIM2, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), AADAC>
+12:13:32   
+12:13:32   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:32   rank(VAMP3 | PSMD12, SL GsG (3)) = 208
+12:13:33   weight: 0.162822
+	<PSMD12, SL GsG (3), SDHC> ->
+	<SDHC, SL GsG (3)^(-1), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   weight: 0.162446
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   weight: 0.157217
+	<PSMD12, located in (10), cytosol> ->
+	<cytosol, part of (5)^(-1), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   weight: 0.157004
+	<PSMD12, located in (10), membrane> ->
+	<membrane, part of (5)^(-1), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   weight: 0.156868
+	<PSMD12, part of (5), cytoplasm> ->
+	<cytoplasm, is active in (12)^(-1), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   weight: 0.156778
+	<PSMD12, located in (10), cytosol> ->
+	<cytosol, located in (10)^(-1), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   weight: 0.156494
+	<PSMD12, involved in (9), regulation_of_cellular_amino_acid_metabolic_process> ->
+	<regulation_of_cellular_amino_acid_metabolic_process, involved in (9)^(-1), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   weight: 0.156455
+	<PSMD12, PARTICIPATES GpPW (11), Regulation_of_ornithine_decarboxylase_(ODC)> ->
+	<Regulation_of_ornithine_decarboxylase_(ODC), PARTICIPATES GpPW (11)^(-1), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   weight: 0.156242
+	<PSMD12, SL GsG (3)^(-1), CNBP> ->
+	<CNBP, SL GsG (3), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   weight: 0.155975
+	<PSMD12, PARTICIPATES GpPW (11), Dectin-1_mediated_noncanonical_NF-kB_signaling> ->
+	<Dectin-1_mediated_noncanonical_NF-kB_signaling, PARTICIPATES GpPW (11)^(-1), PSMD12> ->
+	<PSMD12, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), VAMP3>
+12:13:33   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:33   rank(PSMD12 | VAMP3, SL GsG (3)^(-1)) = 184
+12:13:33   weight: 0.0483024
+	<VAMP3, PARTICIPATES GpPW (11), ER-Phagosome_pathway> ->
+	<ER-Phagosome_pathway, PARTICIPATES GpPW (11)^(-1), PSMC4> ->
+	<PSMC4, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:33   weight: 0.0481901
+	<VAMP3, PARTICIPATES GpPW (11), ER-Phagosome_pathway> ->
+	<ER-Phagosome_pathway, PARTICIPATES GpPW (11)^(-1), SEM1> ->
+	<SEM1, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:33   weight: 0.0478292
+	<VAMP3, located in (10), cytosol> ->
+	<cytosol, located in (10)^(-1), PSMD3> ->
+	<PSMD3, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:33   weight: 0.0478253
+	<VAMP3, PARTICIPATES GpPW (11), ER-Phagosome_pathway> ->
+	<ER-Phagosome_pathway, PARTICIPATES GpPW (11)^(-1), IKBKG> ->
+	<IKBKG, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:33   weight: 0.0477951
+	<VAMP3, PARTICIPATES GpPW (11), ER-Phagosome_pathway> ->
+	<ER-Phagosome_pathway, PARTICIPATES GpPW (11)^(-1), PSMB7> ->
+	<PSMB7, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:33   weight: 0.0477944
+	<VAMP3, PARTICIPATES GpPW (11), ER-Phagosome_pathway> ->
+	<ER-Phagosome_pathway, PARTICIPATES GpPW (11)^(-1), PSMB4> ->
+	<PSMB4, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:33   weight: 0.0477936
+	<VAMP3, PARTICIPATES GpPW (11), ER-Phagosome_pathway> ->
+	<ER-Phagosome_pathway, PARTICIPATES GpPW (11)^(-1), PSMB9> ->
+	<PSMB9, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:33   weight: 0.0477893
+	<VAMP3, PARTICIPATES GpPW (11), ER-Phagosome_pathway> ->
+	<ER-Phagosome_pathway, PARTICIPATES GpPW (11)^(-1), PSMB6> ->
+	<PSMB6, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:33   weight: 0.0477887
+	<VAMP3, PARTICIPATES GpPW (11), ER-Phagosome_pathway> ->
+	<ER-Phagosome_pathway, PARTICIPATES GpPW (11)^(-1), PSME4> ->
+	<PSME4, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:33   weight: 0.0477746
+	<VAMP3, PARTICIPATES GpPW (11), ER-Phagosome_pathway> ->
+	<ER-Phagosome_pathway, PARTICIPATES GpPW (11)^(-1), CD36> ->
+	<CD36, involved in (9), antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent> ->
+	<antigen_processing_and_presentation_of_exogenous_peptide_antigen_via_MHC_class_I,_TAP-dependent, involved in (9)^(-1), PSMD12>
+12:13:34   
+12:13:34   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:34   rank(PLCB2 | KRAS, SL GsG (3)) = 557
+12:13:34   weight: 0.0984549
+	<KRAS, located in (10), cytosol> ->
+	<cytosol, located in (10)^(-1), EXOC1> ->
+	<EXOC1, involved in (9), phosphatidylinositol-mediated_signaling> ->
+	<phosphatidylinositol-mediated_signaling, involved in (9)^(-1), PLCB2>
+12:13:34   weight: 0.0984445
+	<KRAS, located in (10), cytosol> ->
+	<cytosol, part of (5)^(-1), EXOC1> ->
+	<EXOC1, involved in (9), phosphatidylinositol-mediated_signaling> ->
+	<phosphatidylinositol-mediated_signaling, involved in (9)^(-1), PLCB2>
+12:13:34   weight: 0.0981756
+	<KRAS, located in (10), cytosol> ->
+	<cytosol, located in (10)^(-1), EZR> ->
+	<EZR, involved in (9), phosphatidylinositol-mediated_signaling> ->
+	<phosphatidylinositol-mediated_signaling, involved in (9)^(-1), PLCB2>
+12:13:34   weight: 0.0978516
+	<KRAS, located in (10), cytosol> ->
+	<cytosol, part of (5)^(-1), RPS6KB1> ->
+	<RPS6KB1, involved in (9), phosphatidylinositol-mediated_signaling> ->
+	<phosphatidylinositol-mediated_signaling, involved in (9)^(-1), PLCB2>
+12:13:34   weight: 0.0978461
+	<KRAS, located in (10), cytosol> ->
+	<cytosol, located in (10)^(-1), RPS6KB1> ->
+	<RPS6KB1, involved in (9), phosphatidylinositol-mediated_signaling> ->
+	<phosphatidylinositol-mediated_signaling, involved in (9)^(-1), PLCB2>
+12:13:34   weight: 0.097188
+	<KRAS, part of (5), plasma_membrane> ->
+	<plasma_membrane, located in (10)^(-1), EXOC1> ->
+	<EXOC1, involved in (9), phosphatidylinositol-mediated_signaling> ->
+	<phosphatidylinositol-mediated_signaling, involved in (9)^(-1), PLCB2>
+12:13:34   weight: 0.0970898
+	<KRAS, part of (5), plasma_membrane> ->
+	<plasma_membrane, is active in (12)^(-1), EXOC1> ->
+	<EXOC1, involved in (9), phosphatidylinositol-mediated_signaling> ->
+	<phosphatidylinositol-mediated_signaling, involved in (9)^(-1), PLCB2>
+12:13:34   weight: 0.0970838
+	<KRAS, part of (5), plasma_membrane> ->
+	<plasma_membrane, part of (5)^(-1), EXOC1> ->
+	<EXOC1, involved in (9), phosphatidylinositol-mediated_signaling> ->
+	<phosphatidylinositol-mediated_signaling, involved in (9)^(-1), PLCB2>
+12:13:34   weight: 0.0970284
+	<KRAS, PARTICIPATES GpPW (11), IL2-mediated_signaling_events> ->
+	<IL2-mediated_signaling_events, PARTICIPATES GpPW (11)^(-1), IRS2> ->
+	<IRS2, involved in (9), phosphatidylinositol-mediated_signaling> ->
+	<phosphatidylinositol-mediated_signaling, involved in (9)^(-1), PLCB2>
+12:13:34   weight: 0.0745789
+	<KRAS, PARTICIPATES GpPW (11), IL2-mediated_signaling_events> ->
+	<IL2-mediated_signaling_events, PARTICIPATES GpPW (11)^(-1), NRAS> ->
+	<NRAS, SL GsG (3)^(-1), AGTR1> ->
+	<AGTR1, PARTICIPATES GpPW (11), G_alpha_(q)_signalling_events> ->
+	<G_alpha_(q)_signalling_events, PARTICIPATES GpPW (11)^(-1), PLCB2>
+12:13:34   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:34   rank(KRAS | PLCB2, SL GsG (3)^(-1)) = 2
+12:13:34   weight: 0.0770795
+	<PLCB2, PARTICIPATES GpPW (11), Plasma_membrane_estrogen_receptor_signaling> ->
+	<Plasma_membrane_estrogen_receptor_signaling, PARTICIPATES GpPW (11)^(-1), NRAS> ->
+	<NRAS, SL GsG (3), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:34   weight: 0.0707691
+	<PLCB2, part of (5), cytosol> ->
+	<cytosol, located in (10)^(-1), NRAS> ->
+	<NRAS, SL GsG (3), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:34   weight: 0.0660297
+	<PLCB2, enables (8), hydrolase_activity> ->
+	<hydrolase_activity, enables (8)^(-1), NRAS> ->
+	<NRAS, SL GsG (3), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:34   weight: 0.0648154
+	<PLCB2, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), NRAS> ->
+	<NRAS, SL GsG (3), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:34   weight: 0.0623769
+	<PLCB2, involved in (9), signal_transduction> ->
+	<signal_transduction, involved in (9)^(-1), NRAS> ->
+	<NRAS, SL GsG (3), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:34   weight: 0.062138
+	<PLCB2, PARTICIPATES GpPW (11), Plasma_membrane_estrogen_receptor_signaling> ->
+	<Plasma_membrane_estrogen_receptor_signaling, PARTICIPATES GpPW (11)^(-1), PLCB2> ->
+	<PLCB2, enables (8), metal_ion_binding> ->
+	<metal_ion_binding, enables (8)^(-1), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:34   weight: 0.0611694
+	<PLCB2, PARTICIPATES GpPW (11), Plasma_membrane_estrogen_receptor_signaling> ->
+	<Plasma_membrane_estrogen_receptor_signaling, PARTICIPATES GpPW (11)^(-1), MMP9> ->
+	<MMP9, enables (8), metal_ion_binding> ->
+	<metal_ion_binding, enables (8)^(-1), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:34   weight: 0.0610672
+	<PLCB2, located in (10), cytosol> ->
+	<cytosol, located in (10)^(-1), NRAS> ->
+	<NRAS, SL GsG (3), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:34   weight: 0.0609703
+	<PLCB2, PARTICIPATES GpPW (11), Plasma_membrane_estrogen_receptor_signaling> ->
+	<Plasma_membrane_estrogen_receptor_signaling, PARTICIPATES GpPW (11)^(-1), ESR1> ->
+	<ESR1, enables (8), metal_ion_binding> ->
+	<metal_ion_binding, enables (8)^(-1), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:34   weight: 0.060887
+	<PLCB2, PARTICIPATES GpPW (11), Plasma_membrane_estrogen_receptor_signaling> ->
+	<Plasma_membrane_estrogen_receptor_signaling, PARTICIPATES GpPW (11)^(-1), GNAI3> ->
+	<GNAI3, enables (8), metal_ion_binding> ->
+	<metal_ion_binding, enables (8)^(-1), PHF21B> ->
+	<PHF21B, SL GsG (3)^(-1), KRAS>
+12:13:35   
+12:13:35   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:35   rank(CUX1 | CSF1R, SL GsG (3)) = 327
+12:13:35   weight: 0.0548175
+	<CSF1R, PARTICIPATES GpPW (11), C-MYB_transcription_factor_network> ->
+	<C-MYB_transcription_factor_network, PARTICIPATES GpPW (11)^(-1), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   weight: 0.0528953
+	<CSF1R, part of (5), membrane> ->
+	<membrane, located in (10)^(-1), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   weight: 0.0528676
+	<CSF1R, part of (5), membrane> ->
+	<membrane, part of (5)^(-1), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   weight: 0.0521473
+	<CSF1R, PARTICIPATES GpPW (11), Integrins_in_angiogenesis> ->
+	<Integrins_in_angiogenesis, PARTICIPATES GpPW (11)^(-1), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   weight: 0.0521139
+	<CSF1R, located in (10), integral_component_of_plasma_membrane> ->
+	<integral_component_of_plasma_membrane, located in (10)^(-1), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   weight: 0.0520725
+	<CSF1R, located in (10), integral_component_of_membrane> ->
+	<integral_component_of_membrane, located in (10)^(-1), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   weight: 0.0520572
+	<CSF1R, SL GsG (3)^(-1), ATF5> ->
+	<ATF5, SL GsG (3), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   weight: 0.0520454
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   weight: 0.0520432
+	<CSF1R, located in (10), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   weight: 0.0519117
+	<CSF1R, involved in (9), phosphatidylinositol_metabolic_process> ->
+	<phosphatidylinositol_metabolic_process, involved in (9)^(-1), CSF1R> ->
+	<CSF1R, involved in (9), multicellular_organism_development> ->
+	<multicellular_organism_development, involved in (9)^(-1), CUX1>
+12:13:35   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:35   rank(CSF1R | CUX1, SL GsG (3)^(-1)) = 10
+12:13:35   weight: 0.0648542
+	<CUX1, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, is a (4)^(-1), integral_component_of_plasma_membrane> ->
+	<integral_component_of_plasma_membrane, is a (4), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:35   weight: 0.0630195
+	<CUX1, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, is a (4)^(-1), integral_component_of_plasma_membrane> ->
+	<integral_component_of_plasma_membrane, is a (4), integral_component_of_membrane> ->
+	<integral_component_of_membrane, located in (10)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:35   weight: 0.059788
+	<CUX1, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), MAN2A2> ->
+	<MAN2A2, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:35   weight: 0.0597679
+	<CUX1, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, located in (10)^(-1), MAN2A2> ->
+	<MAN2A2, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:35   weight: 0.0596042
+	<CUX1, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, is a (4), intrinsic_component_of_membrane> ->
+	<intrinsic_component_of_membrane, is a (4)^(-1), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:35   weight: 0.0595104
+	<CUX1, part of (5), membrane> ->
+	<membrane, located in (10)^(-1), MAN2A2> ->
+	<MAN2A2, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:35   weight: 0.059436
+	<CUX1, part of (5), membrane> ->
+	<membrane, part of (5)^(-1), MAN2A2> ->
+	<MAN2A2, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:35   weight: 0.0593785
+	<CUX1, part of (5), membrane> ->
+	<membrane, part of (5)^(-1), intrinsic_component_of_membrane> ->
+	<intrinsic_component_of_membrane, is a (4)^(-1), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:35   weight: 0.0592063
+	<CUX1, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, located in (10)^(-1), CUX1> ->
+	<CUX1, located in (10), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:35   weight: 0.0590985
+	<CUX1, part of (5), integral_component_of_membrane> ->
+	<integral_component_of_membrane, is active in (12)^(-1), TM4SF18> ->
+	<TM4SF18, is active in (12), integral_component_of_membrane> ->
+	<integral_component_of_membrane, part of (5)^(-1), LRRC37A3> ->
+	<LRRC37A3, SL GsG (3)^(-1), CSF1R>
+12:13:36   
+12:13:36   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:36   rank(RPL36A | CYP3A7, SL GsG (3)) = 17
+12:13:36   weight: 0.0643636
+	<CYP3A7, part of (5), membrane> ->
+	<membrane, located in (10)^(-1), RPS3> ->
+	<RPS3, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   weight: 0.0640939
+	<CYP3A7, part of (5), membrane> ->
+	<membrane, part of (5)^(-1), RPS3> ->
+	<RPS3, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   weight: 0.0638612
+	<CYP3A7, located in (10), endoplasmic_reticulum> ->
+	<endoplasmic_reticulum, located in (10)^(-1), RPS3> ->
+	<RPS3, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   weight: 0.0637216
+	<CYP3A7, located in (10), endoplasmic_reticulum> ->
+	<endoplasmic_reticulum, located in (10)^(-1), UBA52> ->
+	<UBA52, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   weight: 0.0636581
+	<CYP3A7, located in (10), endoplasmic_reticulum> ->
+	<endoplasmic_reticulum, part of (5)^(-1), RPS3> ->
+	<RPS3, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   weight: 0.063613
+	<CYP3A7, located in (10), endoplasmic_reticulum> ->
+	<endoplasmic_reticulum, part of (5)^(-1), UBA52> ->
+	<UBA52, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   weight: 0.0634286
+	<CYP3A7, part of (5), membrane> ->
+	<membrane, located in (10)^(-1), RPS27A> ->
+	<RPS27A, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   weight: 0.063261
+	<CYP3A7, part of (5), membrane> ->
+	<membrane, part of (5)^(-1), RPS27A> ->
+	<RPS27A, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   weight: 0.0629718
+	<CYP3A7, part of (5), membrane> ->
+	<membrane, part of (5)^(-1), PNLDC1> ->
+	<PNLDC1, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   weight: 0.0629117
+	<CYP3A7, part of (5), membrane> ->
+	<membrane, located in (10)^(-1), RPL12> ->
+	<RPL12, involved in (9), nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay> ->
+	<nuclear-transcribed_mRNA_catabolic_process,_nonsense-mediated_decay, involved in (9)^(-1), RPL36A>
+12:13:36   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:36   rank(CYP3A7 | RPL36A, SL GsG (3)^(-1)) = 46
+12:13:36   weight: 0.0638322
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, part of (5), ribosome> ->
+	<ribosome, located in (10)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:36   weight: 0.0638305
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, located in (10), ribosome> ->
+	<ribosome, located in (10)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:36   weight: 0.0625764
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, involved in (9), SRP-dependent_cotranslational_protein_targeting_to_membrane> ->
+	<SRP-dependent_cotranslational_protein_targeting_to_membrane, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:36   weight: 0.0625707
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, PARTICIPATES GpPW (11), SRP-dependent_cotranslational_protein_targeting_to_membrane> ->
+	<SRP-dependent_cotranslational_protein_targeting_to_membrane, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:36   weight: 0.0615215
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, part of (5), cytosolic_large_ribosomal_subunit> ->
+	<cytosolic_large_ribosomal_subunit, part of (5)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:36   weight: 0.0612651
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, part of (5), cytosolic_ribosome> ->
+	<cytosolic_ribosome, part of (5)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:36   weight: 0.0611513
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, located in (10), endoplasmic_reticulum> ->
+	<endoplasmic_reticulum, part of (5)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:36   weight: 0.0611276
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, part of (5), endoplasmic_reticulum> ->
+	<endoplasmic_reticulum, part of (5)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:36   weight: 0.0610537
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, involved in (9), viral_transcription> ->
+	<viral_transcription, involved in (9)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:36   weight: 0.0610119
+	<RPL36A, PARTICIPATES GpPW (11), Cytoplasmic_Ribosomal_Proteins> ->
+	<Cytoplasmic_Ribosomal_Proteins, PARTICIPATES GpPW (11)^(-1), RPL21> ->
+	<RPL21, located in (10), endoplasmic_reticulum> ->
+	<endoplasmic_reticulum, located in (10)^(-1), RPL21> ->
+	<RPL21, SL GsG (3)^(-1), CYP3A7>
+12:13:37   
+12:13:37   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:37   rank(SPHK1 | KDR, SL GsG (3)) = 16
+12:13:37   weight: 0.108671
+	<KDR, involved in (9), cellular_response_to_vascular_endothelial_growth_factor_stimulus> ->
+	<cellular_response_to_vascular_endothelial_growth_factor_stimulus, involved in (9)^(-1), KDR> ->
+	<KDR, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   weight: 0.107318
+	<KDR, involved in (9), cellular_response_to_vascular_endothelial_growth_factor_stimulus> ->
+	<cellular_response_to_vascular_endothelial_growth_factor_stimulus, involved in (9)^(-1), PRKD2> ->
+	<PRKD2, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   weight: 0.105198
+	<KDR, SL GsG (3)^(-1), DCK> ->
+	<DCK, SL GsG (3), KDR> ->
+	<KDR, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   weight: 0.104945
+	<KDR, SL GsG (3), TYMS> ->
+	<TYMS, SL GsG (3)^(-1), KDR> ->
+	<KDR, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   weight: 0.104612
+	<KDR, acts upstream of or within (16), branching_involved_in_blood_vessel_morphogenesis> ->
+	<branching_involved_in_blood_vessel_morphogenesis, acts upstream of or within (16)^(-1), KDR> ->
+	<KDR, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   weight: 0.104344
+	<KDR, involved in (9), positive_regulation_of_endothelial_cell_chemotaxis_by_VEGF-activated_vascular_endothelial_growth_factor_receptor_signaling_pathway> ->
+	<positive_regulation_of_endothelial_cell_chemotaxis_by_VEGF-activated_vascular_endothelial_growth_factor_receptor_signaling_pathway, involved in (9)^(-1), KDR> ->
+	<KDR, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   weight: 0.104095
+	<KDR, located in (10), cell_junction> ->
+	<cell_junction, located in (10)^(-1), KDR> ->
+	<KDR, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   weight: 0.104045
+	<KDR, located in (10), cell_junction> ->
+	<cell_junction, part of (5)^(-1), KDR> ->
+	<KDR, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   weight: 0.104013
+	<KDR, located in (10), nucleus> ->
+	<nucleus, located in (10)^(-1), KDR> ->
+	<KDR, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   weight: 0.104006
+	<KDR, involved in (9), cellular_response_to_vascular_endothelial_growth_factor_stimulus> ->
+	<cellular_response_to_vascular_endothelial_growth_factor_stimulus, involved in (9)^(-1), FLT1> ->
+	<FLT1, involved in (9), positive_regulation_of_angiogenesis> ->
+	<positive_regulation_of_angiogenesis, involved in (9)^(-1), SPHK1>
+12:13:37   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:37   rank(KDR | SPHK1, SL GsG (3)^(-1)) = 16
+12:13:38   weight: 0.0416514
+	<SPHK1, involved in (9), positive_regulation_of_fibroblast_proliferation> ->
+	<positive_regulation_of_fibroblast_proliferation, involved in (9)^(-1), SPHK1> ->
+	<SPHK1, SL GsG (3)^(-1), NRAS> ->
+	<NRAS, PARTICIPATES GpPW (11), VEGFR2_mediated_cell_proliferation> ->
+	<VEGFR2_mediated_cell_proliferation, PARTICIPATES GpPW (11)^(-1), KDR>
+12:13:38   weight: 0.0383373
+	<SPHK1, enables (8), D-erythro-sphingosine_kinase_activity> ->
+	<D-erythro-sphingosine_kinase_activity, enables (8)^(-1), SPHK1> ->
+	<SPHK1, SL GsG (3)^(-1), NRAS> ->
+	<NRAS, PARTICIPATES GpPW (11), VEGFR2_mediated_cell_proliferation> ->
+	<VEGFR2_mediated_cell_proliferation, PARTICIPATES GpPW (11)^(-1), KDR>
+12:13:38   weight: 0.0354696
+	<SPHK1, involved in (9), positive_regulation_of_fibroblast_proliferation> ->
+	<positive_regulation_of_fibroblast_proliferation, involved in (9)^(-1), SPHK1> ->
+	<SPHK1, SL GsG (3), PARP2> ->
+	<PARP2, SL GsG (3)^(-1), KDR>
+12:13:38   weight: 0.0353221
+	<SPHK1, involved in (9), positive_regulation_of_fibroblast_proliferation> ->
+	<positive_regulation_of_fibroblast_proliferation, involved in (9)^(-1), SPHK1> ->
+	<SPHK1, located in (10), endosome> ->
+	<endosome, is a (4)^(-1), sorting_endosome> ->
+	<sorting_endosome, part of (5)^(-1), KDR>
+12:13:38   weight: 0.0339774
+	<SPHK1, enables (8), lipid_kinase_activity> ->
+	<lipid_kinase_activity, enables (8)^(-1), SPHK1> ->
+	<SPHK1, SL GsG (3)^(-1), NRAS> ->
+	<NRAS, PARTICIPATES GpPW (11), VEGFR2_mediated_cell_proliferation> ->
+	<VEGFR2_mediated_cell_proliferation, PARTICIPATES GpPW (11)^(-1), KDR>
+12:13:38   weight: 0.0338263
+	<SPHK1, PARTICIPATES GpPW (11), Beta3_integrin_cell_surface_interactions> ->
+	<Beta3_integrin_cell_surface_interactions, PARTICIPATES GpPW (11)^(-1), COL1A1> ->
+	<COL1A1, SL GsG (3), KRAS> ->
+	<KRAS, PARTICIPATES GpPW (11), VEGFR2_mediated_cell_proliferation> ->
+	<VEGFR2_mediated_cell_proliferation, PARTICIPATES GpPW (11)^(-1), KDR>
+12:13:38   weight: 0.0337753
+	<SPHK1, PARTICIPATES GpPW (11), Beta3_integrin_cell_surface_interactions> ->
+	<Beta3_integrin_cell_surface_interactions, PARTICIPATES GpPW (11)^(-1), FBN1> ->
+	<FBN1, SL GsG (3)^(-1), KRAS> ->
+	<KRAS, PARTICIPATES GpPW (11), VEGFR2_mediated_cell_proliferation> ->
+	<VEGFR2_mediated_cell_proliferation, PARTICIPATES GpPW (11)^(-1), KDR>
+12:13:38   weight: 0.0337721
+	<SPHK1, PARTICIPATES GpPW (11), Beta3_integrin_cell_surface_interactions> ->
+	<Beta3_integrin_cell_surface_interactions, PARTICIPATES GpPW (11)^(-1), PLAUR> ->
+	<PLAUR, SL GsG (3), KRAS> ->
+	<KRAS, PARTICIPATES GpPW (11), VEGFR2_mediated_cell_proliferation> ->
+	<VEGFR2_mediated_cell_proliferation, PARTICIPATES GpPW (11)^(-1), KDR>
+12:13:38   weight: 0.0333552
+	<SPHK1, PARTICIPATES GpPW (11), Beta3_integrin_cell_surface_interactions> ->
+	<Beta3_integrin_cell_surface_interactions, PARTICIPATES GpPW (11)^(-1), SPHK1> ->
+	<SPHK1, SL GsG (3)^(-1), NRAS> ->
+	<NRAS, PARTICIPATES GpPW (11), VEGFR2_mediated_cell_proliferation> ->
+	<VEGFR2_mediated_cell_proliferation, PARTICIPATES GpPW (11)^(-1), KDR>
+12:13:38   weight: 0.0333226
+	<SPHK1, involved in (9), positive_regulation_of_fibroblast_proliferation> ->
+	<positive_regulation_of_fibroblast_proliferation, involved in (9)^(-1), SPHK1> ->
+	<SPHK1, involved in (9), cellular_response_to_vascular_endothelial_growth_factor_stimulus> ->
+	<cellular_response_to_vascular_endothelial_growth_factor_stimulus, involved in (9)^(-1), KDR>
+12:13:38   
+12:13:38   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:38   rank(CYP1A2 | ALDOC, SL GsG (3)) = 64
+12:13:38   weight: 0.0382748
+	<ALDOC, SL GsG (3)^(-1), ABL1> ->
+	<ABL1, SL GsG (3), PPP1R2> ->
+	<PPP1R2, SL GsG (3)^(-1), CYP1A2>
+12:13:38   weight: 0.033899
+	<ALDOC, SL GsG (3)^(-1), ABL1> ->
+	<ABL1, enables (8), metal_ion_binding> ->
+	<metal_ion_binding, enables (8)^(-1), CTDSPL> ->
+	<CTDSPL, SL GsG (3), CYP1A2>
+12:13:38   weight: 0.033573
+	<ALDOC, enables (8), catalytic_activity> ->
+	<catalytic_activity, is a (4), molecular_function> ->
+	<molecular_function, enables (8)^(-1), CTDSPL> ->
+	<CTDSPL, SL GsG (3), CYP1A2>
+12:13:38   weight: 0.0333712
+	<ALDOC, enables (8), cytoskeletal_protein_binding> ->
+	<cytoskeletal_protein_binding, is a (4), protein_binding> ->
+	<protein_binding, enables (8)^(-1), CTDSPL> ->
+	<CTDSPL, SL GsG (3), CYP1A2>
+12:13:38   weight: 0.0328173
+	<ALDOC, SL GsG (3)^(-1), ABL1> ->
+	<ABL1, enables (8), protein_binding> ->
+	<protein_binding, enables (8)^(-1), CTDSPL> ->
+	<CTDSPL, SL GsG (3), CYP1A2>
+12:13:38   weight: 0.032365
+	<ALDOC, SL GsG (3)^(-1), ABL1> ->
+	<ABL1, part of (5), nucleus> ->
+	<nucleus, located in (10)^(-1), CTDSPL> ->
+	<CTDSPL, SL GsG (3), CYP1A2>
+12:13:38   weight: 0.0323592
+	<ALDOC, SL GsG (3)^(-1), ABL1> ->
+	<ABL1, located in (10), nucleus> ->
+	<nucleus, located in (10)^(-1), CTDSPL> ->
+	<CTDSPL, SL GsG (3), CYP1A2>
+12:13:38   weight: 0.0317335
+	<ALDOC, located in (10), extracellular_exosome> ->
+	<extracellular_exosome, located in (10)^(-1), ALB> ->
+	<ALB, SL GsG (3), CTDSPL> ->
+	<CTDSPL, SL GsG (3), CYP1A2>
+12:13:38   weight: 0.0315907
+	<ALDOC, part of (5), cytosol> ->
+	<cytosol, located in (10)^(-1), ABL1> ->
+	<ABL1, SL GsG (3), CTDSPL> ->
+	<CTDSPL, SL GsG (3), CYP1A2>
+12:13:38   weight: 0.031484
+	<ALDOC, part of (5), cytosol> ->
+	<cytosol, part of (5)^(-1), ABL1> ->
+	<ABL1, SL GsG (3), CTDSPL> ->
+	<CTDSPL, SL GsG (3), CYP1A2>
+12:13:38   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:13:38   rank(ALDOC | CYP1A2, SL GsG (3)^(-1)) = 693
+12:13:39   weight: 0.042494
+	<CYP1A2, PARTICIPATES GpPW (11), Arylamine_metabolism> ->
+	<Arylamine_metabolism, PARTICIPATES GpPW (11)^(-1), CYP1A2> ->
+	<CYP1A2, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+12:13:39   weight: 0.0424828
+	<CYP1A2, SL GsG (3), SPTB> ->
+	<SPTB, SL GsG (3)^(-1), CYP1A2> ->
+	<CYP1A2, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+12:13:39   weight: 0.0423776
+	<CYP1A2, PARTICIPATES GpPW (11), Metapathway_biotransformation> ->
+	<Metapathway_biotransformation, PARTICIPATES GpPW (11)^(-1), CYP1A2> ->
+	<CYP1A2, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+12:13:39   weight: 0.0418382
+	<CYP1A2, PARTICIPATES GpPW (11), Metapathway_biotransformation> ->
+	<Metapathway_biotransformation, PARTICIPATES GpPW (11)^(-1), CYP1B1> ->
+	<CYP1B1, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+12:13:39   weight: 0.041834
+	<CYP1A2, involved in (9), toxin_metabolic_process> ->
+	<toxin_metabolic_process, involved in (9)^(-1), CYP1A2> ->
+	<CYP1A2, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+12:13:39   weight: 0.0417869
+	<CYP1A2, involved in (9), estrogen_metabolic_process> ->
+	<estrogen_metabolic_process, involved in (9)^(-1), CYP1A2> ->
+	<CYP1A2, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+12:13:39   weight: 0.0415189
+	<CYP1A2, PARTICIPATES GpPW (11), Aflatoxin_B1_metabolism> ->
+	<Aflatoxin_B1_metabolism, PARTICIPATES GpPW (11)^(-1), CYP1A2> ->
+	<CYP1A2, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+12:13:39   weight: 0.0414975
+	<CYP1A2, PARTICIPATES GpPW (11), Estrogen_Receptor_Pathway> ->
+	<Estrogen_Receptor_Pathway, PARTICIPATES GpPW (11)^(-1), CYP1A2> ->
+	<CYP1A2, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+12:13:39   weight: 0.0412771
+	<CYP1A2, involved in (9), toxin_metabolic_process> ->
+	<toxin_metabolic_process, involved in (9)^(-1), CYP1B1> ->
+	<CYP1B1, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+12:13:39   weight: 0.0412725
+	<CYP1A2, part of (5), organelle_membrane> ->
+	<organelle_membrane, part of (5)^(-1), CYP1A2> ->
+	<CYP1A2, enables (8), lyase_activity> ->
+	<lyase_activity, enables (8)^(-1), ALDOC>
+Traceback (most recent call last):
+  File "/lustre/groups/crna01/projects/genefunction/NBFNet/script/visualize.py", line 127, in <module>
+    visualize_path(solver, solver.test_set[i], entity_vocab, relation_vocab)
+  File "/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/utils/data/dataset.py", line 298, in __getitem__
+    return self.dataset[self.indices[idx]]
+IndexError: range object index out of range
+/lustre/groups/crna01/projects/genefunction/NBFNet/script/visualize_graph.py:292: SyntaxWarning: 'int' object is not callable; perhaps you missed a comma?
+  entity_vocab, relation_vocab = 0(_dataset)
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-13-45-809516
+12:13:45   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-13-45-809516
+12:13:45   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_pred.yaml
+12:13:45   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-09-57-55-848775/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 4, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': False,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  72%|███████▏  | 113113/156450 [00:00<00:00, 1131098.72it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1120259.73it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1312641.22it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_vis.txt:   0%|          | 0/10 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_vis.txt: 100%|██████████| 10/10 [00:00<00:00, 161942.24it/s]
+12:13:46   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 160474
+)
+12:13:46   #train: 0, #valid: 4014, #test: 10
+12:13:46   Preprocess training set
+12:13:46   {'batch_size': 4,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test_vis.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 160474)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_vis.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_vis.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:13:46   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-09-57-55-848775/model_epoch_14.pth
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+3907 3908 11 True
+3908 3907 41 False
+in if 3907 3908 11
+3907 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+3907 3908 11 True
+3908 11185 41 False
+in if 11185 3908 11
+11185 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+3907 3916 9 True
+3916 3907 39 False
+in if 3907 3916 9
+3907 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+3907 3913 9 True
+3913 3907 39 False
+in if 3907 3913 9
+3907 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+3907 2161 10 True
+2161 3907 35 False
+in if 3907 2161 5
+3907 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+3907 2161 10 True
+2161 3907 40 False
+in if 3907 2161 10
+3907 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+3907 2161 10 True
+2161 3907 42 False
+in if 3907 2161 12
+3907 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+3907 3916 9 True
+3916 5036 34 False
+in if 5036 3916 4
+5036 3916 4 True
+3916 1457 39 False
+in if 1457 3916 9
+3907 3916 9 True
+3916 11185 39 False
+in if 11185 3916 9
+11185 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+3907 2249 10 True
+2249 3907 35 False
+in if 3907 2249 5
+3907 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+in if 3 4 11
+in if 0 6 9
+1457 3916 9 True
+3916 3915 34 False
+in if 3915 3916 4
+3915 3907 39 False
+in if 3907 3915 9
+1457 1931 9 True
+1931 3915 34 False
+in if 3915 1931 4
+3915 3907 39 False
+in if 3907 3915 9
+1457 2249 10 True
+2249 3907 40 False
+in if 3907 2249 10
+1457 2249 10 True
+2249 3907 35 False
+in if 3907 2249 5
+1457 2249 10 True
+2249 722 35 False
+in if 722 2249 5
+722 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+1457 2249 10 True
+2249 722 40 False
+in if 722 2249 10
+722 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+1457 3916 9 True
+3916 3915 34 False
+in if 3915 3916 4
+3915 1457 39 False
+in if 1457 3915 9
+1457 3908 11 True
+3908 3907 41 False
+in if 3907 3908 11
+1457 3916 9 True
+3916 3915 34 False
+in if 3915 3916 4
+3915 1457 39 False
+in if 1457 3915 9
+1457 2249 10 True
+2249 3907 40 False
+in if 3907 2249 10
+1457 2161 12 True
+2161 3907 42 False
+in if 3907 2161 12
+1457 3915 9 True
+3915 3916 4 True
+3916 3915 34 False
+in if 3915 3916 4
+3915 3907 39 False
+in if 3907 3915 9
+in if 7 8 4
+in if 5 7 9
+3907 3909 11 True
+3909 4799 41 False
+in if 4799 3909 11
+3907 3909 11 True
+3909 724 41 False
+in if 724 3909 11
+724 2132 5 True
+2132 2161 35 False
+in if 2161 2132 5
+2161 4799 42 False
+in if 4799 2161 12
+3907 3909 11 True
+3909 724 41 False
+in if 724 3909 11
+724 2132 12 True
+2132 2161 35 False
+in if 2161 2132 5
+2161 4799 42 False
+in if 4799 2161 12
+3907 3909 11 True
+3909 724 41 False
+in if 724 3909 11
+724 2132 10 True
+2132 2161 35 False
+in if 2161 2132 5
+2161 4799 42 False
+in if 4799 2161 12
+3907 3909 11 True
+3909 724 41 False
+in if 724 3909 11
+724 10 33 False
+in if 10 724 3
+10 2161 5 True
+2161 4799 42 False
+in if 4799 2161 12
+3907 3909 11 True
+3909 724 41 False
+in if 724 3909 11
+724 10 33 False
+in if 10 724 3
+10 2161 10 True
+2161 4799 42 False
+in if 4799 2161 12
+3907 3909 11 True
+3909 450 41 False
+in if 450 3909 11
+450 2132 5 True
+2132 2161 35 False
+in if 2161 2132 5
+2161 4799 42 False
+in if 4799 2161 12
+3907 3909 11 True
+3909 450 41 False
+in if 450 3909 11
+450 2132 10 True
+2132 2161 35 False
+in if 2161 2132 5
+2161 4799 42 False
+in if 4799 2161 12
+3907 3909 11 True
+3909 3907 41 False
+in if 3907 3909 11
+3907 2132 10 True
+2132 2161 35 False
+in if 2161 2132 5
+2161 4799 42 False
+in if 4799 2161 12
+3907 2118 10 True
+2118 2089 4 True
+2089 2132 34 False
+in if 2132 2089 4
+2132 2161 35 False
+in if 2161 2132 5
+2161 4799 42 False
+in if 4799 2161 12
+in if 9 8 11
+4799 4820 9 True
+4820 4799 39 False
+in if 4799 4820 9
+4799 3909 11 True
+3909 3907 41 False
+in if 3907 3909 11
+4799 4801 8 True
+4801 4799 38 False
+in if 4799 4801 8
+4799 3909 11 True
+3909 3907 41 False
+in if 3907 3909 11
+4799 2161 12 True
+2161 11185 40 False
+in if 11185 2161 10
+11185 3916 9 True
+3916 3907 39 False
+in if 3907 3916 9
+4799 2161 12 True
+2161 11185 35 False
+in if 11185 2161 5
+11185 3916 9 True
+3916 3907 39 False
+in if 3907 3916 9
+4799 2618 5 True
+2618 11185 40 False
+in if 11185 2618 10
+11185 3916 9 True
+3916 3907 39 False
+in if 3907 3916 9
+4799 2618 5 True
+2618 11185 35 False
+in if 11185 2618 5
+11185 3916 9 True
+3916 3907 39 False
+in if 3907 3916 9
+4799 2161 5 True
+2161 11185 40 False
+in if 11185 2161 10
+11185 3916 9 True
+3916 3907 39 False
+in if 3907 3916 9
+4799 2161 5 True
+2161 11185 35 False
+in if 11185 2161 5
+11185 3916 9 True
+3916 3907 39 False
+in if 3907 3916 9
+4799 2161 12 True
+2161 1457 35 False
+in if 1457 2161 5
+1457 3916 9 True
+3916 3907 39 False
+in if 3907 3916 9
+4799 2161 12 True
+2161 1457 42 False
+in if 1457 2161 12
+1457 3916 9 True
+3916 3907 39 False
+in if 3907 3916 9
+in if 6 8 9
+in if 3 4 11
+3907 3908 11 True
+3908 11185 41 False
+in if 11185 3908 11
+3907 3908 11 True
+3908 3907 41 False
+in if 3907 3908 11
+3907 3916 9 True
+3916 11185 39 False
+in if 11185 3916 9
+3907 3908 11 True
+3908 1457 41 False
+in if 1457 3908 11
+1457 3916 9 True
+3916 11185 39 False
+in if 11185 3916 9
+3907 3908 11 True
+3908 3907 41 False
+in if 3907 3908 11
+3907 3913 9 True
+3913 11185 39 False
+in if 11185 3913 9
+3907 3908 11 True
+3908 1457 41 False
+in if 1457 3908 11
+1457 3913 9 True
+3913 11185 39 False
+in if 11185 3913 9
+3907 3908 11 True
+3908 1457 41 False
+in if 1457 3908 11
+1457 5033 9 True
+5033 11185 39 False
+in if 11185 5033 9
+3907 3908 11 True
+3908 3907 41 False
+in if 3907 3908 11
+3907 1907 8 True
+1907 11185 38 False
+in if 11185 1907 8
+3907 3908 11 True
+3908 1457 41 False
+in if 1457 3908 11
+1457 2618 10 True
+2618 11185 40 False
+in if 11185 2618 10
+3907 3908 11 True
+3908 1457 41 False
+in if 1457 3908 11
+1457 2618 5 True
+2618 11185 40 False
+in if 11185 2618 10
+3907 3908 11 True
+3908 3907 41 False
+in if 3907 3908 11
+3907 3916 9 True
+3916 5036 34 False
+in if 5036 3916 4
+5036 11185 39 False
+in if 11185 5036 9
+in if 9 4 11
+11185 5036 9 True
+5036 3916 4 True
+3916 3907 39 False
+in if 3907 3916 9
+11185 2161 10 True
+2161 3907 42 False
+in if 3907 2161 12
+11185 3916 9 True
+3916 1457 39 False
+in if 1457 3916 9
+1457 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+11185 2161 10 True
+2161 868 35 False
+in if 868 2161 5
+868 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+11185 2161 10 True
+2161 868 40 False
+in if 868 2161 10
+868 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+11185 2161 10 True
+2161 722 35 False
+in if 722 2161 5
+722 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+11185 2161 10 True
+2161 722 42 False
+in if 722 2161 12
+722 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+11185 2161 10 True
+2161 722 40 False
+in if 722 2161 10
+722 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+11185 2161 10 True
+2161 1457 35 False
+in if 1457 2161 5
+1457 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+11185 2161 10 True
+2161 1457 42 False
+in if 1457 2161 12
+1457 3915 9 True
+3915 3907 39 False
+in if 3907 3915 9
+in if 4 6 9
+864 2119 5 True
+2119 864 35 False
+in if 864 2119 5
+864 1907 8 True
+1907 17576 38 False
+in if 17576 1907 8
+864 2105 8 True
+2105 864 38 False
+in if 864 2105 8
+864 1907 8 True
+1907 17576 38 False
+in if 17576 1907 8
+864 2111 9 True
+2111 864 39 False
+in if 864 2111 9
+864 1907 8 True
+1907 17576 38 False
+in if 17576 1907 8
+864 865 3 True
+865 864 33 False
+in if 864 865 3
+864 1907 8 True
+1907 17576 38 False
+in if 17576 1907 8
+864 1907 8 True
+1907 864 38 False
+in if 864 1907 8
+864 1907 8 True
+1907 17576 38 False
+in if 17576 1907 8
+864 2117 10 True
+2117 864 35 False
+in if 864 2117 5
+864 1907 8 True
+1907 17576 38 False
+in if 17576 1907 8
+864 2118 10 True
+2118 864 35 False
+in if 864 2118 5
+864 1907 8 True
+1907 17576 38 False
+in if 17576 1907 8
+864 2117 10 True
+2117 864 40 False
+in if 864 2117 10
+864 1907 8 True
+1907 17576 38 False
+in if 17576 1907 8
+864 2118 10 True
+2118 864 40 False
+in if 864 2118 10
+864 1907 8 True
+1907 17576 38 False
+in if 17576 1907 8
+864 2113 9 True
+2113 595 39 False
+in if 595 2113 9
+595 2178 9 True
+2178 17576 39 False
+in if 17576 2178 9
+in if 1 9 5
+in if 11 3 8
+17576 1907 8 True
+1907 11125 34 False
+in if 11125 1907 4
+11125 1907 4 True
+1907 864 38 False
+in if 864 1907 8
+17576 1907 8 True
+1907 17688 4 True
+17688 1907 34 False
+in if 1907 17688 4
+1907 864 38 False
+in if 864 1907 8
+17576 1907 8 True
+1907 10 38 False
+in if 10 1907 8
+10 1907 8 True
+1907 864 38 False
+in if 864 1907 8
+17576 2183 5 True
+2183 134 40 False
+in if 134 2183 10
+134 2111 9 True
+2111 864 39 False
+in if 864 2111 9
+17576 1907 8 True
+1907 134 38 False
+in if 134 1907 8
+134 2111 9 True
+2111 864 39 False
+in if 864 2111 9
+17576 2183 5 True
+2183 1129 47 False
+in if 1129 2183 17
+1129 1907 8 True
+1907 864 38 False
+in if 864 1907 8
+17576 2183 5 True
+2183 134 35 False
+in if 134 2183 5
+134 2111 9 True
+2111 864 39 False
+in if 864 2111 9
+17576 2183 5 True
+2183 17637 35 False
+in if 17637 2183 5
+17637 1907 8 True
+1907 864 38 False
+in if 864 1907 8
+17576 2183 5 True
+2183 17637 40 False
+in if 17637 2183 10
+17637 1907 8 True
+1907 864 38 False
+in if 864 1907 8
+17576 3599 8 True
+3599 3279 37 False
+in if 3279 3599 7
+3279 17576 38 False
+in if 17576 3279 8
+17576 1907 8 True
+1907 864 38 False
+in if 864 1907 8
+in if 9 4 4
+in if 2 4 8
+362 678 3 True
+678 362 33 False
+in if 362 678 3
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+362 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+362 2053 10 True
+2053 362 35 False
+in if 362 2053 5
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+362 2118 10 True
+2118 362 35 False
+in if 362 2118 5
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+362 2132 5 True
+2132 362 42 False
+in if 362 2132 12
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+362 2053 10 True
+2053 362 40 False
+in if 362 2053 10
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+362 12306 9 True
+12306 362 39 False
+in if 362 12306 9
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+362 14285 11 True
+14285 362 41 False
+in if 362 14285 11
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+362 5537 11 True
+5537 362 41 False
+in if 362 5537 11
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+362 361 33 False
+in if 361 362 3
+361 362 3 True
+362 7161 9 True
+7161 748 39 False
+in if 748 7161 9
+in if 1 2 3
+in if 3 8 9
+748 7140 11 True
+7140 15296 41 False
+in if 15296 7140 11
+15296 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+748 7140 11 True
+7140 961 41 False
+in if 961 7140 11
+961 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+748 2053 10 True
+2053 15302 40 False
+in if 15302 2053 10
+15302 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+748 7140 11 True
+7140 1456 41 False
+in if 1456 7140 11
+1456 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+748 7140 11 True
+7140 327 41 False
+in if 327 7140 11
+327 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+748 7140 11 True
+7140 1063 41 False
+in if 1063 7140 11
+1063 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+748 7140 11 True
+7140 1257 41 False
+in if 1257 7140 11
+1257 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+748 7140 11 True
+7140 1627 41 False
+in if 1627 7140 11
+1627 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+748 7140 11 True
+7140 15303 41 False
+in if 15303 7140 11
+15303 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+748 7140 11 True
+7140 7138 41 False
+in if 7138 7140 11
+7138 7161 9 True
+7161 362 39 False
+in if 362 7161 9
+in if 12 10 11
+in if 1 11 9
+10 2053 10 True
+2053 1677 40 False
+in if 1677 2053 10
+1677 8289 9 True
+8289 14845 39 False
+in if 14845 8289 9
+10 2053 10 True
+2053 1677 35 False
+in if 1677 2053 5
+1677 8289 9 True
+8289 14845 39 False
+in if 14845 8289 9
+10 2053 10 True
+2053 1777 40 False
+in if 1777 2053 10
+1777 8289 9 True
+8289 14845 39 False
+in if 14845 8289 9
+10 2053 10 True
+2053 507 35 False
+in if 507 2053 5
+507 8289 9 True
+8289 14845 39 False
+in if 14845 8289 9
+10 2053 10 True
+2053 507 40 False
+in if 507 2053 10
+507 8289 9 True
+8289 14845 39 False
+in if 14845 8289 9
+10 2135 5 True
+2135 1677 40 False
+in if 1677 2135 10
+1677 8289 9 True
+8289 14845 39 False
+in if 14845 8289 9
+10 2135 5 True
+2135 1677 42 False
+in if 1677 2135 12
+1677 8289 9 True
+8289 14845 39 False
+in if 14845 8289 9
+10 2135 5 True
+2135 1677 35 False
+in if 1677 2135 5
+1677 8289 9 True
+8289 14845 39 False
+in if 14845 8289 9
+10 2118 5 True
+2118 1677 40 False
+in if 1677 2118 10
+1677 8289 9 True
+8289 14845 39 False
+in if 14845 8289 9
+10 6976 11 True
+6976 36 41 False
+in if 36 6976 11
+36 91 33 False
+in if 91 36 3
+91 3182 11 True
+3182 14845 41 False
+in if 14845 3182 11
+in if 4 6 10
+in if 12 11 9
+14845 5899 11 True
+5899 36 41 False
+in if 36 5899 11
+36 736 3 True
+736 10 33 False
+in if 10 736 3
+14845 2053 5 True
+2053 36 40 False
+in if 36 2053 10
+36 736 3 True
+736 10 33 False
+in if 10 736 3
+14845 2106 8 True
+2106 36 38 False
+in if 36 2106 8
+36 736 3 True
+736 10 33 False
+in if 10 736 3
+14845 1907 8 True
+1907 36 38 False
+in if 36 1907 8
+36 736 3 True
+736 10 33 False
+in if 10 736 3
+14845 2573 9 True
+2573 36 39 False
+in if 36 2573 9
+36 736 3 True
+736 10 33 False
+in if 10 736 3
+14845 5899 11 True
+5899 14845 41 False
+in if 14845 5899 11
+14845 2150 8 True
+2150 736 38 False
+in if 736 2150 8
+736 10 33 False
+in if 10 736 3
+14845 5899 11 True
+5899 13555 41 False
+in if 13555 5899 11
+13555 2150 8 True
+2150 736 38 False
+in if 736 2150 8
+736 10 33 False
+in if 10 736 3
+14845 2053 10 True
+2053 36 40 False
+in if 36 2053 10
+36 736 3 True
+736 10 33 False
+in if 10 736 3
+14845 5899 11 True
+5899 33 41 False
+in if 33 5899 11
+33 2150 8 True
+2150 736 38 False
+in if 736 2150 8
+736 10 33 False
+in if 10 736 3
+14845 5899 11 True
+5899 11211 41 False
+in if 11211 5899 11
+11211 2150 8 True
+2150 736 38 False
+in if 736 2150 8
+736 10 33 False
+in if 10 736 3
+in if 2 9 11
+in if 0 3 3
+25 3138 11 True
+3138 25 41 False
+in if 25 3138 11
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+25 2118 5 True
+2118 25 40 False
+in if 25 2118 10
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+25 2118 5 True
+2118 25 35 False
+in if 25 2118 5
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+25 4187 11 True
+4187 25 41 False
+in if 25 4187 11
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+25 2232 10 True
+2232 25 40 False
+in if 25 2232 10
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+25 2116 10 True
+2116 25 40 False
+in if 25 2116 10
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+25 877 33 False
+in if 877 25 3
+877 25 3 True
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+25 2126 9 True
+2126 25 39 False
+in if 25 2126 9
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+25 2116 10 True
+2116 25 35 False
+in if 25 2116 5
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+25 1885 9 True
+1885 25 39 False
+in if 25 1885 9
+25 2126 9 True
+2126 404 39 False
+in if 404 2126 9
+in if 0 8 11
+in if 1 6 9
+404 2116 5 True
+2116 2232 34 False
+in if 2232 2116 4
+2232 2116 4 True
+2116 1179 35 False
+in if 1179 2116 5
+1179 25 33 False
+in if 25 1179 3
+404 2116 5 True
+2116 2232 34 False
+in if 2232 2116 4
+2232 2116 4 True
+2116 1179 40 False
+in if 1179 2116 10
+1179 25 33 False
+in if 25 1179 3
+404 2116 5 True
+2116 13240 35 False
+in if 13240 2116 5
+13240 2116 5 True
+2116 1179 35 False
+in if 1179 2116 5
+1179 25 33 False
+in if 25 1179 3
+404 2116 5 True
+2116 13240 40 False
+in if 13240 2116 10
+13240 2116 5 True
+2116 1179 35 False
+in if 1179 2116 5
+1179 25 33 False
+in if 25 1179 3
+404 2116 5 True
+2116 14721 4 True
+14721 2116 34 False
+in if 2116 14721 4
+2116 1179 35 False
+in if 1179 2116 5
+1179 25 33 False
+in if 25 1179 3
+404 2118 5 True
+2118 13240 40 False
+in if 13240 2118 10
+13240 2116 5 True
+2116 1179 35 False
+in if 1179 2116 5
+1179 25 33 False
+in if 25 1179 3
+404 2118 5 True
+2118 13240 35 False
+in if 13240 2118 5
+13240 2116 5 True
+2116 1179 35 False
+in if 1179 2116 5
+1179 25 33 False
+in if 25 1179 3
+404 2118 5 True
+2118 14721 35 False
+in if 14721 2118 5
+14721 2116 34 False
+in if 2116 14721 4
+2116 1179 35 False
+in if 1179 2116 5
+1179 25 33 False
+in if 25 1179 3
+404 2116 5 True
+2116 404 40 False
+in if 404 2116 10
+404 2116 10 True
+2116 1179 35 False
+in if 1179 2116 5
+1179 25 33 False
+in if 25 1179 3
+404 2116 5 True
+2116 16995 42 False
+in if 16995 2116 12
+16995 2116 12 True
+2116 1179 35 False
+in if 1179 2116 5
+1179 25 33 False
+in if 25 1179 3
+in if 5 3 4
+in if 2 3 5
+in if 0 2 3
+71 2118 5 True
+2118 527 40 False
+in if 527 2118 10
+527 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+71 2118 5 True
+2118 527 35 False
+in if 527 2118 5
+527 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+71 2115 10 True
+2115 527 40 False
+in if 527 2115 10
+527 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+71 2115 10 True
+2115 17285 40 False
+in if 17285 2115 10
+17285 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+71 2115 10 True
+2115 527 35 False
+in if 527 2115 5
+527 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+71 2115 10 True
+2115 17285 35 False
+in if 17285 2115 5
+17285 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+71 2118 5 True
+2118 15772 40 False
+in if 15772 2118 10
+15772 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+71 2118 5 True
+2118 15772 35 False
+in if 15772 2118 5
+15772 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+71 2118 5 True
+2118 14953 35 False
+in if 14953 2118 5
+14953 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+71 2118 5 True
+2118 15744 40 False
+in if 15744 2118 10
+15744 8381 9 True
+8381 216 39 False
+in if 216 8381 9
+in if 2 4 10
+in if 1 5 9
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 4549 5 True
+4549 136 40 False
+in if 136 4549 10
+136 71 33 False
+in if 71 136 3
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 4549 10 True
+4549 136 40 False
+in if 136 4549 10
+136 71 33 False
+in if 71 136 3
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 10313 9 True
+10313 136 41 False
+in if 136 10313 11
+136 71 33 False
+in if 71 136 3
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 10313 11 True
+10313 136 41 False
+in if 136 10313 11
+136 71 33 False
+in if 71 136 3
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 10806 5 True
+10806 136 35 False
+in if 136 10806 5
+136 71 33 False
+in if 71 136 3
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 9777 5 True
+9777 136 35 False
+in if 136 9777 5
+136 71 33 False
+in if 71 136 3
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 2115 10 True
+2115 136 35 False
+in if 136 2115 5
+136 71 33 False
+in if 71 136 3
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 2115 5 True
+2115 136 35 False
+in if 136 2115 5
+136 71 33 False
+in if 71 136 3
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 9364 9 True
+9364 136 39 False
+in if 136 9364 9
+136 71 33 False
+in if 71 136 3
+216 10314 11 True
+10314 136 41 False
+in if 136 10314 11
+136 2115 10 True
+2115 136 40 False
+in if 136 2115 10
+136 71 33 False
+in if 71 136 3
+in if 1 8 11
+in if 1 4 10
+in if 0 1 3
+Traceback (most recent call last):
+  File "/lustre/groups/crna01/projects/genefunction/NBFNet/script/visualize_graph.py", line 300, in <module>
+    batch = data.graph_collate([test_set[i * solver.batch_size + j] for j in range(solver.batch_size)])
+  File "/lustre/groups/crna01/projects/genefunction/NBFNet/script/visualize_graph.py", line 300, in <listcomp>
+    batch = data.graph_collate([test_set[i * solver.batch_size + j] for j in range(solver.batch_size)])
+  File "/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/utils/data/dataset.py", line 298, in __getitem__
+    return self.dataset[self.indices[idx]]
+IndexError: range object index out of range

@@ -28,7 +28,7 @@ python script/run.py -s 1024 -c config/knowledge_graph/mock/mockdata_rgcn.yaml -
 # important config file needs to have the flag "remove_pos: no"
 #### else there will be no predictions of the specific triplets in test_pred.txt
 
-python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus[0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
+python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
 
 
 #################################################

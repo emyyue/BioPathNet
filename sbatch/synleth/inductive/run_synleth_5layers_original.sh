@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=nbfnet_biomed
-#SBATCH --output=./slurm_out/run_synleth_5_%j.txt
-#SBATCH --error=./slurm_out/run_synleth_5_%j.txt
+#SBATCH --output=./slurm_out/run_synleth_seeds-%j.txt
+#SBATCH --error=./slurm_out/run_synleth_seeds-%j.txt
 #SBATCH --time=48:00:00
 #SBATCH --mem=64Gb
 #SBATCH -c 4
@@ -21,9 +21,9 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/targets/x86_64-linu
 
 cd /home/icb/yue.hu/proj_genefun/NBFNet
 
-for i in 1234 1234 1235 1236 1237 1238
+
+for i in 1234 1235 1236 1237 1238
 do
 	echo $i
-	python script/run.py -s $i -c  config/knowledge_graph/synleth/synleth_trans_5layers_threshold.yaml --gpus [0]
+	python script/run.py -s $i -c  config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original.yaml --gpus [0]
 done
-

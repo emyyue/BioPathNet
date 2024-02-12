@@ -1,0 +1,1730 @@
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-26-35-086574
+12:26:35   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-26-35-086574
+12:26:35   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_pred.yaml
+12:26:35   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-09-57-55-848775/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': False,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  71%|███████▏  | 111598/156450 [00:00<00:00, 1115954.46it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1103192.68it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1323371.82it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt:   0%|          | 0/2312 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt: 100%|██████████| 2312/2312 [00:00<00:00, 1280162.49it/s]
+12:26:35   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 162776
+)
+12:26:35   #train: 0, #valid: 4014, #test: 2312
+12:26:35   Preprocess training set
+12:26:35   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test_pred.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 162776)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:26:35   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-09-57-55-848775/model_epoch_14.pth
+12:26:35   Starting link prediction
+12:26:35   Predicting batch 0
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:26:36   Predicting batch 1
+12:26:36   Predicting batch 2
+12:26:37   Predicting batch 3
+12:26:37   Predicting batch 4
+12:26:37   Predicting batch 5
+12:26:38   Predicting batch 6
+12:26:38   Predicting batch 7
+12:26:38   Predicting batch 8
+12:26:38   Predicting batch 9
+12:26:39   Predicting batch 10
+12:26:39   Predicting batch 11
+12:26:39   Predicting batch 12
+12:26:39   Predicting batch 13
+12:26:40   Predicting batch 14
+12:26:40   Predicting batch 15
+12:26:40   Predicting batch 16
+12:26:41   Predicting batch 17
+12:26:41   Predicting batch 18
+12:26:41   Predicting batch 19
+12:26:41   Predicting batch 20
+12:26:42   Predicting batch 21
+12:26:42   Predicting batch 22
+12:26:42   Predicting batch 23
+12:26:42   Predicting batch 24
+12:26:43   Predicting batch 25
+12:26:43   Predicting batch 26
+12:26:43   Predicting batch 27
+12:26:43   Predicting batch 28
+12:26:44   Predicting batch 29
+12:26:44   Predicting batch 30
+12:26:44   Predicting batch 31
+12:26:45   Predicting batch 32
+12:26:45   Predicting batch 33
+12:26:45   Predicting batch 34
+12:26:45   Predicting batch 35
+12:26:46   Predicting batch 36
+12:26:46   Predicting batch 37
+12:26:46   Predicting batch 38
+12:26:46   Predicting batch 39
+12:26:47   Predicting batch 40
+12:26:47   Predicting batch 41
+12:26:47   Predicting batch 42
+12:26:48   Predicting batch 43
+12:26:48   Predicting batch 44
+12:26:48   Predicting batch 45
+12:26:48   Predicting batch 46
+12:26:49   Predicting batch 47
+12:26:49   Predicting batch 48
+12:26:49   Predicting batch 49
+12:26:49   Predicting batch 50
+12:26:50   Predicting batch 51
+12:26:50   Predicting batch 52
+12:26:50   Predicting batch 53
+12:26:51   Predicting batch 54
+12:26:51   Predicting batch 55
+12:26:51   Predicting batch 56
+12:26:51   Predicting batch 57
+12:26:52   Predicting batch 58
+12:26:52   Predicting batch 59
+12:26:52   Predicting batch 60
+12:26:52   Predicting batch 61
+12:26:53   Predicting batch 62
+12:26:53   Predicting batch 63
+12:26:53   Predicting batch 64
+12:26:54   Predicting batch 65
+12:26:54   Predicting batch 66
+12:26:54   Predicting batch 67
+12:26:54   Predicting batch 68
+12:26:55   Predicting batch 69
+12:26:55   Predicting batch 70
+12:26:55   Predicting batch 71
+12:26:55   Predicting batch 72
+12:27:11   Done
+Predictions done
+12:27:28   Link prediction done
+12:27:28   Saving to file
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-26-35-086574/predictions.csv
+12:28:09   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-28-09-303935
+12:28:09   Input Seed: 1024
+12:28:09   Set Seed: 1024
+12:28:09   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_eval.yaml
+12:28:09   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-09-57-55-848775/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': True,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  73%|███████▎  | 113844/156450 [00:00<00:00, 1138405.80it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1125184.95it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1318707.31it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1363896.33it/s]
+12:28:09   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 164478
+)
+12:28:09   #train: 0, #valid: 4014, #test: 4014
+12:28:09   Preprocess training set
+12:28:09   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 164478)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:28:09   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-09-57-55-848775/model_epoch_14.pth
+12:28:09   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:28:09   Evaluate on valid
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:28:45   ------------------------------
+12:28:45   ap: 0.857845
+12:28:45   auroc: 0.893253
+12:28:45   hits@1: 0.0444694
+12:28:45   hits@10: 0.14711
+12:28:45   hits@100: 0.34716
+12:28:45   hits@20: 0.182735
+12:28:45   hits@3: 0.0960389
+12:28:45   hits@50: 0.26856
+12:28:45   mr: 798.087
+12:28:45   mrr: 0.0829986
+12:28:45   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:28:45   Evaluate on test
+12:29:20   ------------------------------
+12:29:20   ap: 0.858986
+12:29:20   auroc: 0.894388
+12:29:20   hits@1: 0.0444694
+12:29:20   hits@10: 0.14711
+12:29:20   hits@100: 0.34716
+12:29:20   hits@20: 0.182735
+12:29:20   hits@3: 0.0960389
+12:29:20   hits@50: 0.26856
+12:29:20   mr: 798.087
+12:29:20   mrr: 0.0829986
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-29-29-133919
+12:29:29   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-29-29-133919
+12:29:29   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_pred.yaml
+12:29:29   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-10-21-41-564990/model_epoch_12.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': False,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  72%|███████▏  | 112429/156450 [00:00<00:00, 1124253.55it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1117291.76it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1295570.32it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt:   0%|          | 0/2312 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt: 100%|██████████| 2312/2312 [00:00<00:00, 1259053.60it/s]
+12:29:29   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 162776
+)
+12:29:29   #train: 0, #valid: 4014, #test: 2312
+12:29:29   Preprocess training set
+12:29:29   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test_pred.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 162776)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:29:29   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-10-21-41-564990/model_epoch_12.pth
+12:29:29   Starting link prediction
+12:29:29   Predicting batch 0
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:29:30   Predicting batch 1
+12:29:31   Predicting batch 2
+12:29:31   Predicting batch 3
+12:29:31   Predicting batch 4
+12:29:31   Predicting batch 5
+12:29:32   Predicting batch 6
+12:29:32   Predicting batch 7
+12:29:32   Predicting batch 8
+12:29:32   Predicting batch 9
+12:29:33   Predicting batch 10
+12:29:33   Predicting batch 11
+12:29:33   Predicting batch 12
+12:29:33   Predicting batch 13
+12:29:34   Predicting batch 14
+12:29:34   Predicting batch 15
+12:29:34   Predicting batch 16
+12:29:35   Predicting batch 17
+12:29:35   Predicting batch 18
+12:29:35   Predicting batch 19
+12:29:35   Predicting batch 20
+12:29:36   Predicting batch 21
+12:29:36   Predicting batch 22
+12:29:36   Predicting batch 23
+12:29:36   Predicting batch 24
+12:29:37   Predicting batch 25
+12:29:37   Predicting batch 26
+12:29:37   Predicting batch 27
+12:29:38   Predicting batch 28
+12:29:38   Predicting batch 29
+12:29:38   Predicting batch 30
+12:29:38   Predicting batch 31
+12:29:39   Predicting batch 32
+12:29:39   Predicting batch 33
+12:29:39   Predicting batch 34
+12:29:39   Predicting batch 35
+12:29:40   Predicting batch 36
+12:29:40   Predicting batch 37
+12:29:40   Predicting batch 38
+12:29:41   Predicting batch 39
+12:29:41   Predicting batch 40
+12:29:41   Predicting batch 41
+12:29:41   Predicting batch 42
+12:29:42   Predicting batch 43
+12:29:42   Predicting batch 44
+12:29:42   Predicting batch 45
+12:29:42   Predicting batch 46
+12:29:43   Predicting batch 47
+12:29:43   Predicting batch 48
+12:29:43   Predicting batch 49
+12:29:44   Predicting batch 50
+12:29:44   Predicting batch 51
+12:29:44   Predicting batch 52
+12:29:44   Predicting batch 53
+12:29:45   Predicting batch 54
+12:29:45   Predicting batch 55
+12:29:45   Predicting batch 56
+12:29:45   Predicting batch 57
+12:29:46   Predicting batch 58
+12:29:46   Predicting batch 59
+12:29:46   Predicting batch 60
+12:29:47   Predicting batch 61
+12:29:47   Predicting batch 62
+12:29:47   Predicting batch 63
+12:29:47   Predicting batch 64
+12:29:48   Predicting batch 65
+12:29:48   Predicting batch 66
+12:29:48   Predicting batch 67
+12:29:48   Predicting batch 68
+12:29:49   Predicting batch 69
+12:29:49   Predicting batch 70
+12:29:49   Predicting batch 71
+12:29:49   Predicting batch 72
+12:30:05   Done
+Predictions done
+12:30:21   Link prediction done
+12:30:21   Saving to file
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-29-29-133919/predictions.csv
+12:31:02   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-31-02-095175
+12:31:02   Input Seed: 1024
+12:31:02   Set Seed: 1024
+12:31:02   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_eval.yaml
+12:31:02   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-10-21-41-564990/model_epoch_12.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': True,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  72%|███████▏  | 112067/156450 [00:00<00:00, 1120641.68it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1109259.10it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1312334.26it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1353262.30it/s]
+12:31:02   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 164478
+)
+12:31:02   #train: 0, #valid: 4014, #test: 4014
+12:31:02   Preprocess training set
+12:31:02   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 164478)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:31:02   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-10-21-41-564990/model_epoch_12.pth
+12:31:02   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:31:02   Evaluate on valid
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:31:39   ------------------------------
+12:31:39   ap: 0.939129
+12:31:39   auroc: 0.953738
+12:31:39   hits@1: 0.00523169
+12:31:39   hits@10: 0.0579223
+12:31:39   hits@100: 0.274165
+12:31:39   hits@20: 0.102641
+12:31:39   hits@3: 0.01856
+12:31:39   hits@50: 0.189337
+12:31:39   mr: 896.628
+12:31:39   mrr: 0.0252137
+12:31:39   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:31:39   Evaluate on test
+12:32:14   ------------------------------
+12:32:14   ap: 0.938145
+12:32:14   auroc: 0.954417
+12:32:14   hits@1: 0.00523169
+12:32:14   hits@10: 0.0579223
+12:32:14   hits@100: 0.274165
+12:32:14   hits@20: 0.102641
+12:32:14   hits@3: 0.01856
+12:32:14   hits@50: 0.189337
+12:32:14   mr: 896.628
+12:32:14   mrr: 0.0252137
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-32-32-050558
+12:32:32   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-32-32-050558
+12:32:32   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_pred.yaml
+12:32:32   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-10-43-02-147608/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': False,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  72%|███████▏  | 112396/156450 [00:00<00:00, 1123894.08it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1111380.17it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1300875.93it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt:   0%|          | 0/2312 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt: 100%|██████████| 2312/2312 [00:00<00:00, 1265957.03it/s]
+12:32:32   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 162776
+)
+12:32:32   #train: 0, #valid: 4014, #test: 2312
+12:32:32   Preprocess training set
+12:32:32   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test_pred.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 162776)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:32:32   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-10-43-02-147608/model_epoch_14.pth
+12:32:32   Starting link prediction
+12:32:32   Predicting batch 0
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:32:33   Predicting batch 1
+12:32:34   Predicting batch 2
+12:32:34   Predicting batch 3
+12:32:34   Predicting batch 4
+12:32:34   Predicting batch 5
+12:32:35   Predicting batch 6
+12:32:35   Predicting batch 7
+12:32:35   Predicting batch 8
+12:32:35   Predicting batch 9
+12:32:36   Predicting batch 10
+12:32:36   Predicting batch 11
+12:32:36   Predicting batch 12
+12:32:37   Predicting batch 13
+12:32:37   Predicting batch 14
+12:32:37   Predicting batch 15
+12:32:37   Predicting batch 16
+12:32:38   Predicting batch 17
+12:32:38   Predicting batch 18
+12:32:38   Predicting batch 19
+12:32:38   Predicting batch 20
+12:32:39   Predicting batch 21
+12:32:39   Predicting batch 22
+12:32:39   Predicting batch 23
+12:32:40   Predicting batch 24
+12:32:40   Predicting batch 25
+12:32:40   Predicting batch 26
+12:32:40   Predicting batch 27
+12:32:41   Predicting batch 28
+12:32:41   Predicting batch 29
+12:32:41   Predicting batch 30
+12:32:41   Predicting batch 31
+12:32:42   Predicting batch 32
+12:32:42   Predicting batch 33
+12:32:42   Predicting batch 34
+12:32:43   Predicting batch 35
+12:32:43   Predicting batch 36
+12:32:43   Predicting batch 37
+12:32:43   Predicting batch 38
+12:32:44   Predicting batch 39
+12:32:44   Predicting batch 40
+12:32:44   Predicting batch 41
+12:32:44   Predicting batch 42
+12:32:45   Predicting batch 43
+12:32:45   Predicting batch 44
+12:32:45   Predicting batch 45
+12:32:46   Predicting batch 46
+12:32:46   Predicting batch 47
+12:32:46   Predicting batch 48
+12:32:46   Predicting batch 49
+12:32:47   Predicting batch 50
+12:32:47   Predicting batch 51
+12:32:47   Predicting batch 52
+12:32:47   Predicting batch 53
+12:32:48   Predicting batch 54
+12:32:48   Predicting batch 55
+12:32:48   Predicting batch 56
+12:32:49   Predicting batch 57
+12:32:49   Predicting batch 58
+12:32:49   Predicting batch 59
+12:32:49   Predicting batch 60
+12:32:50   Predicting batch 61
+12:32:50   Predicting batch 62
+12:32:50   Predicting batch 63
+12:32:50   Predicting batch 64
+12:32:51   Predicting batch 65
+12:32:51   Predicting batch 66
+12:32:51   Predicting batch 67
+12:32:51   Predicting batch 68
+12:32:52   Predicting batch 69
+12:32:52   Predicting batch 70
+12:32:52   Predicting batch 71
+12:32:53   Predicting batch 72
+12:33:07   Done
+Predictions done
+12:33:25   Link prediction done
+12:33:25   Saving to file
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-32-32-050558/predictions.csv
+12:34:05   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-34-05-827237
+12:34:05   Input Seed: 1024
+12:34:05   Set Seed: 1024
+12:34:05   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_eval.yaml
+12:34:05   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-10-43-02-147608/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': True,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  72%|███████▏  | 112852/156450 [00:00<00:00, 1128488.79it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1115265.60it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1293877.67it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1342578.65it/s]
+12:34:06   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 164478
+)
+12:34:06   #train: 0, #valid: 4014, #test: 4014
+12:34:06   Preprocess training set
+12:34:06   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 164478)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:34:06   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-10-43-02-147608/model_epoch_14.pth
+12:34:06   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:34:06   Evaluate on valid
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:34:42   ------------------------------
+12:34:42   ap: 0.976492
+12:34:42   auroc: 0.979309
+12:34:42   hits@1: 0.0432237
+12:34:42   hits@10: 0.162556
+12:34:42   hits@100: 0.374938
+12:34:42   hits@20: 0.221475
+12:34:42   hits@3: 0.0868211
+12:34:42   hits@50: 0.304559
+12:34:42   mr: 811.224
+12:34:42   mrr: 0.0832244
+12:34:42   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:34:42   Evaluate on test
+12:35:17   ------------------------------
+12:35:17   ap: 0.976994
+12:35:17   auroc: 0.979195
+12:35:17   hits@1: 0.0432237
+12:35:17   hits@10: 0.162556
+12:35:17   hits@100: 0.374938
+12:35:17   hits@20: 0.221475
+12:35:17   hits@3: 0.0868211
+12:35:17   hits@50: 0.304559
+12:35:17   mr: 811.224
+12:35:17   mrr: 0.0832244
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-35-24-478536
+12:35:24   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-35-24-478536
+12:35:24   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_pred.yaml
+12:35:24   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-11-02-37-706105/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': False,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  74%|███████▍  | 115866/156450 [00:00<00:00, 1158630.72it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1146976.22it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1341936.57it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt:   0%|          | 0/2312 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt: 100%|██████████| 2312/2312 [00:00<00:00, 1294517.53it/s]
+12:35:24   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 162776
+)
+12:35:24   #train: 0, #valid: 4014, #test: 2312
+12:35:24   Preprocess training set
+12:35:25   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test_pred.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 162776)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:35:25   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-11-02-37-706105/model_epoch_14.pth
+12:35:25   Starting link prediction
+12:35:25   Predicting batch 0
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:35:26   Predicting batch 1
+12:35:26   Predicting batch 2
+12:35:26   Predicting batch 3
+12:35:26   Predicting batch 4
+12:35:27   Predicting batch 5
+12:35:27   Predicting batch 6
+12:35:27   Predicting batch 7
+12:35:27   Predicting batch 8
+12:35:28   Predicting batch 9
+12:35:28   Predicting batch 10
+12:35:28   Predicting batch 11
+12:35:29   Predicting batch 12
+12:35:29   Predicting batch 13
+12:35:29   Predicting batch 14
+12:35:29   Predicting batch 15
+12:35:30   Predicting batch 16
+12:35:30   Predicting batch 17
+12:35:30   Predicting batch 18
+12:35:30   Predicting batch 19
+12:35:31   Predicting batch 20
+12:35:31   Predicting batch 21
+12:35:31   Predicting batch 22
+12:35:32   Predicting batch 23
+12:35:32   Predicting batch 24
+12:35:32   Predicting batch 25
+12:35:32   Predicting batch 26
+12:35:33   Predicting batch 27
+12:35:33   Predicting batch 28
+12:35:33   Predicting batch 29
+12:35:33   Predicting batch 30
+12:35:34   Predicting batch 31
+12:35:34   Predicting batch 32
+12:35:34   Predicting batch 33
+12:35:35   Predicting batch 34
+12:35:35   Predicting batch 35
+12:35:35   Predicting batch 36
+12:35:35   Predicting batch 37
+12:35:36   Predicting batch 38
+12:35:36   Predicting batch 39
+12:35:36   Predicting batch 40
+12:35:36   Predicting batch 41
+12:35:37   Predicting batch 42
+12:35:37   Predicting batch 43
+12:35:37   Predicting batch 44
+12:35:38   Predicting batch 45
+12:35:38   Predicting batch 46
+12:35:38   Predicting batch 47
+12:35:38   Predicting batch 48
+12:35:39   Predicting batch 49
+12:35:39   Predicting batch 50
+12:35:39   Predicting batch 51
+12:35:39   Predicting batch 52
+12:35:40   Predicting batch 53
+12:35:40   Predicting batch 54
+12:35:40   Predicting batch 55
+12:35:41   Predicting batch 56
+12:35:41   Predicting batch 57
+12:35:41   Predicting batch 58
+12:35:41   Predicting batch 59
+12:35:42   Predicting batch 60
+12:35:42   Predicting batch 61
+12:35:42   Predicting batch 62
+12:35:42   Predicting batch 63
+12:35:43   Predicting batch 64
+12:35:43   Predicting batch 65
+12:35:43   Predicting batch 66
+12:35:44   Predicting batch 67
+12:35:44   Predicting batch 68
+12:35:44   Predicting batch 69
+12:35:44   Predicting batch 70
+12:35:45   Predicting batch 71
+12:35:45   Predicting batch 72
+12:36:00   Done
+Predictions done
+12:36:17   Link prediction done
+12:36:17   Saving to file
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-35-24-478536/predictions.csv
+12:36:58   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-36-58-567643
+12:36:58   Input Seed: 1024
+12:36:58   Set Seed: 1024
+12:36:58   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_eval.yaml
+12:36:58   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-11-02-37-706105/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': True,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  72%|███████▏  | 113130/156450 [00:00<00:00, 1131271.41it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1119481.89it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1229259.36it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1360040.09it/s]
+12:36:58   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 164478
+)
+12:36:58   #train: 0, #valid: 4014, #test: 4014
+12:36:58   Preprocess training set
+12:36:59   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 164478)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:36:59   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-11-02-37-706105/model_epoch_14.pth
+12:36:59   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:36:59   Evaluate on valid
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:37:35   ------------------------------
+12:37:35   ap: 0.805523
+12:37:35   auroc: 0.811144
+12:37:35   hits@1: 0.0246637
+12:37:35   hits@10: 0.106253
+12:37:35   hits@100: 0.301943
+12:37:35   hits@20: 0.14848
+12:37:35   hits@3: 0.053438
+12:37:35   hits@50: 0.228077
+12:37:35   mr: 891.634
+12:37:35   mrr: 0.0539949
+12:37:35   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:37:35   Evaluate on test
+12:38:10   ------------------------------
+12:38:10   ap: 0.805933
+12:38:10   auroc: 0.814199
+12:38:10   hits@1: 0.0246637
+12:38:10   hits@10: 0.106253
+12:38:10   hits@100: 0.301943
+12:38:10   hits@20: 0.14848
+12:38:10   hits@3: 0.053438
+12:38:10   hits@50: 0.228077
+12:38:10   mr: 891.634
+12:38:10   mrr: 0.0539949
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-38-17-139873
+12:38:17   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-38-17-139873
+12:38:17   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_pred.yaml
+12:38:17   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-11-21-49-066166/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': False,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  71%|███████   | 111056/156450 [00:00<00:00, 1110534.58it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1107105.02it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1202824.62it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt:   0%|          | 0/2312 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test_pred.txt: 100%|██████████| 2312/2312 [00:00<00:00, 1245950.26it/s]
+12:38:17   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 162776
+)
+12:38:17   #train: 0, #valid: 4014, #test: 2312
+12:38:17   Preprocess training set
+12:38:17   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test_pred.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 162776)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_pred.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:38:17   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-11-21-49-066166/model_epoch_14.pth
+12:38:17   Starting link prediction
+12:38:17   Predicting batch 0
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:38:18   Predicting batch 1
+12:38:19   Predicting batch 2
+12:38:19   Predicting batch 3
+12:38:19   Predicting batch 4
+12:38:19   Predicting batch 5
+12:38:20   Predicting batch 6
+12:38:20   Predicting batch 7
+12:38:20   Predicting batch 8
+12:38:20   Predicting batch 9
+12:38:21   Predicting batch 10
+12:38:21   Predicting batch 11
+12:38:21   Predicting batch 12
+12:38:22   Predicting batch 13
+12:38:22   Predicting batch 14
+12:38:22   Predicting batch 15
+12:38:22   Predicting batch 16
+12:38:23   Predicting batch 17
+12:38:23   Predicting batch 18
+12:38:23   Predicting batch 19
+12:38:23   Predicting batch 20
+12:38:24   Predicting batch 21
+12:38:24   Predicting batch 22
+12:38:24   Predicting batch 23
+12:38:25   Predicting batch 24
+12:38:25   Predicting batch 25
+12:38:25   Predicting batch 26
+12:38:25   Predicting batch 27
+12:38:26   Predicting batch 28
+12:38:26   Predicting batch 29
+12:38:26   Predicting batch 30
+12:38:26   Predicting batch 31
+12:38:27   Predicting batch 32
+12:38:27   Predicting batch 33
+12:38:27   Predicting batch 34
+12:38:28   Predicting batch 35
+12:38:28   Predicting batch 36
+12:38:28   Predicting batch 37
+12:38:28   Predicting batch 38
+12:38:29   Predicting batch 39
+12:38:29   Predicting batch 40
+12:38:29   Predicting batch 41
+12:38:29   Predicting batch 42
+12:38:30   Predicting batch 43
+12:38:30   Predicting batch 44
+12:38:30   Predicting batch 45
+12:38:31   Predicting batch 46
+12:38:31   Predicting batch 47
+12:38:31   Predicting batch 48
+12:38:31   Predicting batch 49
+12:38:32   Predicting batch 50
+12:38:32   Predicting batch 51
+12:38:32   Predicting batch 52
+12:38:32   Predicting batch 53
+12:38:33   Predicting batch 54
+12:38:33   Predicting batch 55
+12:38:33   Predicting batch 56
+12:38:33   Predicting batch 57
+12:38:34   Predicting batch 58
+12:38:34   Predicting batch 59
+12:38:34   Predicting batch 60
+12:38:35   Predicting batch 61
+12:38:35   Predicting batch 62
+12:38:35   Predicting batch 63
+12:38:35   Predicting batch 64
+12:38:36   Predicting batch 65
+12:38:36   Predicting batch 66
+12:38:36   Predicting batch 67
+12:38:36   Predicting batch 68
+12:38:37   Predicting batch 69
+12:38:37   Predicting batch 70
+12:38:37   Predicting batch 71
+12:38:38   Predicting batch 72
+12:38:52   Done
+Predictions done
+12:39:11   Link prediction done
+12:39:11   Saving to file
+/lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-38-17-139873/predictions.csv
+12:39:55   Working directory: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-12-39-55-811768
+12:39:55   Input Seed: 1024
+12:39:55   Set Seed: 1024
+12:39:55   Config file: config/knowledge_graph/synleth/inductive/synleth_inductive_5layers_original_eval.yaml
+12:39:55   {'checkpoint': '/home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-11-21-49-066166/model_epoch_14.pth',
+ 'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/'},
+ 'engine': {'batch_size': 32, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/lustre/groups/crna01/projects/genefunction/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'remove_pos': True,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:   0%|          | 0/156450 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt:  75%|███████▍  | 116607/156450 [00:00<00:00, 1166043.31it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train1.txt: 100%|██████████| 156450/156450 [00:00<00:00, 1152151.84it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/train2.txt: 0it [00:00, ?it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/valid.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1356205.59it/s]
+Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt:   0%|          | 0/4014 [00:00<?, ?it/s]Loading /lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/test.txt: 100%|██████████| 4014/4014 [00:00<00:00, 1413952.82it/s]
+12:39:56   biomedical(
+  #entity: 20100
+  #relation: 30
+  #triplet: 164478
+)
+12:39:56   #train: 0, #valid: 4014, #test: 4014
+12:39:56   Preprocess training set
+12:39:56   {'batch_size': 32,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(30),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test.txt'],
+                          'include_factgraph': True,
+                          'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                          'verbose': 1},
+              'indices': range(160464, 164478)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 156450)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/lustre/groups/crna01/datasets/linkpred/synleth/inductive_noRev/SL_ind/',
+                           'verbose': 1},
+               'indices': range(156450, 160464)}}
+12:39:56   Load checkpoint from /home/icb/yue.hu/proj_genefun/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-02-09-11-21-49-066166/model_epoch_14.pth
+12:39:56   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:39:56   Evaluate on valid
+/home/icb/yue.hu/proj_genefun/conda-env/miniconda3/envs/env_re_nbfnet/lib/python3.10/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3483.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+12:40:32   ------------------------------
+12:40:32   ap: 0.907878
+12:40:32   auroc: 0.935643
+12:40:32   hits@1: 0.0135775
+12:40:32   hits@10: 0.0673891
+12:40:32   hits@100: 0.299203
+12:40:32   hits@20: 0.107623
+12:40:32   hits@3: 0.0286497
+12:40:32   hits@50: 0.208396
+12:40:32   mr: 851.387
+12:40:32   mrr: 0.0350608
+12:40:32   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+12:40:32   Evaluate on test
+12:41:07   ------------------------------
+12:41:07   ap: 0.898931
+12:41:07   auroc: 0.931627
+12:41:07   hits@1: 0.0135775
+12:41:07   hits@10: 0.0673891
+12:41:07   hits@100: 0.299203
+12:41:07   hits@20: 0.107623
+12:41:07   hits@3: 0.0286497
+12:41:07   hits@50: 0.208396
+12:41:07   mr: 851.387
+12:41:07   mrr: 0.0350608

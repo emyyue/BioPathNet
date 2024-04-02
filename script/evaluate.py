@@ -14,8 +14,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from nbfnet import dataset, layer, model, task, util
 import numpy as np
 
-vocab_file = os.path.join(os.path.dirname(__file__), "/home/icb/yue.hu/proj_genefun/NBFNet/data/primekg/disease_split/cardiovascular_42/entity_names.txt")
-vocab_file = os.path.abspath(vocab_file)
 
 def solver_load(checkpoint, load_optimizer=True):
 
@@ -75,25 +73,35 @@ if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
+    print(working_dir)
+    vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
+    vocab_file = os.path.abspath(vocab_file)
 
     torch.manual_seed(args.seed + comm.get_rank())
 
     logger = util.get_root_logger()
+    logger.warning("Working directory: %s" % working_dir)
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
 
-    _dataset = core.Configurable.load_config_dict(cfg.dataset)
-    train_set, valid_set, test_set = _dataset.split()
-    full_valid_set = valid_set
-    if comm.get_rank() == 0:
-        logger.warning(_dataset)
-        logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
+    for i in ['test_contra.txt', 'test_indi.txt', 'test_off.txt']:
+        cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', i]
+        _dataset = core.Configurable.load_config_dict(cfg.dataset)
+        train_set, valid_set, test_set = _dataset.split()
+        full_valid_set = valid_set
+        if comm.get_rank() == 0:
+            logger.warning(_dataset)
+            logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
 
-    solver = build_solver(cfg)
+        solver = build_solver(cfg)
 
-    if "checkpoint" in cfg:
-        solver_load(cfg.checkpoint)
-    entity_vocab, relation_vocab = load_vocab(_dataset)
-    
-    evaluate_per_node(cfg, solver)
+        if "checkpoint" in cfg:
+            solver_load(cfg.checkpoint)
+        entity_vocab, relation_vocab = load_vocab(_dataset)
+
+        logger.warning(f"Starting evaluation on {i}")
+        evaluate_per_node(cfg, solver)
+        
+    with open(os.path.join(working_dir + '/entity_vocab.txt'), mode='wt', encoding='utf-8') as myfile:
+        myfile.write('\n'.join(entity_vocab))

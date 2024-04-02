@@ -1,0 +1,51 @@
+output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
+
+dataset:
+  class: biomedical
+  path: /lustre/groups/crna01/datasets/linkpred/txgnn/anemia_{{datasplit_seed}}/nfbnet
+  include_factgraph: True
+  
+task:
+  class: KnowledgeGraphCompletionBiomed
+  model:
+    class: NBFNet
+    input_dim: 32
+    hidden_dims: [ 32, 32, 32, 32]
+    message_func: distmult
+    aggregate_func: pna
+    short_cut: yes
+    layer_norm: yes
+    dependent: yes
+    symmetric: yes
+  criterion: bce
+  num_negative: 64
+  strict_negative: yes
+  adversarial_temperature: 0.5
+  sample_weight: no
+  heterogeneous_negative: yes
+  heterogeneous_evaluation: yes
+  gene_annotation_predict: no
+  conditional_probability: yes
+  full_batch_eval: True
+
+
+
+
+optimizer:
+  class: Adam
+  lr: 5.0e-3
+
+engine:
+  gpus: {{ gpus }}
+  batch_size: 8
+
+  
+train:
+  num_epoch: 8
+  batch_per_epoch: 1000
+  
+metric: mrr
+
+checkpoint: {{checkpoint}}
+
+output_directory: {{output_directory}}

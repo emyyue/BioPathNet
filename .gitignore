@@ -14,3 +14,5 @@ __pycache__
 .ipynb_checkpoints
 data
 experiments
+slurm_out
+sbatch/old*

@@ -1,0 +1,53 @@
+output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
+
+dataset:
+  class: biomedical
+  path: /lustre/groups/crna01/datasets/linkpred/PC_KEGG_nofact
+  include_factgraph: False  
+
+task:
+  class: KnowledgeGraphCompletionBiomed
+  # class: KnowledgeGraphEmbeddingEx
+  model:
+    class: NodeEncoder
+    gnn_model:
+      class: BatchedRGCN
+      input_dim: 128
+      hidden_dims: [128, 128, 128]
+      layer_norm: yes
+      short_cut: yes
+      batch_norm: yes
+    score_model:
+      class: RotatEScore
+      embedding_dim: 128
+      max_score: 9
+    flip_edge: yes
+  criterion: bce
+  num_negative: 512
+  strict_negative: yes
+  adversarial_temperature: 2
+  # evaluation_target: both
+  sample_weight: no
+  heterogeneous_negative: yes
+  heterogeneous_evaluation: yes
+  conditional_probability: yes
+  full_batch_eval: False
+
+
+
+
+optimizer:
+  class: Adam
+  lr: 1.0e-3
+
+engine:
+  gpus: {{ gpus }}
+  batch_size: 64
+  
+
+train:
+  num_epoch: 10
+  #batch_per_epoch: 10
+  
+metric: mrr
+

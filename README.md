@@ -1,8 +1,6 @@
-# NBFNet: Neural Bellman-Ford Networks #
+# BioKGC: Biomedical Knowledge Graph Completion #
 
-This is the official codebase of the manuscript
-
-BioKGC: Path-based reasoning in biomedical knowledge graphs
+This is the official codebase of the manuscript **BioKGC: Path-based reasoning in biomedical knowledge graphs**
 
 ## Overview ##
 BioKGC is a graph neural network framework, adapted from [NBFNet][paper],
@@ -16,7 +14,7 @@ background regulatory graph for message passing.
 
 ![BioKGC](asset/biokgc.svg)
 
-This codebase is based on [NBFNetgithub], PyTorch and [TorchDrug]. It supports training and inference
+This codebase is based on [NBFNet][NBFNetgithub], PyTorch and [TorchDrug]. It supports training and inference
 with multiple GPUs or multiple machines.
 
 [TorchDrug]: https://github.com/DeepGraphLearning/torchdrug
@@ -40,4 +38,13 @@ conda install ogb easydict pyyaml -c conda-forge
 pip install torch==1.8.2+cu111 -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
 pip install torchdrug
 pip install ogb easydict pyyaml
+```
+
+## Run ##
+
+To reproduce the results of BioKGC on mock data, use the following command. Alternatively, you
+may use `--gpus null` to run NBFNet on a CPU.
+
+```bash
+python script/run.py -s 1024 -c config/knowledge_graph/mock/mockdata_run.yaml --gpus [0] 
 ```

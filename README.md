@@ -50,6 +50,7 @@ python script/run.py -s 1024 -c config/knowledge_graph/mock/mockdata_run.yaml --
 ```
 
 ## Predict ##
+Predictions given a query node and query relation can be obtained and investigated for known and novel predictions. 
 
 ```bash
 python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
@@ -57,8 +58,8 @@ python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus
 
 ## Visualize ##
 
-To reproduce the results of BioKGC on mock data, use the following command. Alternatively, you
-may use `--gpus null` to run NBFNet on a CPU.
+For the visualization of the most important paths for a certain prediction, there is the option of detailing the top 10 paths
+as text file or as subgraph figure. 
 
 ```bash
 python script/visualize_graph.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth

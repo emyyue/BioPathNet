@@ -28,8 +28,15 @@ with Python 3.7/3.8 and PyTorch version >= 1.8.0.
 ### From Conda ###
 
 ```bash
-conda install torchdrug pytorch=1.8.2 cudatoolkit=11.1 -c milagraph -c pytorch-lts -c pyg -c conda-forge
-conda install ogb easydict pyyaml -c conda-forge
+conda create -y -n biokgc python=3.10
+conda activate biokgc
+pip install --no-cache-dir torch torchvision torchaudio
+pip install torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.0+cpu.html
+git clone https://github.com/DeepGraphLearning/torchdrug
+cd torchdrug
+pip install -r requirements.txt
+python setup.py install
+pip install ogb easydict pyyaml
 ```
 
 ### From Pip ###

@@ -12,7 +12,7 @@ background regulatory graph for message passing.
 
 [paper]: https://arxiv.org/pdf/2106.06935.pdf
 
-<img src="asset/biokgc.svg" width="2048">
+<img src="asset/biokgc.svg" width="600">
 
 This codebase is based on [NBFNet][NBFNetgithub], PyTorch and [TorchDrug]. It supports training and inference
 with multiple GPUs or multiple machines.

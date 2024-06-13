@@ -39,13 +39,6 @@ python setup.py install
 pip install ogb easydict pyyaml
 ```
 
-### From Pip ###
-
-```bash
-pip install torch==1.8.2+cu111 -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
-pip install torchdrug
-pip install ogb easydict pyyaml
-```
 
 ## Run ##
 
@@ -55,3 +48,22 @@ may use `--gpus null` to run NBFNet on a CPU.
 ```bash
 python script/run.py -s 1024 -c config/knowledge_graph/mock/mockdata_run.yaml --gpus [0] 
 ```
+
+## Predict ##
+
+```bash
+python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
+```
+
+## Visualize ##
+
+To reproduce the results of BioKGC on mock data, use the following command. Alternatively, you
+may use `--gpus null` to run NBFNet on a CPU.
+
+```bash
+python script/visualize_graph.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
+
+python script/visualize.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth```
+```
+
+More Details on execution in the sbatch directory.

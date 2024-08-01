@@ -1,9 +1,9 @@
-output_dir: /lustre/groups/crna01/workspace/hui/nbfnet-gr/experiments
+output_dir: experiments
 
 dataset:
   class: biomedical
-  path: /lustre/groups/crna01/workspace/hui/nbfnet-gr/data/gold/lnctardppi
-  include_factgraph: True
+  path: data/lnctardppi
+  include_factgraph: yes
   
 task:
   class: KnowledgeGraphCompletionBiomed
@@ -24,8 +24,7 @@ task:
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  conditional_probability: yes
-  full_batch_eval: False
+  full_batch_eval: no
 
 optimizer:
   class: Adam

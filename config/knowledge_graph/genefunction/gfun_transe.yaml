@@ -1,15 +1,16 @@
-output_dir: /home/icb/yue.hu/proj_genefun/NBFNet/experiments/
+output_dir: experiments/
 
 dataset:
   class: biomedical
-  path: /lustre/groups/crna01/datasets/linkpred/PC_KEGG_nofact/
-  include_factgraph: no
+  path: data/PC_KEGG_0928
+  include_factgraph: yes
+  fact_as_train: yes
   
 task:
   class: KnowledgeGraphCompletionBiomed
   model:
-    class: RotatE
-    embedding_dim: 512
+    class: TransE
+    embedding_dim: 128
     max_score: 6
   criterion: bce
   num_negative: 512
@@ -21,13 +22,13 @@ task:
 
 optimizer:
   class: Adam
-  lr: 2.0e-4
+  lr: 1.0e-3
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 1024
+  batch_size: 4096
 
 train:
-  num_epoch: 500
+  num_epoch: 100
 
 metric: mrr

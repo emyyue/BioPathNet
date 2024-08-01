@@ -1,12 +1,12 @@
-output_dir: ~/experiments/
+output_dir: experiments/
 
 dataset:
   class: biomedical
-  path: /home/mila/y/yue.hu/github/NBFNet/data/PC_KEGG
-  include_factgraph: True
+  path: data/PC_KEGG_0928
+  include_factgraph: no
   
 task:
-  class: KnowledgeGraphCompletion
+  class: KnowledgeGraphCompletionBiomed
   model:
     class: NBFNet
     input_dim: 32
@@ -15,12 +15,14 @@ task:
     aggregate_func: pna
     short_cut: yes
     layer_norm: yes
-    dependent: no
+    dependent: yes
   criterion: bce
   num_negative: 32
   strict_negative: yes
   adversarial_temperature: 1
   sample_weight: no
+  heterogeneous_negative: yes
+  heterogeneous_evaluation: yes
 
 
 
@@ -30,13 +32,10 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 64
+  batch_size: 32
   
 
 train:
-  num_epoch: 2
-  batch_per_epoch: 1000
+  num_epoch: 8
 
 metric: mrr
-
-checkpoint: {{ checkpoint }}

@@ -1,13 +1,12 @@
-output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
+output_dir: experiments/
 
 dataset:
   class: biomedical
-  path: /lustre/groups/crna01/datasets/linkpred/PC_KEGG_nofact
-  include_factgraph: False  
+  path: data/PC_KEGG_0928
+  include_factgraph: yes  
 
 task:
   class: KnowledgeGraphCompletionBiomed
-  # class: KnowledgeGraphEmbeddingEx
   model:
     class: NodeEncoder
     gnn_model:

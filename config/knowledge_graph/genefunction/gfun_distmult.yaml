@@ -1,17 +1,17 @@
-output_dir: ~/scratch/experiments/
+output_dir: experiments/
 
 dataset:
   class: biomedical
-  path: ~/nbfnet_hy/data/PC_KEGG_0928
+  path: data/PC_KEGG_0928
   include_factgraph: yes
   fact_as_train: yes
   
 task:
   class: KnowledgeGraphCompletionBiomed
   model:
-    class: TransE
+    class: DistMult
     embedding_dim: 128
-    max_score: 6
+    l3_regularization: 2.0e-6
   criterion: bce
   num_negative: 512
   strict_negative: yes

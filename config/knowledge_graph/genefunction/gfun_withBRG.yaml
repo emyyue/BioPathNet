@@ -1,9 +1,9 @@
-output_dir: /lustre/groups/crna01/projects/genefunction/experiments/
+output_dir: experiments/
 
 dataset:
   class: biomedical
-  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/PC_KEGG_0602
-  include_factgraph: True
+  path: data/PC_KEGG_0928
+  include_factgraph: yes
   
 task:
   class: KnowledgeGraphCompletionBiomed
@@ -33,11 +33,10 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 8
+  batch_size: 32
   
 
 train:
   num_epoch: 8
-  #batch_per_epoch: 1000
   
 metric: mrr

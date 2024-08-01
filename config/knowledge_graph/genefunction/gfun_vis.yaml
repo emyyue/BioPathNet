@@ -1,9 +1,9 @@
-output_dir: /lustre/groups/crna01/projects/genefunction/experiments/
+output_dir: experiments/
 
 dataset:
   class: biomedical
-  path: /lustre/groups/crna01/datasets/linkpred/PC_KEGG_0602/
-  include_factgraph: False
+  path: data/PC_KEGG_0928
+  include_factgraph: yes
   
 task:
   class: KnowledgeGraphCompletionBiomed
@@ -15,14 +15,12 @@ task:
     aggregate_func: pna
     short_cut: yes
     layer_norm: yes
-    dependent: yes
+    dependent: no
   criterion: bce
   num_negative: 32
   strict_negative: yes
   adversarial_temperature: 1
   sample_weight: no
-  heterogeneous_negative: yes
-  heterogeneous_evaluation: yes
 
 
 
@@ -32,11 +30,13 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 32
+  batch_size: 64
   
 
 train:
-  num_epoch: 1
-  batch_per_epoch: 1
+  num_epoch: 2
+  batch_per_epoch: 1000
 
 metric: mrr
+
+checkpoint: {{ checkpoint }}

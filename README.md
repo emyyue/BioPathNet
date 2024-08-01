@@ -42,15 +42,20 @@ pip install ogb easydict pyyaml
 
 ## Run ##
 
-To reproduce the results of BioKGC on mock data, use the following command. Alternatively, you
-may use `--gpus null` to run NBFNet on a CPU.
+To run BioKGC on mock data, use the following command. Alternatively, you
+may use `--gpus null` to run BioKGC on a CPU. Input files are train1 (BRG), train2 (supervision edges),
+valid and test.
 
 ```bash
 python script/run.py -s 1024 -c config/knowledge_graph/mock/mockdata_run.yaml --gpus [0] 
 ```
 
 ## Predict ##
-Predictions given a query node and query relation can be obtained and investigated for known and novel predictions. 
+Predictions can be performed given a query node and query relation. Then all possible tail nodes (of same node type) 
+will be ranked according to the prediction score. A prediction test file needs to be generated that specifies the query triplets.
+The best way is have all unique (head, relation, tail), as as predictions are done over p(all_t of node_type(t) | h, r), 
+as well as p(all_h of node_type(h)| given t, r-1). Important: the flag "remove_pos: no" needs to be set, else predictions will not
+contain positive tails found in training.
 
 ```bash
 python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
@@ -59,12 +64,11 @@ python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus
 ## Visualize ##
 
 For the visualization of the most important paths for a certain prediction, there is the option of detailing the top 10 paths
-as text file or as subgraph figure. 
+as text file or as subgraph figure. A prediction test file (test_vis.txt) needs to be generated that specifies the triplets to visualize.
+Also node_colors_dict.txt specifies the colors used for different node types.
 
 ```bash
 python script/visualize_graph.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
 
 python script/visualize.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth```
 ```
-
-More Details on execution in the sbatch directory.

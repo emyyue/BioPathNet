@@ -1,0 +1,256 @@
+19:35:21   Working directory: experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-08-01-19-35-21-312803
+19:35:21   Input Seed: 1024
+19:35:21   Set Seed: 1024
+19:35:21   Config file: config/knowledge_graph/mock/mockdata_run.yaml
+19:35:21   {'dataset': {'class': 'biomedical',
+             'files': ['train1.txt', 'train2.txt', 'valid.txt', 'test.txt'],
+             'include_factgraph': True,
+             'path': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/data/mock'},
+ 'engine': {'batch_size': 4, 'gpus': None},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': 'experiments/',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'full_batch_eval': False,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 32,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 5}}
+19:35:21   biomedical(
+  #entity: 28
+  #relation: 5
+  #triplet: 71
+)
+19:35:21   #train: 34, #valid: 12, #test: 12
+19:35:21   Preprocess training set
+19:35:21   {'batch_size': 4,
+ 'class': 'core.Engine',
+ 'gpus': None,
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': False,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(5),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 32,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test.txt'],
+                          'include_factgraph': True,
+                          'path': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/data/mock',
+                          'verbose': 1},
+              'indices': range(59, 71)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/data/mock',
+                           'verbose': 1},
+               'indices': range(13, 47)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test.txt'],
+                           'include_factgraph': True,
+                           'path': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/data/mock',
+                           'verbose': 1},
+               'indices': range(47, 59)}}
+19:35:21   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:21   Epoch 0 begin
+19:35:22   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:22   binary cross entropy: 0.681875
+19:35:22   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:22   Epoch 0 end
+19:35:22   duration: 1.21 secs
+19:35:22   speed: 7.47 batch / sec
+19:35:22   ETA: 0.00 secs
+19:35:22   ------------------------------
+19:35:22   average binary cross entropy: 0.732186
+19:35:22   Save checkpoint to model_epoch_1.pth
+19:35:22   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:22   Evaluate on valid
+19:35:22   ------------------------------
+19:35:22   ap: 0.596716
+19:35:22   auroc: 0.479167
+19:35:22   hits@1: 0.125
+19:35:22   hits@10: 1
+19:35:22   hits@100: 1
+19:35:22   hits@20: 1
+19:35:22   hits@3: 0.5
+19:35:22   hits@50: 1
+19:35:22   mr: 4.33333
+19:35:22   mrr: 0.378571
+19:35:22   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:22   Epoch 1 begin
+19:35:22   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:22   Epoch 1 end
+19:35:22   duration: 0.34 secs
+19:35:22   speed: 26.48 batch / sec
+19:35:22   ETA: 0.00 secs
+19:35:22   ------------------------------
+19:35:22   average binary cross entropy: 0.686969
+19:35:22   Save checkpoint to model_epoch_2.pth
+19:35:22   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:22   Evaluate on valid
+19:35:23   ------------------------------
+19:35:23   ap: 0.595814
+19:35:23   auroc: 0.491319
+19:35:23   hits@1: 0.0416667
+19:35:23   hits@10: 1
+19:35:23   hits@100: 1
+19:35:23   hits@20: 1
+19:35:23   hits@3: 0.583333
+19:35:23   hits@50: 1
+19:35:23   mr: 4.41667
+19:35:23   mrr: 0.32996
+19:35:23   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:23   Epoch 2 begin
+19:35:23   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:23   Epoch 2 end
+19:35:23   duration: 0.34 secs
+19:35:23   speed: 26.51 batch / sec
+19:35:23   ETA: 0.00 secs
+19:35:23   ------------------------------
+19:35:23   average binary cross entropy: 0.679576
+19:35:23   Save checkpoint to model_epoch_3.pth
+19:35:23   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:23   Evaluate on valid
+19:35:23   ------------------------------
+19:35:23   ap: 0.545156
+19:35:23   auroc: 0.520833
+19:35:23   hits@1: 0.0416667
+19:35:23   hits@10: 1
+19:35:23   hits@100: 1
+19:35:23   hits@20: 1
+19:35:23   hits@3: 0.625
+19:35:23   hits@50: 1
+19:35:23   mr: 4.29167
+19:35:23   mrr: 0.335979
+19:35:23   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:23   Epoch 3 begin
+19:35:23   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:23   Epoch 3 end
+19:35:23   duration: 0.33 secs
+19:35:23   speed: 27.38 batch / sec
+19:35:23   ETA: 0.00 secs
+19:35:23   ------------------------------
+19:35:23   average binary cross entropy: 0.681409
+19:35:23   Save checkpoint to model_epoch_4.pth
+19:35:23   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:23   Evaluate on valid
+19:35:23   ------------------------------
+19:35:23   ap: 0.729908
+19:35:23   auroc: 0.579861
+19:35:23   hits@1: 0.0833333
+19:35:23   hits@10: 0.875
+19:35:23   hits@100: 1
+19:35:23   hits@20: 1
+19:35:23   hits@3: 0.583333
+19:35:23   hits@50: 1
+19:35:23   mr: 4.375
+19:35:23   mrr: 0.36563
+19:35:23   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:23   Epoch 4 begin
+19:35:23   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:23   Epoch 4 end
+19:35:23   duration: 0.33 secs
+19:35:23   speed: 26.92 batch / sec
+19:35:23   ETA: 0.00 secs
+19:35:23   ------------------------------
+19:35:23   average binary cross entropy: 0.682516
+19:35:23   Save checkpoint to model_epoch_5.pth
+19:35:23   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:23   Evaluate on valid
+19:35:24   ------------------------------
+19:35:24   ap: 0.594256
+19:35:24   auroc: 0.592014
+19:35:24   hits@1: 0.0833333
+19:35:24   hits@10: 1
+19:35:24   hits@100: 1
+19:35:24   hits@20: 1
+19:35:24   hits@3: 0.625
+19:35:24   hits@50: 1
+19:35:24   mr: 4.25
+19:35:24   mrr: 0.356812
+19:35:24   Load checkpoint from model_epoch_1.pth
+19:35:24   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:24   Evaluate on valid
+19:35:24   ------------------------------
+19:35:24   ap: 0.551917
+19:35:24   auroc: 0.456597
+19:35:24   hits@1: 0.125
+19:35:24   hits@10: 1
+19:35:24   hits@100: 1
+19:35:24   hits@20: 1
+19:35:24   hits@3: 0.5
+19:35:24   hits@50: 1
+19:35:24   mr: 4.33333
+19:35:24   mrr: 0.378571
+19:35:24   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:35:24   Evaluate on test
+19:35:24   ------------------------------
+19:35:24   ap: 0.666937
+19:35:24   auroc: 0.565972
+19:35:24   hits@1: 0.125
+19:35:24   hits@10: 1
+19:35:24   hits@100: 1
+19:35:24   hits@20: 1
+19:35:24   hits@3: 0.708333
+19:35:24   hits@50: 1
+19:35:24   mr: 3.20833
+19:35:24   mrr: 0.435814

@@ -1,0 +1,704 @@
+19:43:24   Working directory: /Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-08-01-19-43-24-463847
+19:43:24   Config file: config/knowledge_graph/mock/mockdata_vis.yaml
+19:43:24   {'checkpoint': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-08-01-19-35-21-312803/model_epoch_5.pth',
+ 'dataset': {'class': 'biomedical',
+             'files': ['train1.txt', 'train2.txt', 'valid.txt', 'test_vis.txt'],
+             'include_factgraph': True,
+             'path': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/data/mock'},
+ 'engine': {'batch_size': 4, 'gpus': None},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/experiments/',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': False,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 32,
+          'remove_pos': False,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 5}}
+19:43:24   Preprocess training set
+19:43:24   {'batch_size': 4,
+ 'class': 'core.Engine',
+ 'gpus': None,
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': False,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(5),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 32,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                    'test_vis.txt'],
+                          'include_factgraph': True,
+                          'path': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/data/mock',
+                          'verbose': 1},
+              'indices': range(59, 65)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_vis.txt'],
+                           'include_factgraph': True,
+                           'path': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/data/mock',
+                           'verbose': 1},
+               'indices': range(13, 47)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': ['train1.txt', 'train2.txt', 'valid.txt',
+                                     'test_vis.txt'],
+                           'include_factgraph': True,
+                           'path': '/Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/data/mock',
+                           'verbose': 1},
+               'indices': range(47, 59)}}
+19:43:24   Load checkpoint from /Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-08-01-19-35-21-312803/model_epoch_5.pth
+19:43:24   
+19:43:24   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:24   rank(gene1 | pathway12, GO:annotation (3)) = 3
+19:43:24   weight: 0.0915572
+	<gene1, up (0), gene1> ->
+	<pathway12, GO:annotation (3), gene1>
+19:43:24   weight: 0.00020119
+	<gene1, up (0), gene1> ->
+	<pathway3, GO:annotation (3), gene1>
+19:43:24   weight: 0.000172563
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway3, GO:annotation (3), gene1>
+19:43:24   weight: -0.000168227
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway3, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway3, GO:annotation (3), gene1>
+19:43:24   weight: -0.000169631
+	<gene1, up (0), gene1> ->
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway3, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway12, GO:annotation (3), gene1>
+19:43:24   weight: -0.000190702
+	<pathway12, GO:annotation (3), gene1>
+19:43:24   weight: -0.000300971
+	<gene1, up (0), gene1> ->
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway3, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway3, GO:annotation (3), gene1>
+19:43:24   weight: -0.000732558
+	<gene1, up (0), gene1> ->
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway3, GO:annotation (3), gene1>
+19:43:24   weight: -0.000824093
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway3, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway2, GO:annotation (3), gene1>
+19:43:24   weight: -0.00164606
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene1> ->
+	<pathway2, GO:annotation (3), gene1>
+19:43:24   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:24   rank(pathway12 | gene1, GO:annotation (3)^(-1)) = 19
+19:43:24   weight: 0.046311
+	<gene1, GO:annotation (3), pathway22> ->
+	<pathway22, GO:annotation (3)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0458844
+	<gene1, up (0), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0458267
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0457179
+	<gene1, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0456224
+	<gene1, up (0), gene2> ->
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0455647
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0455071
+	<gene1, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0454246
+	<gene1, GO:annotation (3)^(-1), pathway14> ->
+	<pathway14, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.045424
+	<gene1, GO:annotation (3)^(-1), pathway4> ->
+	<pathway4, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.045424
+	<gene1, GO:annotation (3)^(-1), pathway4> ->
+	<pathway4, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   
+19:43:24   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:24   rank(gene2 | pathway12, GO:annotation (3)) = 2
+19:43:24   weight: 0.096644
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2>
+19:43:24   weight: 0.0254398
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene2>
+19:43:24   weight: 0.01443
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, down (1), gene1> ->
+	<gene1, phos (2)^(-1), gene2>
+19:43:24   weight: 0.0140213
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, phos (2)^(-1), gene2>
+19:43:24   weight: 0.0138371
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, down (1), gene3> ->
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, phos (2)^(-1), gene2>
+19:43:24   weight: 0.0136334
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway11> ->
+	<pathway11, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2>
+19:43:24   weight: 0.0136018
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway14> ->
+	<pathway14, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2>
+19:43:24   weight: 0.0135783
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3), pathway22> ->
+	<pathway22, GO:annotation (3)^(-1), gene1> ->
+	<gene1, phos (2)^(-1), gene2>
+19:43:24   weight: 0.0135713
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway2> ->
+	<pathway2, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2>
+19:43:24   weight: 0.0135545
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway13> ->
+	<pathway13, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2>
+19:43:24   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:24   rank(pathway12 | gene2, GO:annotation (3)^(-1)) = 10
+19:43:24   weight: 0.0984181
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0809454
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0524754
+	<gene2, down (1)^(-1), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0524488
+	<gene2, GO:annotation (3)^(-1), pathway11> ->
+	<pathway11, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.052429
+	<gene2, phos (2)^(-1), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0524232
+	<gene2, GO:annotation (3)^(-1), pathway14> ->
+	<pathway14, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0524071
+	<gene2, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.052378
+	<gene2, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0519928
+	<gene2, GO:annotation (3)^(-1), pathway4> ->
+	<pathway4, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0384219
+	<gene2, phos (2), gene1> ->
+	<gene1, up (0), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   
+19:43:24   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:24   rank(gene3 | pathway12, GO:annotation (3)) = 5
+19:43:24   weight: 0.0658182
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, down (1), gene3>
+19:43:24   weight: 0.0121251
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene4> ->
+	<gene4, up (0)^(-1), gene3>
+19:43:24   weight: 0.011753
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, up (0)^(-1), gene4> ->
+	<gene4, up (0)^(-1), gene3>
+19:43:24   weight: 0.0116685
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene2> ->
+	<gene2, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene3>
+19:43:24   weight: 0.0116322
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene3>
+19:43:24   weight: 0.0115857
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene2> ->
+	<gene2, phos (2)^(-1), gene4> ->
+	<gene4, up (0)^(-1), gene3>
+19:43:24   weight: 0.0115834
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene2> ->
+	<gene2, down (1)^(-1), gene4> ->
+	<gene4, up (0)^(-1), gene3>
+19:43:24   weight: 0.0115494
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, phos (2)^(-1), gene4> ->
+	<gene4, up (0)^(-1), gene3>
+19:43:24   weight: 0.0115471
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, down (1)^(-1), gene4> ->
+	<gene4, up (0)^(-1), gene3>
+19:43:24   weight: 0.00698745
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene3>
+19:43:24   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:24   rank(pathway12 | gene3, GO:annotation (3)^(-1)) = 13
+19:43:24   weight: 0.0917765
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0532889
+	<gene3, down (1)^(-1), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0532364
+	<gene3, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0531898
+	<gene3, phos (2), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0531459
+	<gene3, GO:annotation (3)^(-1), pathway13> ->
+	<pathway13, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0530478
+	<gene3, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0530448
+	<gene3, GO:annotation (3)^(-1), pathway11> ->
+	<pathway11, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0328981
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, down (1), gene3> ->
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0321976
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:24   weight: 0.0320693
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, down (1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   
+19:43:25   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:25   rank(gene4 | pathway12, GO:annotation (3)) = 6
+19:43:25   weight: 0.0422961
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene4>
+19:43:25   weight: 0.00758456
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene5> ->
+	<gene5, up (0)^(-1), gene4>
+19:43:25   weight: 0.00568406
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene3> ->
+	<gene3, down (1)^(-1), gene4>
+19:43:25   weight: 0.00567662
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway11> ->
+	<pathway11, GO:annotation (3), gene3> ->
+	<gene3, down (1)^(-1), gene4>
+19:43:25   weight: 0.00567058
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway13> ->
+	<pathway13, GO:annotation (3), gene3> ->
+	<gene3, down (1)^(-1), gene4>
+19:43:25   weight: 0.00368635
+	<gene1, up (0), gene1> ->
+	<pathway8, GO:annotation (3), gene4>
+19:43:25   weight: 0.00317018
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene2> ->
+	<gene2, down (1)^(-1), gene4>
+19:43:25   weight: 0.00306279
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway4> ->
+	<pathway4, GO:annotation (3), gene2> ->
+	<gene2, down (1)^(-1), gene4>
+19:43:25   weight: 0.00299533
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway11> ->
+	<pathway11, GO:annotation (3), gene2> ->
+	<gene2, down (1)^(-1), gene4>
+19:43:25   weight: 0.00297835
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway14> ->
+	<pathway14, GO:annotation (3), gene2> ->
+	<gene2, down (1)^(-1), gene4>
+19:43:25   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:25   rank(pathway12 | gene4, GO:annotation (3)^(-1)) = 17
+19:43:25   weight: 0.100288
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0537544
+	<gene4, phos (2), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0530342
+	<gene4, up (0)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0529194
+	<gene4, down (1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0517893
+	<gene4, phos (2), gene2> ->
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0510962
+	<gene4, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0510692
+	<gene4, up (0)^(-1), gene2> ->
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0509543
+	<gene4, down (1), gene2> ->
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0502828
+	<gene4, up (0), gene5> ->
+	<gene5, down (1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0497614
+	<gene4, up (0)^(-1), gene3> ->
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   
+19:43:25   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:25   rank(gene5 | pathway12, GO:annotation (3)) = 4
+19:43:25   weight: 0.110031
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   weight: 0.0139985
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   weight: 0.0139474
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene2> ->
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   weight: 0.013646
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   weight: 0.013488
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12> ->
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   weight: 0.0134685
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway11> ->
+	<pathway11, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   weight: 0.013445
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway13> ->
+	<pathway13, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   weight: 0.0134251
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   weight: 0.0134135
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway2> ->
+	<pathway2, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   weight: 0.0134125
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway4> ->
+	<pathway4, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5>
+19:43:25   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:25   rank(pathway12 | gene5, GO:annotation (3)^(-1)) = 13
+19:43:25   weight: 0.0889395
+	<gene5, down (1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0537397
+	<gene5, up (0)^(-1), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0537083
+	<gene5, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0342356
+	<gene5, down (1), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, down (1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0341495
+	<gene5, down (1), gene1> ->
+	<gene1, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0340265
+	<gene5, down (1), gene1> ->
+	<gene1, down (1), gene3> ->
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0337953
+	<gene5, down (1), gene1> ->
+	<gene1, up (0), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0337823
+	<gene5, down (1), gene1> ->
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0337261
+	<gene5, down (1), gene1> ->
+	<gene1, up (0), gene2> ->
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0337131
+	<gene5, down (1), gene1> ->
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, up (0)^(-1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   
+19:43:25   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:25   rank(gene6 | pathway12, GO:annotation (3)) = 7
+19:43:25   weight: 0.0123191
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway1> ->
+	<pathway1, GO:annotation (3), gene5> ->
+	<gene5, down (1), gene6>
+19:43:25   weight: 0.0121831
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, up (0), gene4> ->
+	<gene4, up (0), gene5> ->
+	<gene5, down (1), gene6>
+19:43:25   weight: 0.00198618
+	<gene1, up (0), gene1> ->
+	<pathway10, GO:annotation (3), gene6>
+19:43:25   weight: 0.000946801
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway2> ->
+	<pathway2, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, down (1), gene6>
+19:43:25   weight: 0.000946769
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12> ->
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, down (1), gene6>
+19:43:25   weight: 0.000946701
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway3> ->
+	<pathway3, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, down (1), gene6>
+19:43:25   weight: 0.000903763
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway2> ->
+	<pathway2, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene6>
+19:43:25   weight: 0.000903737
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12> ->
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene6>
+19:43:25   weight: 0.00090368
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway3> ->
+	<pathway3, GO:annotation (3), gene1> ->
+	<gene1, down (1)^(-1), gene5> ->
+	<gene5, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene6>
+19:43:25   weight: 0.000902856
+	<pathway12, GO:annotation (3), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway2> ->
+	<pathway2, GO:annotation (3), gene1> ->
+	<gene1, down (1), gene3> ->
+	<gene3, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene6>
+19:43:25   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+19:43:25   rank(pathway12 | gene6, GO:annotation (3)^(-1)) = 21
+19:43:25   weight: 0.0402709
+	<gene6, down (1)^(-1), gene5> ->
+	<gene5, down (1), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0284547
+	<gene6, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene5> ->
+	<gene5, down (1), gene1> ->
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0284533
+	<gene6, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene5> ->
+	<gene5, down (1), gene1> ->
+	<gene1, up (0), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0283888
+	<gene6, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene3> ->
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, phos (2)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0283874
+	<gene6, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene3> ->
+	<gene3, down (1)^(-1), gene1> ->
+	<gene1, up (0), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0283826
+	<gene6, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene3> ->
+	<gene3, up (0), gene4> ->
+	<gene4, down (1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0283788
+	<gene6, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene3> ->
+	<gene3, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0283788
+	<gene6, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene3> ->
+	<gene3, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0283788
+	<gene6, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene3> ->
+	<gene3, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>
+19:43:25   weight: 0.0283788
+	<gene6, GO:annotation (3)^(-1), pathway17> ->
+	<pathway17, GO:annotation (3), gene3> ->
+	<gene3, up (0), gene4> ->
+	<gene4, up (0)^(-1), gene2> ->
+	<gene2, phos (2), gene1> ->
+	<gene1, GO:annotation (3)^(-1), pathway12>

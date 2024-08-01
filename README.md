@@ -44,7 +44,7 @@ pip install ogb easydict pyyaml
 
 To run BioKGC on mock data, use the following command. Alternatively, you
 may use `--gpus null` to run BioKGC on a CPU. Input files are train1 (BRG), train2 (supervision edges),
-valid and test.
+valid and test. Specify the absolute path of output dir and data dir in the config file.
 
 ```bash
 python script/run.py -s 1024 -c config/knowledge_graph/mock/mockdata_run.yaml --gpus [0] 
@@ -59,6 +59,8 @@ contain positive tails found in training.
 
 ```bash
 python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
+
+python script/predict.py -c config/knowledge_graph/mock/mockdata_pred.yaml --gpus [0] --checkpoint /Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-08-01-19-35-21-312803/model_epoch_5.pth
 ```
 
 ## Visualize ##

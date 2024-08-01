@@ -59,8 +59,6 @@ contain positive tails found in training.
 
 ```bash
 python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
-
-python script/predict.py -c config/knowledge_graph/mock/mockdata_pred.yaml --gpus [0] --checkpoint /Users/yue.hu/Documents/proj/functionalannotation/github/BioPath/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-08-01-19-35-21-312803/model_epoch_5.pth
 ```
 
 ## Visualize ##
@@ -73,5 +71,5 @@ http server (https://stackoverflow.com/questions/38497334/how-to-run-html-file-o
 ```bash
 python script/visualize_graph.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
 
-python script/visualize.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth```
+python script/visualize.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth
 ```

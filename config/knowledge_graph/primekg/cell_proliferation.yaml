@@ -1,9 +1,9 @@
-output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
+output_dir: experiments
 
 dataset:
   class: biomedical
-  path: /home/icb/yue.hu/proj_genefun/NBFNet/data/primekg/disease_split/cell_proliferation_42/
-  include_factgraph: True
+  path: data/primekg/disease_split/cell_proliferation_42/
+  include_factgraph: yes
   
 task:
   class: KnowledgeGraphCompletionBiomed

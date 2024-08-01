@@ -1,8 +1,8 @@
-output_dir: /lustre/groups/crna01/projects/genefunction/NBFNet/experiments
+output_dir: experiments
 
 dataset:
   class: biomedical
-  path:  /lustre/groups/crna01/datasets/linkpred/txgnn/alzheimers_42/nfbnet
+  path:  data/primekg/disease_split/alzheimers_42
   include_factgraph: True
   
 task:
@@ -41,7 +41,6 @@ engine:
 
 train:
   num_epoch: 4
-  #batch_per_epoch: 100
   
 metric: mrr
 

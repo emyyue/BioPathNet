@@ -4,6 +4,7 @@ dataset:
   class: biomedical
   path: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/data/mock
   include_factgraph: True
+  files: ['train1.txt', 'train2.txt', 'valid.txt', 'test_vis.txt']
 
 task:
   class: KnowledgeGraphCompletionBiomed
@@ -45,4 +46,4 @@ train:
   
 metric: mrr
 
-#checkpoint: {{checkpoint}}
+checkpoint: {{checkpoint}}

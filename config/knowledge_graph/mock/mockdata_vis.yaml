@@ -1,9 +1,9 @@
-output_dir: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/experiments/
+output_dir: experiments/
 
 dataset:
   class: biomedical
-  path: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/data/mock
-  include_factgraph: True
+  path: data/mock
+  include_factgraph: yes
   files: ['train1.txt', 'train2.txt', 'valid.txt', 'test_vis.txt']
 
 task:
@@ -26,11 +26,8 @@ task:
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
   conditional_probability: yes
-  full_batch_eval: False
+  full_batch_eval: no
   remove_pos: no
-
-
-
 
 optimizer:
   class: Adam

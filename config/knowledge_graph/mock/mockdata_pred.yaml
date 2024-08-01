@@ -1,10 +1,11 @@
-output_dir: /network/scratch/s/sophie.xhonneux/NBFNet/experiments/
+output_dir: experiments/
 
 dataset:
   class: biomedical
-  path: /home/mila/s/sophie.xhonneux/projects/NBFNet/NBFNet/data/mock
-  include_factgraph: True
-  
+  path: data/mock
+  include_factgraph: yes
+  files: ['train1.txt', 'train2.txt', 'valid.txt', 'test_pred.txt']
+
 task:
   class: KnowledgeGraphCompletionBiomed
   model:
@@ -24,11 +25,8 @@ task:
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  conditional_probability: yes
-  full_batch_eval: False
-
-
-
+  remove_pos: no
+  full_batch_eval: no
 
 optimizer:
   class: Adam
@@ -36,11 +34,12 @@ optimizer:
 
 engine:
   gpus: {{ gpus }}
-  batch_size: 32
+  batch_size: 4
   
 
 train:
   num_epoch: 5
-  #batch_per_epoch: 10
   
 metric: mrr
+
+checkpoint: {{checkpoint}}

@@ -1,13 +1,12 @@
-output_dir: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/experiments/
+output_dir: experiments/
 
 dataset:
   class: biomedical
-  path: /Users/yue.hu/Documents/proj/functionalannotation/NBFNet/data/mock
-  include_factgraph: False  
+  path: data/mock
+  include_factgraph: yes
 
 task:
   class: KnowledgeGraphCompletionBiomed
-  # class: KnowledgeGraphEmbeddingEx
   model:
     class: NodeEncoder
     gnn_model:
@@ -30,8 +29,7 @@ task:
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  conditional_probability: yes
-  full_batch_eval: False
+  full_batch_eval: no
 
 
 

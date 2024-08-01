@@ -65,7 +65,8 @@ python script/predict.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus
 
 For the visualization of the most important paths for a certain prediction, there is the option of detailing the top 10 paths
 as text file or as subgraph figure. A prediction test file (test_vis.txt) needs to be generated that specifies the triplets to visualize.
-Also node_colors_dict.txt specifies the colors used for different node types.
+Also node_colors_dict.txt specifies the colors used for different node types. Resulting visualizations (html files) can be opened with a
+http server (https://stackoverflow.com/questions/38497334/how-to-run-html-file-on-localhost). 
 
 ```bash
 python script/visualize_graph.py -c config/knowledge_graph/mock/mockdata_vis.yaml --gpus [0] --checkpoint dir/to/checkpoint/model_epoch_8.pth

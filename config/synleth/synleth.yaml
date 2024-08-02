@@ -33,7 +33,7 @@ task:
 
 optimizer:
   class: Adam
-  lr: 1.0e-3
+  lr: 5.0e-3
 
 engine:
   gpus: {{ gpus }}

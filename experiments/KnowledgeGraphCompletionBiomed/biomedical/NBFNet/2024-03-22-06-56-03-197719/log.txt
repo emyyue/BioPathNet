@@ -1,0 +1,446 @@
+06:56:03   Working directory: /home/icb/svitlana.oleshko/NBFNet/experiments/KnowledgeGraphCompletionBiomed/biomedical/NBFNet/2024-03-22-06-56-03-197719
+06:56:03   Input Seed: 1238
+06:56:03   Set Seed: 1238
+06:56:03   Config file: config/knowledge_graph/synleth/synleth_trans_5layers_threshold_09.yaml
+06:56:03   {'dataset': {'class': 'biomedical',
+             'include_factgraph': True,
+             'path': '/home/icb/svitlana.oleshko/KR4SL_thr000/data/transductive_noRev_thr/'},
+ 'engine': {'batch_size': 64, 'gpus': [0]},
+ 'metric': 'mrr',
+ 'optimizer': {'class': 'Adam', 'lr': 0.005},
+ 'output_dir': '/home/icb/svitlana.oleshko/NBFNet/experiments',
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'KnowledgeGraphCompletionBiomed',
+          'conditional_probability': True,
+          'criterion': 'bce',
+          'full_batch_eval': True,
+          'heterogeneous_evaluation': True,
+          'heterogeneous_negative': True,
+          'model': {'aggregate_func': 'pna',
+                    'class': 'NBFNet',
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'train': {'num_epoch': 15}}
+06:56:04   biomedical(
+  #entity: 42547
+  #relation: 32
+  #triplet: 417079
+)
+06:56:04   #train: 9878, #valid: 3533, #test: 7049
+06:56:04   Preprocess training set
+06:56:06   {'batch_size': 64,
+ 'class': 'core.Engine',
+ 'gpus': [0],
+ 'gradient_interval': 1,
+ 'log_interval': 100,
+ 'logger': 'logging',
+ 'num_worker': 0,
+ 'optimizer': {'amsgrad': False,
+               'betas': (0.9, 0.999),
+               'capturable': False,
+               'class': 'optim.Adam',
+               'differentiable': False,
+               'eps': 1e-08,
+               'foreach': None,
+               'fused': None,
+               'lr': 0.005,
+               'maximize': False,
+               'weight_decay': 0},
+ 'scheduler': None,
+ 'task': {'adversarial_temperature': 0.5,
+          'class': 'tasks.KnowledgeGraphCompletionBiomed',
+          'criterion': 'bce',
+          'fact_ratio': None,
+          'filtered_ranking': True,
+          'full_batch_eval': True,
+          'margin': 6,
+          'metric': ('mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@100',
+                     'hits@20', 'hits@50', 'auroc', 'ap'),
+          'model': {'activation': 'relu',
+                    'aggregate_func': 'pna',
+                    'class': 'model.NBFNet',
+                    'concat_hidden': False,
+                    'dependent': True,
+                    'hidden_dims': [32, 32, 32, 32, 32],
+                    'input_dim': 32,
+                    'layer_norm': True,
+                    'message_func': 'distmult',
+                    'num_beam': 10,
+                    'num_mlp_layer': 2,
+                    'num_relation': tensor(32),
+                    'path_topk': 10,
+                    'remove_one_hop': False,
+                    'short_cut': True,
+                    'symmetric': True},
+          'num_negative': 64,
+          'sample_weight': False,
+          'strict_negative': True},
+ 'test_set': {'class': 'dataset.Subset',
+              'dataset': {'class': 'datasets.biomedical',
+                          'fact_as_train': False,
+                          'files': None,
+                          'include_factgraph': True,
+                          'path': '/home/icb/svitlana.oleshko/KR4SL_thr000/data/transductive_noRev_thr/',
+                          'verbose': 1},
+              'indices': range(410030, 417079)},
+ 'train_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': None,
+                           'include_factgraph': True,
+                           'path': '/home/icb/svitlana.oleshko/KR4SL_thr000/data/transductive_noRev_thr/',
+                           'verbose': 1},
+               'indices': range(396619, 406497)},
+ 'valid_set': {'class': 'dataset.Subset',
+               'dataset': {'class': 'datasets.biomedical',
+                           'fact_as_train': False,
+                           'files': None,
+                           'include_factgraph': True,
+                           'path': '/home/icb/svitlana.oleshko/KR4SL_thr000/data/transductive_noRev_thr/',
+                           'verbose': 1},
+               'indices': range(406497, 410030)}}
+06:56:06   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+06:56:06   Epoch 0 begin
+06:56:13   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+06:56:13   binary cross entropy: 0.708313
+06:59:01   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+06:59:03   binary cross entropy: 0.656951
+07:00:33   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:00:33   Epoch 0 end
+07:00:33   duration: 4.46 mins
+07:00:33   speed: 0.58 batch / sec
+07:00:33   ETA: 4.46 mins
+07:00:33   max GPU memory: 47437.0 MiB
+07:00:33   ------------------------------
+07:00:33   average binary cross entropy: 0.577046
+07:00:33   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:00:33   Epoch 1 begin
+07:01:51   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:01:52   binary cross entropy: 0.552316
+07:04:40   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:04:41   binary cross entropy: 0.561717
+07:04:56   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:04:56   Epoch 1 end
+07:04:56   duration: 4.38 mins
+07:04:56   speed: 0.59 batch / sec
+07:04:56   ETA: 0.00 secs
+07:04:56   max GPU memory: 47437.0 MiB
+07:04:56   ------------------------------
+07:04:56   average binary cross entropy: 0.542673
+07:04:56   Save checkpoint to model_epoch_2.pth
+07:04:57   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:04:57   Evaluate on valid
+07:05:44   ------------------------------
+07:05:44   ap: 0.969152
+07:05:44   auroc: 0.963502
+07:05:44   hits@1: 0.265921
+07:05:44   hits@10: 0.44792
+07:05:44   hits@100: 0.636711
+07:05:44   hits@20: 0.502689
+07:05:44   hits@3: 0.344325
+07:05:44   hits@50: 0.577696
+07:05:44   mr: 803.341
+07:05:44   mrr: 0.326335
+07:05:44   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:05:44   Epoch 2 begin
+07:08:17   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:08:18   binary cross entropy: 0.584797
+07:10:05   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:10:05   Epoch 2 end
+07:10:05   duration: 5.16 mins
+07:10:05   speed: 0.50 batch / sec
+07:10:05   ETA: 5.16 mins
+07:10:05   max GPU memory: 47459.0 MiB
+07:10:05   ------------------------------
+07:10:05   average binary cross entropy: 0.524508
+07:10:05   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:10:05   Epoch 3 begin
+07:11:05   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:11:06   binary cross entropy: 0.546304
+07:13:54   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:13:56   binary cross entropy: 0.538027
+07:14:27   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:14:27   Epoch 3 end
+07:14:27   duration: 4.36 mins
+07:14:27   speed: 0.59 batch / sec
+07:14:27   ETA: 0.00 secs
+07:14:27   max GPU memory: 47459.0 MiB
+07:14:27   ------------------------------
+07:14:27   average binary cross entropy: 0.520943
+07:14:27   Save checkpoint to model_epoch_4.pth
+07:14:27   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:14:27   Evaluate on valid
+07:15:14   ------------------------------
+07:15:14   ap: 0.963152
+07:15:14   auroc: 0.945276
+07:15:14   hits@1: 0.27413
+07:15:14   hits@10: 0.449052
+07:15:14   hits@100: 0.646476
+07:15:14   hits@20: 0.509482
+07:15:14   hits@3: 0.351401
+07:15:14   hits@50: 0.587744
+07:15:14   mr: 759.659
+07:15:14   mrr: 0.333048
+07:15:14   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:15:14   Epoch 4 begin
+07:17:30   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:17:31   binary cross entropy: 0.491483
+07:19:35   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:19:35   Epoch 4 end
+07:19:35   duration: 5.14 mins
+07:19:35   speed: 0.50 batch / sec
+07:19:35   ETA: 5.14 mins
+07:19:35   max GPU memory: 47459.0 MiB
+07:19:35   ------------------------------
+07:19:35   average binary cross entropy: 0.516571
+07:19:35   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:19:35   Epoch 5 begin
+07:20:18   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:20:19   binary cross entropy: 0.576979
+07:23:08   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:23:09   binary cross entropy: 0.491235
+07:23:58   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:23:58   Epoch 5 end
+07:23:58   duration: 4.37 mins
+07:23:58   speed: 0.59 batch / sec
+07:23:58   ETA: 0.00 secs
+07:23:58   max GPU memory: 47459.0 MiB
+07:23:58   ------------------------------
+07:23:58   average binary cross entropy: 0.516419
+07:23:58   Save checkpoint to model_epoch_6.pth
+07:23:58   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:23:58   Evaluate on valid
+07:24:45   ------------------------------
+07:24:45   ap: 0.976647
+07:24:45   auroc: 0.965092
+07:24:45   hits@1: 0.284178
+07:24:45   hits@10: 0.459524
+07:24:45   hits@100: 0.649023
+07:24:45   hits@20: 0.517124
+07:24:45   hits@3: 0.357345
+07:24:45   hits@50: 0.593971
+07:24:45   mr: 748.35
+07:24:45   mrr: 0.342237
+07:24:45   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:24:45   Epoch 6 begin
+07:26:43   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:26:45   binary cross entropy: 0.457758
+07:29:06   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:29:06   Epoch 6 end
+07:29:06   duration: 5.14 mins
+07:29:06   speed: 0.50 batch / sec
+07:29:06   ETA: 5.14 mins
+07:29:06   max GPU memory: 47459.0 MiB
+07:29:06   ------------------------------
+07:29:06   average binary cross entropy: 0.510707
+07:29:06   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:29:06   Epoch 7 begin
+07:29:32   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:29:33   binary cross entropy: 0.4826
+07:32:21   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:32:22   binary cross entropy: 0.526678
+07:33:27   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:33:27   Epoch 7 end
+07:33:27   duration: 4.36 mins
+07:33:27   speed: 0.59 batch / sec
+07:33:27   ETA: 0.00 secs
+07:33:27   max GPU memory: 47459.0 MiB
+07:33:27   ------------------------------
+07:33:27   average binary cross entropy: 0.510206
+07:33:27   Save checkpoint to model_epoch_8.pth
+07:33:27   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:33:27   Evaluate on valid
+07:34:14   ------------------------------
+07:34:14   ap: 0.965446
+07:34:14   auroc: 0.947676
+07:34:14   hits@1: 0.27229
+07:34:14   hits@10: 0.463346
+07:34:14   hits@100: 0.654401
+07:34:14   hits@20: 0.518539
+07:34:14   hits@3: 0.356071
+07:34:14   hits@50: 0.595386
+07:34:14   mr: 727.107
+07:34:14   mrr: 0.335622
+07:34:14   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:34:14   Epoch 8 begin
+07:35:56   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:35:58   binary cross entropy: 0.488016
+07:38:37   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:38:37   Epoch 8 end
+07:38:37   duration: 5.16 mins
+07:38:37   speed: 0.50 batch / sec
+07:38:37   ETA: 5.16 mins
+07:38:37   max GPU memory: 47459.0 MiB
+07:38:37   ------------------------------
+07:38:37   average binary cross entropy: 0.509356
+07:38:37   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:38:37   Epoch 9 begin
+07:38:46   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:38:47   binary cross entropy: 0.609774
+07:41:35   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:41:37   binary cross entropy: 0.501578
+07:42:59   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:42:59   Epoch 9 end
+07:42:59   duration: 4.36 mins
+07:42:59   speed: 0.59 batch / sec
+07:42:59   ETA: 0.00 secs
+07:42:59   max GPU memory: 47459.0 MiB
+07:42:59   ------------------------------
+07:42:59   average binary cross entropy: 0.503402
+07:42:59   Save checkpoint to model_epoch_10.pth
+07:42:59   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:42:59   Evaluate on valid
+07:43:46   ------------------------------
+07:43:46   ap: 0.962659
+07:43:46   auroc: 0.944606
+07:43:46   hits@1: 0.288706
+07:43:46   hits@10: 0.470988
+07:43:46   hits@100: 0.65893
+07:43:46   hits@20: 0.52505
+07:43:46   hits@3: 0.366969
+07:43:46   hits@50: 0.60133
+07:43:46   mr: 717.941
+07:43:46   mrr: 0.348526
+07:43:46   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:43:46   Epoch 10 begin
+07:45:11   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:45:12   binary cross entropy: 0.476518
+07:48:01   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:48:02   binary cross entropy: 0.527598
+07:48:08   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:48:08   Epoch 10 end
+07:48:08   duration: 5.16 mins
+07:48:08   speed: 0.50 batch / sec
+07:48:08   ETA: 5.16 mins
+07:48:08   max GPU memory: 47459.0 MiB
+07:48:08   ------------------------------
+07:48:08   average binary cross entropy: 0.505751
+07:48:08   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:48:08   Epoch 11 begin
+07:50:49   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:50:50   binary cross entropy: 0.462459
+07:52:29   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:52:29   Epoch 11 end
+07:52:29   duration: 4.35 mins
+07:52:29   speed: 0.59 batch / sec
+07:52:29   ETA: 0.00 secs
+07:52:29   max GPU memory: 47459.0 MiB
+07:52:29   ------------------------------
+07:52:29   average binary cross entropy: 0.505596
+07:52:29   Save checkpoint to model_epoch_12.pth
+07:52:29   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:52:29   Evaluate on valid
+07:53:16   ------------------------------
+07:53:16   ap: 0.968417
+07:53:16   auroc: 0.952519
+07:53:16   hits@1: 0.290405
+07:53:16   hits@10: 0.467874
+07:53:16   hits@100: 0.659355
+07:53:16   hits@20: 0.52604
+07:53:16   hits@3: 0.369516
+07:53:16   hits@50: 0.5985
+07:53:16   mr: 732.822
+07:53:16   mrr: 0.349596
+07:53:16   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:53:16   Epoch 12 begin
+07:54:24   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:54:26   binary cross entropy: 0.48173
+07:57:14   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:57:15   binary cross entropy: 0.450385
+07:57:39   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:57:39   Epoch 12 end
+07:57:39   duration: 5.17 mins
+07:57:39   speed: 0.50 batch / sec
+07:57:39   ETA: 5.17 mins
+07:57:39   max GPU memory: 47459.0 MiB
+07:57:39   ------------------------------
+07:57:39   average binary cross entropy: 0.506668
+07:57:39   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+07:57:39   Epoch 13 begin
+08:00:04   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:00:05   binary cross entropy: 0.501558
+08:02:01   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:02:01   Epoch 13 end
+08:02:01   duration: 4.37 mins
+08:02:01   speed: 0.59 batch / sec
+08:02:01   ETA: 0.00 secs
+08:02:01   max GPU memory: 47459.0 MiB
+08:02:01   ------------------------------
+08:02:01   average binary cross entropy: 0.495812
+08:02:01   Save checkpoint to model_epoch_14.pth
+08:02:02   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:02:02   Evaluate on valid
+08:02:48   ------------------------------
+08:02:48   ap: 0.971457
+08:02:48   auroc: 0.955746
+08:02:48   hits@1: 0.285735
+08:02:48   hits@10: 0.47028
+08:02:48   hits@100: 0.657798
+08:02:48   hits@20: 0.527172
+08:02:48   hits@3: 0.36895
+08:02:48   hits@50: 0.602179
+08:02:48   mr: 719.341
+08:02:48   mrr: 0.347169
+08:02:48   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:02:48   Epoch 14 begin
+08:03:40   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:03:41   binary cross entropy: 0.475275
+08:06:29   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:06:30   binary cross entropy: 0.484242
+08:07:10   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:07:10   Epoch 14 end
+08:07:10   duration: 5.14 mins
+08:07:10   speed: 0.50 batch / sec
+08:07:10   ETA: 0.00 secs
+08:07:10   max GPU memory: 47459.0 MiB
+08:07:10   ------------------------------
+08:07:10   average binary cross entropy: 0.498756
+08:07:10   Save checkpoint to model_epoch_15.pth
+08:07:10   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:07:10   Evaluate on valid
+08:07:57   ------------------------------
+08:07:57   ap: 0.97017
+08:07:57   auroc: 0.953293
+08:07:57   hits@1: 0.278658
+08:07:57   hits@10: 0.46193
+08:07:57   hits@100: 0.657939
+08:07:57   hits@20: 0.518256
+08:07:57   hits@3: 0.355222
+08:07:57   hits@50: 0.596377
+08:07:57   mr: 717.876
+08:07:57   mrr: 0.338957
+08:07:57   Load checkpoint from model_epoch_12.pth
+08:07:57   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:07:57   Evaluate on valid
+08:08:44   ------------------------------
+08:08:44   ap: 0.968903
+08:08:44   auroc: 0.952722
+08:08:44   hits@1: 0.290405
+08:08:44   hits@10: 0.467874
+08:08:44   hits@100: 0.659355
+08:08:44   hits@20: 0.52604
+08:08:44   hits@3: 0.369516
+08:08:44   hits@50: 0.5985
+08:08:44   mr: 732.822
+08:08:44   mrr: 0.349596
+08:08:44   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+08:08:44   Evaluate on test
+08:10:18   ------------------------------
+08:10:18   ap: 0.971326
+08:10:18   auroc: 0.956818
+08:10:18   hits@1: 0.287488
+08:10:18   hits@10: 0.466449
+08:10:18   hits@100: 0.657824
+08:10:18   hits@20: 0.524543
+08:10:18   hits@3: 0.362676
+08:10:18   hits@50: 0.601433
+08:10:18   mr: 735.295
+08:10:18   mrr: 0.346558

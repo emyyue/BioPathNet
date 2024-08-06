@@ -6,7 +6,7 @@ import networkx as nx
 
 
 def gene_correction_map():
-    # read Gencode
+    # read Gencode https://www.gencodegenes.org/human/
     gencode = GTF.dataframe("../bronze/gencode.gtf")
     gencode = gencode[["gene_id", "gene_name", "gene_type"]].drop_duplicates().rename(columns={
         "gene_name": "gene_name_gencode",
@@ -15,14 +15,14 @@ def gene_correction_map():
     gencode['gene_id'] = gencode['gene_id'].str[:-2]
     gencode = gencode.drop_duplicates()
 
-    # read Homo Sapiens GRCh38 110
+    # read Homo Sapiens GRCh38 110 https://asia.ensembl.org/info/data/ftp/index.html
     homosapiens = GTF.dataframe("../bronze/Homo_sapiens.GRCh38.110.gtf")
     homosapiens = homosapiens[["gene_id", "gene_name", "gene_biotype"]].drop_duplicates().rename(columns={
         "gene_name": "gene_name_homosapiens",
         "gene_biotype": "gene_type_homosapiens"
     })
 
-    # read LncTarD 2.0
+    # read LncTarD 2.0 https://lnctard.bio-database.com/
     lnctard = pd.read_csv("../bronze/lncTarD2.txt", sep="\t", header=0, encoding="latin-1")
     regulators = lnctard[["RegulatorEnsembleID", "RegulatorEntrezID", "Regulator", "RegulatorType"]].rename(columns={
         "RegulatorEnsembleID": "gene_id",
@@ -38,7 +38,7 @@ def gene_correction_map():
     })
     genes = pd.concat([regulators, targets]).drop_duplicates()
 
-    # join three tables
+    # join three tables and save to file for manual correction https://github.com/chcomet/nbfnet-gr/blob/master/data/silver/genes_mapped.csv
     genes = pd.merge(genes, gencode, how="left", on="gene_id")
     genes = pd.merge(genes, homosapiens, how="left", on="gene_id")
     genes.to_csv("../silver/genes_mapped.csv", header=True, sep="\t", encoding="latin-1", index=False)
@@ -91,7 +91,7 @@ def gene_correction_match():
     )
     genes = genes[["gene_id", "gene_name_lnctard", "gene_type_lnctard", "gene_name_corrected", "gene_type_corrected"]]
 
-    # graph
+    # construct graph
     lnctard = pd.read_csv("../bronze/lncTarD2.txt", sep="\t", header=0, encoding="latin-1")
     G = nx.DiGraph()
     for _, row in lnctard.iterrows():
@@ -114,9 +114,10 @@ def gene_correction_match():
     genes = pd.merge(genes, degrees, on="gene_name_lnctard", how="inner")[
         ["gene_id", "degree", "weakly_connected", "gene_name_lnctard", "gene_name_corrected", "gene_type_lnctard", "gene_type_corrected"]]
     genes = genes.sort_values(by=['degree'], ascending=[False])
+    # save to file https://github.com/chcomet/nbfnet-gr/blob/master/data/silver/genes_matched.csv
     genes.to_csv("../silver/genes_matched.csv", header=True, sep="\t", encoding="latin-1", index=False)
 
 
 gene_correction_map()
-# manual correction
+# manual correction: search gene in GeneCards and update emsembl id
 gene_correction_match()

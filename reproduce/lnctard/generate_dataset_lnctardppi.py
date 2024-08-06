@@ -5,10 +5,10 @@ from pykeen.triples import TriplesFactory
 
 # 1. split train2, valid and test
 
-# 1.1. load corrected lnctard relations
+# 1.1. load corrected lnctard relations https://github.com/chcomet/nbfnet-gr/blob/master/data/silver/relations.csv
 lnctard = pd.read_csv("../silver/relations.csv", sep="\t", header=0, encoding="latin-1")
 lnctard = lnctard[["Regulator", "SearchregulatoryMechanism", "Target"]].drop_duplicates()
-# 1.2. use corrected gene name, filter out unmatched genes
+# 1.2. use corrected gene name, filter out unmatched genes https://github.com/chcomet/nbfnet-gr/blob/master/data/silver/genes_matched.csv
 genes_matched = pd.read_csv("../silver/genes_matched.csv", sep="\t", header=0, encoding="latin-1")
 genes_matched = genes_matched[["gene_name_corrected", "gene_name_lnctard"]]
 lnctard = pd.merge(lnctard, genes_matched, how="left", left_on="Regulator", right_on="gene_name_lnctard")
@@ -31,7 +31,7 @@ tf_train, tf_valid, tf_test = tf_ppi_sub.split([0.8, 0.1, 0.1], random_state=123
 df_train = tf_train.tensor_to_df(tensor=tf_train.mapped_triples)[["head_label", "relation_label", "tail_label"]]
 df_valid = tf_valid.tensor_to_df(tensor=tf_valid.mapped_triples)[["head_label", "relation_label", "tail_label"]]
 df_test = tf_test.tensor_to_df(tensor=tf_test.mapped_triples)[["head_label", "relation_label", "tail_label"]]
-# 1.7. save train2, valid and test
+# 1.7. save train2, valid and test 
 df_train.to_csv("../gold/lnctardppi/train2.txt", header=False, sep="\t", index=False)
 df_valid.to_csv("../gold/lnctardppi/valid.txt", header=False, sep="\t", index=False)
 df_test.to_csv("../gold/lnctardppi/test.txt", header=False, sep="\t", index=False)
@@ -39,7 +39,7 @@ df_test.to_csv("../gold/lnctardppi/test.txt", header=False, sep="\t", index=Fals
 
 # 2. generate train1 (ppi)
 
-# 2.1. load ppi
+# 2.1. load ppi https://github.com/chcomet/nbfnet-gr/blob/master/data/bronze/ppi.txt
 ppi = pd.read_csv("../bronze/ppi.txt", sep=",", header=0)
 # 2.2. load homosapiens
 homosapiens = GTF.dataframe("../bronze/Homo_sapiens.GRCh38.110.gtf")

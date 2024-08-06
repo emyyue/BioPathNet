@@ -7,6 +7,7 @@ from fitter import Fitter
 from scipy.stats import exponnorm
 np.random.seed(0)
 
+# load external pairs https://github.com/chcomet/nbfnet-gr/blob/master/data/silver/external_pairs.csv
 pairs = pd.read_csv("../silver/external_pairs.csv", header=0, sep="\t")
 
 # get pairs related to recall calculation
@@ -18,7 +19,7 @@ print(n_sample)
 
 def resample(predictions):
     # resample
-    f = Fitter(predictions["probability"], distributions=['exponnorm'])  # 创建Fitter类
+    f = Fitter(predictions["probability"], distributions=['exponnorm']) 
     f.fit()
     f.summary()
     plt.show()
@@ -37,8 +38,9 @@ def resample(predictions):
 
     return resampled_data
 
-
+# load predictions https://github.com/chcomet/nbfnet-gr/blob/master/data/results/predictions_CRISRP.csv
 crispr = pd.read_csv("../results/predictions_CRISRP.csv", header=0, sep="\t")
+# load predictions https://github.com/chcomet/nbfnet-gr/blob/master/data/results/predictions_cancer_lncRNAs.csv
 lncrna_pairs = pd.read_csv("../results/predictions_enhancer.csv", header=0, sep="\t")
 predictions = pd.concat([crispr, lncrna_pairs], axis=0)
 
@@ -71,13 +73,12 @@ def calculate_recall(threshold, recall_pairs, predictions):
                             right_on=["query_node", "prediction_node"])
     recall_pairs = recall_pairs[predictions.columns]
 
-    # ...
+    # calculate the maximum probability of recall pairs
     thresholded_recall_pairs = recall_pairs.groupby(["query_node", "prediction_node", "prediction_node_type"])[
         "probability"].max()
-
-    # ...
     result_df = pd.DataFrame({"max_probability": thresholded_recall_pairs})
 
+    # threshold the probabilities
     result_df["positive"] = result_df["max_probability"] > threshold
 
     # calculate the recall

@@ -1,5 +1,5 @@
 """
-GTF.py
+GTF.py https://gist.github.com/slowkow/8101481
 Kamil Slowikowski
 December 24, 2013
 Read GFF/GTF files. Works with gzip compressed files and pandas.

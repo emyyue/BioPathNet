@@ -1,0 +1,2 @@
+pathway12	GO:annotation	gene1
+pathway13	GO:annotation	gene1

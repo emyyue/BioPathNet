@@ -1,0 +1,51 @@
+output_dir: experiments/
+
+dataset:
+  class: biomedical
+  path: data/mock
+  include_factgraph: yes
+
+task:
+  class: KnowledgeGraphCompletionBiomed
+  model:
+    class: NodeEncoder
+    gnn_model:
+      class: BatchedRGCN
+      input_dim: 128
+      hidden_dims: [128, 128]
+      layer_norm: yes
+      short_cut: yes
+      batch_norm: yes
+    score_model:
+      class: RotatEScore
+      embedding_dim: 128
+      max_score: 9
+    flip_edge: yes
+  criterion: bce
+  num_negative: 32
+  strict_negative: yes
+  adversarial_temperature: 0.5
+  # evaluation_target: both
+  sample_weight: no
+  heterogeneous_negative: yes
+  heterogeneous_evaluation: yes
+  full_batch_eval: no
+
+
+
+
+optimizer:
+  class: Adam
+  lr: 5.0e-3
+
+engine:
+  gpus: {{ gpus }}
+  batch_size: 32
+  
+
+train:
+  num_epoch: 5
+  #batch_per_epoch: 10
+  
+metric: mrr
+

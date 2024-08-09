@@ -1,0 +1,50 @@
+output_dir: experiments/
+
+dataset:
+  class: biomedical
+  path: data/PC_KEGG_0928
+  include_factgraph: yes  
+
+task:
+  class: KnowledgeGraphCompletionBiomed
+  model:
+    class: NodeEncoder
+    gnn_model:
+      class: BatchedRGCN
+      input_dim: 128
+      hidden_dims: [128, 128, 128, 128, 128]
+      layer_norm: yes
+      short_cut: yes
+      batch_norm: yes
+    score_model:
+      class: RotatEScore
+      embedding_dim: 128
+      max_score: 9
+    flip_edge: yes
+  criterion: bce
+  num_negative: 32
+  strict_negative: yes
+  adversarial_temperature: 1
+  sample_weight: no
+  heterogeneous_negative: yes
+  heterogeneous_evaluation: yes
+  conditional_probability: yes
+  full_batch_eval: False
+
+
+
+
+optimizer:
+  class: Adam
+  lr: 5.0e-4
+
+engine:
+  gpus: {{ gpus }}
+  batch_size: 64
+  
+
+train:
+  num_epoch: 10
+  
+metric: mrr
+

@@ -229,7 +229,10 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         node_type = self.fact_graph.node_type
-
+        
+        ####################### 
+        # sample negative heads # (pos_h, r, neg_t)
+        ####################### 
         # remove true tails first
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         pattern = pattern[:batch_size // 2]
@@ -237,9 +240,15 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if self.train2_in_factgraph:
             edge_index, num_t_truth = self.fact_graph.match(pattern)
             t_truth_index = self.fact_graph.edge_list[edge_index, 1]
+            # get degree
+            node_in = self.fact_graph.edge_list[:, 1]
+            degree_in = torch.bincount(node_in, minlength=self.fact_graph.num_node)
         else:
             edge_index, num_t_truth = self.fact_graph_supervision.match(pattern)
             t_truth_index = self.fact_graph_supervision.edge_list[edge_index, 1]
+            # get degree
+            node_in = self.fact_graph_supervision.edge_list[:, 1]
+            degree_in = torch.bincount(node_in, minlength=self.fact_graph_supervision.num_node)
         pos_index = torch.repeat_interleave(num_t_truth)
         # only get those of node type
         if self.heterogeneous_negative:
@@ -249,14 +258,32 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
         # remove true tails
         t_mask[pos_index, t_truth_index] = 0
+        
         ## sample tails not in fact graph
-        # get the candidates in one list
-        neg_t_candidate = t_mask.nonzero()[:, 1]
-        # get number of candidates belonging to each triplet
-        num_t_candidate = t_mask.sum(dim=-1)
-        # sample num_negative from candidate list, knowing (over neg_t_candidate) how many belong to each triplet
-        neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
+        if self.degree_negative:
+            # sample according to degree
+            degree_in_expanded = degree_in.float().unsqueeze(0).expand(t_mask.shape)
+            prob_deg = torch.zeros_like(degree_in_expanded, dtype=torch.float)  # Initialize a result tensor
+            prob_deg[t_mask] = degree_in_expanded[t_mask]
+            # in LinkPrediction sampling of h is according to num_nodes - degree
+            ## this gives a higher probability to nodes with lower degrees
+            ## in our case, we want to sample according to the degree
+            ## so that we get nodes with higher degrees as negatives
+            neg_t_index = functional.multinomial(prob_deg, batch_size, replacement=True)
+        else:
+            # sample uniformly
+            # get the candidates in one list
+            neg_t_candidate = t_mask.nonzero()[:, 1]
+            # get number of candidates belonging to each triplet
+            num_t_candidate = t_mask.sum(dim=-1)
+            # sample num_negative from candidate list, knowing (over neg_t_candidate) how many belong to each triplet
+            neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
+            
 
+
+        ####################### 
+        # sample negative heads # (neg_h, r-1, pos_t)
+        ####################### 
         pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
         pattern = pattern[batch_size // 2:]
         if self.train2_in_factgraph:
@@ -276,6 +303,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         num_h_candidate = h_mask.sum(dim=-1)
         neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
 
+        # TODO: sample negatives according to degree_in (of node h)
+        
         neg_index = torch.cat([neg_t_index, neg_h_index])
         return neg_index
     

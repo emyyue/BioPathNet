@@ -270,6 +270,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             ## in our case, we want to sample according to the degree
             ## so that we get nodes with higher degrees as negatives
             neg_t_index = functional.multinomial(prob_deg, batch_size, replacement=True)
+            import pdb; pdb.set_trace()
         else:
             # sample uniformly
             # get the candidates in one list
@@ -289,9 +290,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if self.train2_in_factgraph:
             edge_index, num_h_truth = self.fact_graph.match(pattern)
             h_truth_index = self.fact_graph.edge_list[edge_index, 0]
+            node_in = self.fact_graph.edge_list[:, 0]
+            degree_in = torch.bincount(node_in, minlength=self.fact_graph.num_node)
         else:
             edge_index, num_h_truth = self.fact_graph_supervision.match(pattern)
             h_truth_index = self.fact_graph_supervision.edge_list[edge_index, 0]
+            node_in = self.fact_graph_supervision.edge_list[:, 0]
+            degree_in = torch.bincount(node_in, minlength=self.fact_graph_supervision.num_node)
         pos_index = torch.repeat_interleave(num_h_truth)
         if self.heterogeneous_negative:
             pos_h_type = node_type[pos_h_index[batch_size // 2:]]
@@ -299,11 +304,19 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         else:
             h_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
         h_mask[pos_index, h_truth_index] = 0
-        neg_h_candidate = h_mask.nonzero()[:, 1]
-        num_h_candidate = h_mask.sum(dim=-1)
-        neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
-
-        # TODO: sample negatives according to degree_in (of node h)
+        
+        
+        if self.degree_negative:
+            # multinomial sampling
+            degree_in_expanded = degree_in.float().unsqueeze(0).expand(h_mask.shape)
+            prob_deg = torch.zeros_like(degree_in_expanded, dtype=torch.float)
+            prob_deg[h_mask] = degree_in_expanded[h_mask]
+            neg_h_index = functional.multinomial(prob_deg, batch_size, replacement=True)
+        else:
+            # variadic sampling
+            neg_h_candidate = h_mask.nonzero()[:, 1]
+            num_h_candidate = h_mask.sum(dim=-1)
+            neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
         
         neg_index = torch.cat([neg_t_index, neg_h_index])
         return neg_index

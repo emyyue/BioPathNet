@@ -28,7 +28,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True,
-                 full_batch_eval=False, remove_pos=True,  train2_in_factgraph=True):
+                 full_batch_eval=False, 
+                 degree_negative = False, remove_pos=True,  train2_in_factgraph=True):
         super(KnowledgeGraphCompletionBiomed, self).__init__(model=model, criterion=criterion, metric=metric, 
                                                              num_negative=num_negative, margin=margin,
                                                              adversarial_temperature=adversarial_temperature, 
@@ -37,6 +38,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                                                              sample_weight=sample_weight, full_batch_eval=full_batch_eval)
         self.heterogeneous_negative = heterogeneous_negative
         self.heterogeneous_evaluation = heterogeneous_evaluation
+        self.degree_negative = degree_negative
         self.remove_pos = remove_pos
         self.train2_in_factgraph = train2_in_factgraph
         
@@ -264,13 +266,14 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # sample according to degree
             degree_in_expanded = degree_in.float().unsqueeze(0).expand(t_mask.shape)
             prob_deg = torch.zeros_like(degree_in_expanded, dtype=torch.float)  # Initialize a result tensor
-            prob_deg[t_mask] = degree_in_expanded[t_mask]
+            # +1 when node only has one edge (which was removed as true tail)
+            ## then prob vector is only 0
+            prob_deg[t_mask] = degree_in_expanded[t_mask] + 1
             # in LinkPrediction sampling of h is according to num_nodes - degree
             ## this gives a higher probability to nodes with lower degrees
             ## in our case, we want to sample according to the degree
             ## so that we get nodes with higher degrees as negatives
-            neg_t_index = functional.multinomial(prob_deg, batch_size, replacement=True)
-            import pdb; pdb.set_trace()
+            neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
         else:
             # sample uniformly
             # get the candidates in one list
@@ -297,7 +300,9 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             h_truth_index = self.fact_graph_supervision.edge_list[edge_index, 0]
             node_in = self.fact_graph_supervision.edge_list[:, 0]
             degree_in = torch.bincount(node_in, minlength=self.fact_graph_supervision.num_node)
+        
         pos_index = torch.repeat_interleave(num_h_truth)
+        
         if self.heterogeneous_negative:
             pos_h_type = node_type[pos_h_index[batch_size // 2:]]
             h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
@@ -307,13 +312,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         
         
         if self.degree_negative:
-            # multinomial sampling
+            # multinomial sampling according to degree
             degree_in_expanded = degree_in.float().unsqueeze(0).expand(h_mask.shape)
             prob_deg = torch.zeros_like(degree_in_expanded, dtype=torch.float)
-            prob_deg[h_mask] = degree_in_expanded[h_mask]
-            neg_h_index = functional.multinomial(prob_deg, batch_size, replacement=True)
+            prob_deg[h_mask] = degree_in_expanded[h_mask] + 1
+            neg_h_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
         else:
-            # variadic sampling
+            # variadic sampling uniformly
             neg_h_candidate = h_mask.nonzero()[:, 1]
             num_h_candidate = h_mask.sum(dim=-1)
             neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)

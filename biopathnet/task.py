@@ -242,15 +242,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if self.train2_in_factgraph:
             edge_index, num_t_truth = self.fact_graph.match(pattern)
             t_truth_index = self.fact_graph.edge_list[edge_index, 1]
-            # get degree
-            node_in = self.fact_graph.edge_list[:, 1]
-            degree_in = torch.bincount(node_in, minlength=self.fact_graph.num_node)
+            # get degree per rel type
+            degree_in_rel = self.get_degree_in_type(self.fact_graph.undirected(add_inverse=True))
         else:
             edge_index, num_t_truth = self.fact_graph_supervision.match(pattern)
             t_truth_index = self.fact_graph_supervision.edge_list[edge_index, 1]
-            # get degree
-            node_in = self.fact_graph_supervision.edge_list[:, 1]
-            degree_in = torch.bincount(node_in, minlength=self.fact_graph_supervision.num_node)
+            # get degree per rel type
+            degree_in_rel = self.get_degree_in_type(self.fact_graph_supervision.undirected(add_inverse=True))
         pos_index = torch.repeat_interleave(num_t_truth)
         # only get those of node type
         if self.heterogeneous_negative:
@@ -263,16 +261,12 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         
         ## sample tails not in fact graph
         if self.degree_negative:
-            # sample according to degree
-            degree_in_expanded = degree_in.float().unsqueeze(0).expand(t_mask.shape)
-            prob_deg = torch.zeros_like(degree_in_expanded, dtype=torch.float)  # Initialize a result tensor
-            # +1 when node only has one edge (which was removed as true tail)
-            ## then prob vector is only 0
-            prob_deg[t_mask] = degree_in_expanded[t_mask] + 1
-            # in LinkPrediction sampling of h is according to num_nodes - degree
-            ## this gives a higher probability to nodes with lower degrees
-            ## in our case, we want to sample according to the degree
-            ## so that we get nodes with higher degrees as negatives
+            # sample according to in degree of node type and relation type
+            # get degree per relation type
+            degree_in_rel_expanded = degree_in_rel[pattern[:,2] + self.graph.num_relation].float()
+            prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
+            # remove true tails (positives) and nodes of undesired type
+            prob_deg[t_mask] = (degree_in_rel_expanded[t_mask] + 1)
             neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
         else:
             # sample uniformly

@@ -78,7 +78,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         return train_set, valid_set, test_set
         
 
-    def get_degree_in_type(self, graph):        
+    def get_in_degree_per_rel(self, graph):        
         ########################
         # making degree_in_type based on relations, as same nodes might have different relation types
         ########################
@@ -243,12 +243,12 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             edge_index, num_t_truth = self.fact_graph.match(pattern)
             t_truth_index = self.fact_graph.edge_list[edge_index, 1]
             # get degree per rel type
-            degree_in_rel = self.get_degree_in_type(self.fact_graph.undirected(add_inverse=True))
+            degree_in_rel = self.get_in_degree_per_rel(self.fact_graph.undirected(add_inverse=True))
         else:
             edge_index, num_t_truth = self.fact_graph_supervision.match(pattern)
             t_truth_index = self.fact_graph_supervision.edge_list[edge_index, 1]
             # get degree per rel type
-            degree_in_rel = self.get_degree_in_type(self.fact_graph_supervision.undirected(add_inverse=True))
+            degree_in_rel = self.get_in_degree_per_rel(self.fact_graph_supervision.undirected(add_inverse=True))
         pos_index = torch.repeat_interleave(num_t_truth)
         # only get those of node type
         if self.heterogeneous_negative:
@@ -287,13 +287,9 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if self.train2_in_factgraph:
             edge_index, num_h_truth = self.fact_graph.match(pattern)
             h_truth_index = self.fact_graph.edge_list[edge_index, 0]
-            node_in = self.fact_graph.edge_list[:, 0]
-            degree_in = torch.bincount(node_in, minlength=self.fact_graph.num_node)
         else:
             edge_index, num_h_truth = self.fact_graph_supervision.match(pattern)
             h_truth_index = self.fact_graph_supervision.edge_list[edge_index, 0]
-            node_in = self.fact_graph_supervision.edge_list[:, 0]
-            degree_in = torch.bincount(node_in, minlength=self.fact_graph_supervision.num_node)
         
         pos_index = torch.repeat_interleave(num_h_truth)
         
@@ -306,10 +302,11 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         
         
         if self.degree_negative:
-            # multinomial sampling according to degree
-            degree_in_expanded = degree_in.float().unsqueeze(0).expand(h_mask.shape)
-            prob_deg = torch.zeros_like(degree_in_expanded, dtype=torch.float)
-            prob_deg[h_mask] = degree_in_expanded[h_mask] + 1
+            # multinomial sampling according to degree per rel
+            degree_in_rel_expanded = degree_in_rel[pattern[:,2]].float()
+            prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
+            # remove true tails (positives) and nodes of undesired type
+            prob_deg[h_mask] = (degree_in_rel_expanded[h_mask] + 1)
             neg_h_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
         else:
             # variadic sampling uniformly

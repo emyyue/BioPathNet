@@ -235,7 +235,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         ####################### 
         # sample negative heads # (pos_h, r, neg_t)
         ####################### 
-        # remove true tails first
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         pattern = pattern[:batch_size // 2]
         # if train2 not used for mp, it should still serve to sample negatives
@@ -250,26 +249,27 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # get degree per rel type
             degree_in_rel = self.get_in_degree_per_rel(self.fact_graph_supervision.undirected(add_inverse=True))
         pos_index = torch.repeat_interleave(num_t_truth)
-        # only get those of node type
+
+        # remove undesired node type
         if self.heterogeneous_negative:
             pos_t_type = node_type[pos_t_index[:batch_size // 2]]
             t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
         else:
             t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
-        # remove true tails
+        # remove positive
         t_mask[pos_index, t_truth_index] = 0
         
         ## sample tails not in fact graph
         if self.degree_negative:
-            # sample according to in degree of node type and relation type
+            # multinomial negative sampling according to degree per rel
             # get degree per relation type
             degree_in_rel_expanded = degree_in_rel[pattern[:,2] + self.graph.num_relation].float()
             prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
-            # remove true tails (positives) and nodes of undesired type
+            # apply mask
             prob_deg[t_mask] = (degree_in_rel_expanded[t_mask] + 1)
             neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
         else:
-            # sample uniformly
+            # variadic sampling of negatives uniformly
             # get the candidates in one list
             neg_t_candidate = t_mask.nonzero()[:, 1]
             # get number of candidates belonging to each triplet
@@ -284,32 +284,34 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         ####################### 
         pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
         pattern = pattern[batch_size // 2:]
+        # if train2 is used for mp
         if self.train2_in_factgraph:
             edge_index, num_h_truth = self.fact_graph.match(pattern)
             h_truth_index = self.fact_graph.edge_list[edge_index, 0]
         else:
             edge_index, num_h_truth = self.fact_graph_supervision.match(pattern)
             h_truth_index = self.fact_graph_supervision.edge_list[edge_index, 0]
-        
+            
         pos_index = torch.repeat_interleave(num_h_truth)
         
+        # remove undesired node type
         if self.heterogeneous_negative:
             pos_h_type = node_type[pos_h_index[batch_size // 2:]]
             h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
         else:
             h_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+        # remove positive
         h_mask[pos_index, h_truth_index] = 0
         
-        
         if self.degree_negative:
-            # multinomial sampling according to degree per rel
+            # multinomial negative sampling according to degree per rel
             degree_in_rel_expanded = degree_in_rel[pattern[:,2]].float()
             prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
-            # remove true tails (positives) and nodes of undesired type
+            # apply mask
             prob_deg[h_mask] = (degree_in_rel_expanded[h_mask] + 1)
             neg_h_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
         else:
-            # variadic sampling uniformly
+            # variadic sampling of negatives uniformly
             neg_h_candidate = h_mask.nonzero()[:, 1]
             num_h_candidate = h_mask.sum(dim=-1)
             neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)

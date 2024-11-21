@@ -59,12 +59,23 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             train_indices = torch.tensor(train_set.indices)
             fact_mask[train_indices[index]] = 0
             train_set = torch_data.Subset(train_set, index)
-        if not self.train2_in_factgraph:
+            
+        if self.train2_in_factgraph:
+            self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
+            # get in degree per relation type
+            self.in_degree_per_rel = self.get_in_degree_per_rel(
+                self.fact_graph.undirected(add_inverse=True))
+        else:
             # fact_graph_supervision is used to get negative samples - only remove valid and test
             self.register_buffer("fact_graph_supervision", dataset.graph.edge_mask(fact_mask))
+            # get in degree per relation type
+            ## for use in negative sampling
+            self.in_degree_per_rel = self.get_in_degree_per_rel(
+                self.fact_graph_supervision.undirected(add_inverse=True))
+            
             # fact_graph is used for message passing
             fact_mask[train_set.indices] = 0
-        self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
+            self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
 
         if self.sample_weight:
             degree_hr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)
@@ -74,7 +85,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 degree_tr[t, r] += 1
             self.register_buffer("degree_hr", degree_hr)
             self.register_buffer("degree_tr", degree_tr)
-            
         return train_set, valid_set, test_set
         
 
@@ -231,6 +241,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         node_type = self.fact_graph.node_type
+        degree_in_rel = self.in_degree_per_rel
         
         ####################### 
         # sample negative heads # (pos_h, r, neg_t)
@@ -241,13 +252,9 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if self.train2_in_factgraph:
             edge_index, num_t_truth = self.fact_graph.match(pattern)
             t_truth_index = self.fact_graph.edge_list[edge_index, 1]
-            # get degree per rel type
-            degree_in_rel = self.get_in_degree_per_rel(self.fact_graph.undirected(add_inverse=True))
         else:
             edge_index, num_t_truth = self.fact_graph_supervision.match(pattern)
             t_truth_index = self.fact_graph_supervision.edge_list[edge_index, 1]
-            # get degree per rel type
-            degree_in_rel = self.get_in_degree_per_rel(self.fact_graph_supervision.undirected(add_inverse=True))
         pos_index = torch.repeat_interleave(num_t_truth)
 
         # remove undesired node type

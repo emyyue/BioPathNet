@@ -98,7 +98,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         relation_type = graph.edge_list[:, 2]
         # one hot encoding of relation types
         # Zhaocheng: myinput is (|E|, |R|), potentially OOM for large graphs
-        # You may augment myindex to be relation_type * graph.num_node + my_index
+        # You may augment myindex to be relation_type * graph.num_node + myindex
         # and scatter_add ones with the augmented index
         # finally reshape the tensor from (num_relation * num_node,) to (num_relation, num_node)
         myinput = torch.t(F.one_hot(relation_type))

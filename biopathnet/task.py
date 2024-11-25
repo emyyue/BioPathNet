@@ -153,10 +153,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         else:
             ranking = torch.sum(pos_pred <= pred, dim=-1) + 1 
         # get neg predictions
-        # remove the true tail and head
-        m = torch.ones_like(pred).scatter(2, target.unsqueeze(-1), 0).bool()
-        # use mask to get rid of other true tails and heads
-        prob =  m.logical_and(~mask).long().float()
+        # mask out true pos and undesired node type
+        prob = mask.long().float()
         # sample from neg exampels
         neg_t = functional.multinomial(prob[:,0,:], 1, replacement=True)
         neg_h = functional.multinomial(prob[:,1,:], 1, replacement=True)

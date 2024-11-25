@@ -63,14 +63,16 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if self.train2_in_factgraph:
             self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
             # get in degree per relation type
-            self.in_degree_per_rel = self.get_in_degree_per_rel(
-                self.fact_graph.undirected(add_inverse=True))
+            with self.fact_graph.graph():
+                self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
+                    self.fact_graph.undirected(add_inverse=True))
         else:
             # fact_graph_supervision is used to get negative samples - only remove valid and test
             self.register_buffer("fact_graph_supervision", dataset.graph.edge_mask(fact_mask))
             # get in degree per relation type
             ## for use in negative sampling
-            self.in_degree_per_rel = self.get_in_degree_per_rel(
+            with self.fact_graph_supervision.graph():
+                self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
                 self.fact_graph_supervision.undirected(add_inverse=True))
             
             # fact_graph is used for message passing
@@ -241,7 +243,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         node_type = self.fact_graph.node_type
-        degree_in_rel = self.in_degree_per_rel
         
         ####################### 
         # sample negative heads # (pos_h, r, neg_t)
@@ -252,9 +253,11 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if self.train2_in_factgraph:
             edge_index, num_t_truth = self.fact_graph.match(pattern)
             t_truth_index = self.fact_graph.edge_list[edge_index, 1]
+            degree_in_rel = self.fact_graph.in_degree_per_rel
         else:
             edge_index, num_t_truth = self.fact_graph_supervision.match(pattern)
             t_truth_index = self.fact_graph_supervision.edge_list[edge_index, 1]
+            degree_in_rel = self.fact_graph_supervision.in_degree_per_rel
         pos_index = torch.repeat_interleave(num_t_truth)
 
         # remove undesired node type

@@ -51,7 +51,7 @@ def build_solver(cfg):
         scheduler = None
     return core.Engine(_task, train_set, valid_set, test_set, optimizer, scheduler, **cfg.engine)
 
-def load_vocab(dataset):
+def load_vocab(dataset, vocab_file):
     entity_mapping = {}
     with open(vocab_file, "r") as fin:
         for line in fin:
@@ -60,7 +60,7 @@ def load_vocab(dataset):
     entity_vocab = [entity_mapping[t] for t in dataset.entity_vocab]
     relation_vocab = ["%s (%d)" % (t[t.rfind("/") + 1:].replace("_", " "), i)
                       for i, t in enumerate(dataset.relation_vocab)]
-    
+
     return entity_vocab, relation_vocab
 
 @torch.no_grad()
@@ -137,7 +137,12 @@ if __name__ == "__main__":
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
     print(working_dir)
-    vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_names.txt")
+    # get entity names
+    if 'entity_files' in cfg.dataset:
+        vfile = cfg.dataset.entity_files[1]
+    else:
+        vfile = "entity_names.txt"
+    vocab_file = os.path.join(os.path.dirname(__file__), cfg.dataset.path, vfile)
     vocab_file = os.path.abspath(vocab_file)
 
     torch.manual_seed(args.seed + comm.get_rank())
@@ -160,7 +165,7 @@ if __name__ == "__main__":
 
     if "checkpoint" in cfg:
         solver_load(cfg.checkpoint)
-    entity_vocab, relation_vocab = load_vocab(_dataset)
+    entity_vocab, relation_vocab = load_vocab(_dataset, vocab_file)
 
     logger.warning("Starting link prediction")
     

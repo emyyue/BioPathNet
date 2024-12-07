@@ -366,11 +366,15 @@ class biomedical(data.KnowledgeGraphDataset):
         "valid.txt", # such as KEGG valid
         "test.txt",] # such as KEGG test
 
-    entity_vocab_file = "entity_types.txt"
+    entity_files = ['entity_types.txt', 'entity_names.txt']
 
-    def __init__(self, path, include_factgraph=True, fact_as_train=False, verbose=1, files=None):
+    def __init__(self, path, include_factgraph=True, fact_as_train=False, verbose=1, files=None, entity_files = None):
         if files:
             self.files = files
+            
+        if entity_files:
+            self.entity_files = entity_files
+            
         path = os.path.expanduser(path)
         self.path = path
         self.include_factgraph = include_factgraph
@@ -388,7 +392,8 @@ class biomedical(data.KnowledgeGraphDataset):
     def load_entity_types(self, path) -> None:
         inv_type_vocab = {}
         node_type = {}
-        with open(os.path.join(path, self.entity_vocab_file), "r") as f:
+        # read in node types
+        with open(os.path.join(path, self.entity_files[0]), "r") as f:
             lines = f.readlines()
             for line in lines:
                 entity_token, type_token = line.strip().split()

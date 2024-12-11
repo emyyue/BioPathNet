@@ -160,7 +160,7 @@ def get_sparse_rows(sparse_tensor, row_indices):
     size = sparse_tensor.size()
 
     # Initialize a dense tensor for the rows
-    dense_rows = torch.zeros((len(row_indices), size[1]))
+    dense_rows = torch.zeros((len(row_indices), size[1]), device=sparse_tensor.device)
 
     # Loop over each row index
     for i, row_index in enumerate(row_indices):

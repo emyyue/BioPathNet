@@ -11,8 +11,13 @@ from torchdrug.layers import functional
 from torchdrug.core import Registry as R
 import torch_scatter
 import numpy as np
+from scipy import sparse
+import logging
+from tqdm import tqdm
 
 from biopathnet import dataset
+
+logger = logging.getLogger(__file__)
 
 
 Evaluator = core.make_configurable(linkproppred.Evaluator)
@@ -73,9 +78,74 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             self.register_buffer("degree_hr", degree_hr)
             self.register_buffer("degree_tr", degree_tr)
             
+        with self.fact_graph.graph():
+            self.fact_graph.k_mat = self.build_k_rw(n_rw=1000, k_hop=2)
+            #k_mat = self.build_k_hop(k_hop=2)
+     
         return train_set, valid_set, test_set
         
+    def _get_adj_mat(self):
+        a_mat = sparse.dok_matrix((self.fact_graph.num_node, self.fact_graph.num_node))
+        for (h, t, _) in self.fact_graph.edge_list:
+            a_mat[t, h] = 1
+            a_mat[h, t] = 1
+        a_mat = a_mat.tocsr()
+        return a_mat
+    
+    def build_k_hop(self, k_hop):
+        if k_hop == 0:
+            return None
+        
+        _a_mat = self._get_adj_mat()
+        _k_mat = _a_mat ** (k_hop - 1)
+        k_mat = _k_mat * _a_mat + _k_mat
 
+        return k_mat
+    
+    def build_k_rw(self, n_rw=1000, k_hop=2):
+        """
+        Returns:
+            k_mat: sparse |V| * |V| adjacency matrix
+        """
+        logger.warning('Preprocessing for Structure Aware Negative Sampling (SANS)')
+
+        if n_rw == 0 or k_hop == 0:
+            return None
+
+        a_mat = self._get_adj_mat()
+        k_mat = sparse.dok_matrix((self.fact_graph.num_node, self.fact_graph.num_node))
+
+        randomly_sampled = 0
+
+        for i in tqdm(range(0, self.fact_graph.num_node)):
+            neighbors = a_mat[i]
+            if len(neighbors.indices) == 0:
+                randomly_sampled += 1
+                walker = np.random.randint(self.fact_graph.num_node, size=n_rw)
+                k_mat[i, walker] = 1
+            else:
+                for _ in range(0, n_rw):
+                    walker = i
+                    for _ in range(0, k_hop):
+                        idx = np.random.randint(len(neighbors.indices))
+                        walker = neighbors.indices[idx]
+                        neighbors = a_mat[walker]
+                    k_mat[i, walker] += 1
+        logger.warning(f'During randomwalks for SANS: randomly_sampled: {randomly_sampled}')
+        k_mat = k_mat.tocsr()
+        
+        # convert scipy_csr to torch.sparse_coo
+        row, col = k_mat.nonzero() 
+        values = k_mat.data         
+        indices = torch.tensor([row, col], dtype=torch.int64) 
+
+        k_mat_torch = torch.sparse_coo_tensor(
+            indices, 
+            torch.tensor(values, dtype=torch.float32),  # Values tensor
+            size=k_mat.shape                      # Shape of the original matrix
+        )
+        return k_mat_torch
+    
     def get_degree_in_type(self, graph):        
         ########################
         # making degree_in_type based on relations, as same nodes might have different relation types

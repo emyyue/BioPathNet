@@ -14,6 +14,7 @@ import numpy as np
 from scipy import sparse
 import logging
 from tqdm import tqdm
+from biopathnet import util
 
 from biopathnet import dataset
 
@@ -109,8 +110,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 train_graph.edge_list[:, :2].flatten())])
             with self.fact_graph.graph():
                 self.fact_graph.k_mat = self.build_k_rw(rw_nodetypes, n_rw=1000, k_hop=2)
-                #k_mat = self.build_k_hop(k_hop=2)
-     
+
         return train_set, valid_set, test_set
         
     def _get_adj_mat(self):
@@ -171,19 +171,17 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                         neighbors = a_mat[walker]
                     k_mat[i, walker] += 1
         logger.warning(f'During randomwalks for SANS: randomly_sampled: {randomly_sampled}')
-        k_mat = k_mat.tocsr()
+        k_mat = k_mat.tocoo()
         
-        # convert scipy_csr to torch.sparse_coo
-        row, col = k_mat.nonzero() 
-        values = k_mat.data         
-        indices = torch.tensor([row, col], dtype=torch.int64) 
+        # convert to torch.sparse_coo
+        values = k_mat.data
+        indices = np.vstack((k_mat.row, k_mat.col))
+        i = torch.LongTensor(indices)
+        v = torch.FloatTensor(values)
+        shape = k_mat.shape
+        k_mat_torch_coalesced = torch.sparse.FloatTensor(i, v, torch.Size(shape)).coalesce()
 
-        k_mat_torch = torch.sparse_coo_tensor(
-            indices, 
-            torch.tensor(values, dtype=torch.float32),  # Values tensor
-            size=k_mat.shape                      # Shape of the original matrix
-        )
-        return k_mat_torch
+        return k_mat_torch_coalesced
     
     def get_in_degree_per_rel(self, graph):  
         """

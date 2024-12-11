@@ -152,3 +152,20 @@ def solver_load(solver, checkpoint, load_optimizer=True):
                     state[k] = v.to(solver.device)
 
     comm.synchronize()
+
+
+def get_sparse_row(sparse_tensor, row_index):
+    indices = sparse_tensor.indices()
+    values = sparse_tensor.values()
+    size = sparse_tensor.size()
+
+    # Mask to filter the desired row
+    row_mask = indices[0] == row_index
+    row_columns = indices[1][row_mask]
+    row_values = values[row_mask]
+
+    # Create a dense row (optional)
+    dense_row = torch.zeros(size[1])
+    dense_row[row_columns] = row_values
+
+    return dense_row

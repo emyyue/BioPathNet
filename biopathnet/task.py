@@ -34,7 +34,9 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True,
                  full_batch_eval=False, 
-                 degree_negative = False, remove_pos=True,  train2_in_factgraph=True):
+                 degree_negative = False,
+                 structure_aware_negative = False,
+                 remove_pos=True,  train2_in_factgraph=True):
         super(KnowledgeGraphCompletionBiomed, self).__init__(model=model, criterion=criterion, metric=metric, 
                                                              num_negative=num_negative, margin=margin,
                                                              adversarial_temperature=adversarial_temperature, 
@@ -44,6 +46,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         self.heterogeneous_negative = heterogeneous_negative
         self.heterogeneous_evaluation = heterogeneous_evaluation
         self.degree_negative = degree_negative
+        self.structure_aware_negative = structure_aware_negative
         self.remove_pos = remove_pos
         self.train2_in_factgraph = train2_in_factgraph
         
@@ -92,14 +95,29 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 degree_tr[t, r] += 1
             self.register_buffer("degree_hr", degree_hr)
             self.register_buffer("degree_tr", degree_tr)
-            
-        with self.fact_graph.graph():
-            self.fact_graph.k_mat = self.build_k_rw(n_rw=1000, k_hop=2)
-            #k_mat = self.build_k_hop(k_hop=2)
+        
+        if self.structure_aware_negative:
+            # get nodes in train, valid and test
+            fact_mask = torch.zeros(len(dataset), dtype=torch.bool)
+            fact_mask[train_set.indices] = 1
+            fact_mask[valid_set.indices] = 1
+            fact_mask[test_set.indices] = 1
+            train_graph = dataset.graph.edge_mask(fact_mask)
+            # get unique node types in train, valid and test 
+            # for which random walks are to be performed
+            rw_nodetypes = torch.unique(self.graph.node_type[torch.unique(
+                train_graph.edge_list[:, :2].flatten())])
+            with self.fact_graph.graph():
+                self.fact_graph.k_mat = self.build_k_rw(rw_nodetypes, n_rw=1000, k_hop=2)
+                #k_mat = self.build_k_hop(k_hop=2)
      
         return train_set, valid_set, test_set
         
     def _get_adj_mat(self):
+        """
+        Code adapted from SANS implementation. Get a sparse adjacency matrix 
+        of the undirected graph, where the relation types are disregarded
+        """
         a_mat = sparse.dok_matrix((self.fact_graph.num_node, self.fact_graph.num_node))
         for (h, t, _) in self.fact_graph.edge_list:
             a_mat[t, h] = 1
@@ -108,6 +126,9 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         return a_mat
     
     def build_k_hop(self, k_hop):
+        """
+        Code adapted from SANS implementation. Get k-hop adjacency matrix.
+        """
         if k_hop == 0:
             return None
         
@@ -117,8 +138,9 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
 
         return k_mat
     
-    def build_k_rw(self, n_rw=1000, k_hop=2):
+    def build_k_rw(self, rw_nodetypes, n_rw=1000, k_hop=2):
         """
+        Get a k-hop adjacency matrix from random walks
         Returns:
             k_mat: sparse |V| * |V| adjacency matrix
         """
@@ -131,8 +153,10 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         k_mat = sparse.dok_matrix((self.fact_graph.num_node, self.fact_graph.num_node))
 
         randomly_sampled = 0
-
-        for i in tqdm(range(0, self.fact_graph.num_node)):
+        # only perform for those of node type
+        rw_nodes = torch.where(torch.isin(self.fact_graph.node_type, rw_nodetypes))[0]
+        for i in tqdm(rw_nodes):
+            i = i.item()
             neighbors = a_mat[i]
             if len(neighbors.indices) == 0:
                 randomly_sampled += 1
@@ -161,19 +185,15 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         )
         return k_mat_torch
     
-    def get_degree_in_type(self, graph):        
-        ########################
-        # making degree_in_type based on relations, as same nodes might have different relation types
-        ########################
+    def get_in_degree_per_rel(self, graph):  
+        """
+        Get in degree per node per relation type. Returns a tensor of shape (num_relation, num_node)
+        """
 
         # count the number of occurrence for each relation type for each node
         myindex = graph.edge_list[:, 0]
         relation_type = graph.edge_list[:, 2]
         # one hot encoding of relation types
-        # Zhaocheng: myinput is (|E|, |R|), potentially OOM for large graphs
-        # You may augment myindex to be relation_type * graph.num_node + myindex
-        # and scatter_add ones with the augmented index
-        # finally reshape the tensor from (num_relation * num_node,) to (num_relation, num_node)
         myinput = torch.t(F.one_hot(relation_type))
         # calculate
         degree_in_type = myinput.new_zeros(graph.num_relation,  graph.num_node) # which output dim

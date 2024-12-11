@@ -336,6 +336,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         ####################### 
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         pattern = pattern[:batch_size // 2]
+
         # if train2 not used for mp, it should still serve to sample negatives
         if self.train2_in_factgraph:
             edge_index, num_t_truth = self.fact_graph.match(pattern)
@@ -357,7 +358,14 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         t_mask[pos_index, t_truth_index] = 0
         
         ## sample tails not in fact graph
-        if self.degree_negative:
+        if self.structure_aware_negative and not self.degree_negative:
+            k_mat = self.fact_graph.k_mat
+            pos_t = pos_t_index[:batch_size //2]
+            rw = util.get_sparse_rows(k_mat, pos_t) # get random walks of pos_t nodes
+            prob_deg = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
+            prob_deg[t_mask] = (rw[t_mask] + 1) # mask
+            neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
+        elif self.degree_negative and not self.structure_aware_negative:
             # multinomial negative sampling according to degree per rel
             # get degree per relation type
             degree_in_rel_expanded = degree_in_rel[pattern[:,2] + self.graph.num_relation].float()
@@ -365,6 +373,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # apply mask
             prob_deg[t_mask] = (degree_in_rel_expanded[t_mask] + 1)
             neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
+        elif self.degree_negative and self.structure_aware_negative:
+            raise ValueError("Unknown combination of structure aware and degree negatives")
         else:
             # variadic sampling of negatives uniformly
             # get the candidates in one list

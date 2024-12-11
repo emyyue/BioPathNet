@@ -154,18 +154,22 @@ def solver_load(solver, checkpoint, load_optimizer=True):
     comm.synchronize()
 
 
-def get_sparse_row(sparse_tensor, row_index):
+def get_sparse_rows(sparse_tensor, row_indices):
     indices = sparse_tensor.indices()
     values = sparse_tensor.values()
     size = sparse_tensor.size()
 
-    # Mask to filter the desired row
-    row_mask = indices[0] == row_index
-    row_columns = indices[1][row_mask]
-    row_values = values[row_mask]
+    # Initialize a dense tensor for the rows
+    dense_rows = torch.zeros((len(row_indices), size[1]))
 
-    # Create a dense row (optional)
-    dense_row = torch.zeros(size[1])
-    dense_row[row_columns] = row_values
+    # Loop over each row index
+    for i, row_index in enumerate(row_indices):
+        # Mask to filter the desired row
+        row_mask = indices[0] == row_index
+        row_columns = indices[1][row_mask]
+        row_values = values[row_mask]
 
-    return dense_row
+        # Populate the corresponding row in the dense tensor
+        dense_rows[i, row_columns] = row_values
+
+    return dense_rows

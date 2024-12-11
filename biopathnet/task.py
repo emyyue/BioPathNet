@@ -52,6 +52,9 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         self.train2_in_factgraph = train2_in_factgraph
         
     def preprocess(self, train_set, valid_set, test_set):
+        if self.degree_negative and self.structure_aware_negative:
+            raise ValueError("Unknown combination of structure aware and degree negatives")
+        
         if isinstance(train_set, torch_data.Subset):
             dataset = train_set.dataset
         else:
@@ -360,11 +363,11 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         ## sample tails not in fact graph
         if self.structure_aware_negative and not self.degree_negative:
             k_mat = self.fact_graph.k_mat
-            pos_t = pos_t_index[:batch_size //2]
+            pos_t = pos_t_index[:batch_size //2] # get pos_t
             rw = util.get_sparse_rows(k_mat, pos_t) # get random walks of pos_t nodes
-            prob_deg = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
-            prob_deg[t_mask] = (rw[t_mask] + 1) # mask
-            neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
+            prob_sans = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
+            prob_sans[t_mask] = (rw[t_mask] + 1) # mask
+            neg_t_index = functional.multinomial(prob_sans, self.num_negative, replacement=True)
         elif self.degree_negative and not self.structure_aware_negative:
             # multinomial negative sampling according to degree per rel
             # get degree per relation type
@@ -410,13 +413,22 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # remove positive
         h_mask[pos_index, h_truth_index] = 0
         
-        if self.degree_negative:
+        if self.structure_aware_negative and not self.degree_negative:
+            pos_h = pos_h_index[batch_size // 2:] # get pos_h
+            rw = util.get_sparse_rows(k_mat, pos_h) # get random walks of pos_h nodes
+            prob_sans = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
+            prob_sans[h_mask] = (rw[h_mask] + 1) # mask
+            neg_h_index = functional.multinomial(prob_sans, self.num_negative, replacement=True)
+        elif self.degree_negative and not self.structure_aware_negative:
             # multinomial negative sampling according to degree per rel
-            degree_in_rel_expanded = degree_in_rel[pattern[:,2]].float()
+            pos_r = pos_r_index[batch_size // 2:]
+            degree_in_rel_expanded = degree_in_rel[pos_r].float()
             prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
             # apply mask
             prob_deg[h_mask] = (degree_in_rel_expanded[h_mask] + 1)
             neg_h_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
+        elif self.degree_negative and self.structure_aware_negative:
+            raise ValueError("Unknown combination of structure aware and degree negatives")
         else:
             # variadic sampling of negatives uniformly
             neg_h_candidate = h_mask.nonzero()[:, 1]

@@ -25,6 +25,7 @@ task:
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
+  degree_negative: yes
   full_batch_eval: no
 
 optimizer:

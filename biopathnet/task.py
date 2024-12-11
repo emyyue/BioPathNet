@@ -33,7 +33,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True,
-                 full_batch_eval=False, remove_pos=True,  train2_in_factgraph=True):
+                 full_batch_eval=False, 
+                 degree_negative = False, remove_pos=True,  train2_in_factgraph=True):
         super(KnowledgeGraphCompletionBiomed, self).__init__(model=model, criterion=criterion, metric=metric, 
                                                              num_negative=num_negative, margin=margin,
                                                              adversarial_temperature=adversarial_temperature, 
@@ -42,6 +43,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                                                              sample_weight=sample_weight, full_batch_eval=full_batch_eval)
         self.heterogeneous_negative = heterogeneous_negative
         self.heterogeneous_evaluation = heterogeneous_evaluation
+        self.degree_negative = degree_negative
         self.remove_pos = remove_pos
         self.train2_in_factgraph = train2_in_factgraph
         
@@ -62,12 +64,25 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             train_indices = torch.tensor(train_set.indices)
             fact_mask[train_indices[index]] = 0
             train_set = torch_data.Subset(train_set, index)
-        if not self.train2_in_factgraph:
+            
+        if self.train2_in_factgraph:
+            self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
+            # get in degree per relation type
+            with self.fact_graph.graph():
+                self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
+                    self.fact_graph.undirected(add_inverse=True))
+        else:
             # fact_graph_supervision is used to get negative samples - only remove valid and test
             self.register_buffer("fact_graph_supervision", dataset.graph.edge_mask(fact_mask))
+            # get in degree per relation type
+            ## for use in negative sampling
+            with self.fact_graph_supervision.graph():
+                self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
+                self.fact_graph_supervision.undirected(add_inverse=True))
+            
             # fact_graph is used for message passing
             fact_mask[train_set.indices] = 0
-        self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
+            self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
 
         if self.sample_weight:
             degree_hr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)
@@ -156,7 +171,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         relation_type = graph.edge_list[:, 2]
         # one hot encoding of relation types
         # Zhaocheng: myinput is (|E|, |R|), potentially OOM for large graphs
-        # You may augment myindex to be relation_type * graph.num_node + my_index
+        # You may augment myindex to be relation_type * graph.num_node + myindex
         # and scatter_add ones with the augmented index
         # finally reshape the tensor from (num_relation * num_node,) to (num_relation, num_node)
         myinput = torch.t(F.one_hot(relation_type))
@@ -297,53 +312,89 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         node_type = self.fact_graph.node_type
-
-        # remove true tails first
+        
+        ####################### 
+        # sample negative heads # (pos_h, r, neg_t)
+        ####################### 
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         pattern = pattern[:batch_size // 2]
         # if train2 not used for mp, it should still serve to sample negatives
         if self.train2_in_factgraph:
             edge_index, num_t_truth = self.fact_graph.match(pattern)
             t_truth_index = self.fact_graph.edge_list[edge_index, 1]
+            degree_in_rel = self.fact_graph.in_degree_per_rel
         else:
             edge_index, num_t_truth = self.fact_graph_supervision.match(pattern)
             t_truth_index = self.fact_graph_supervision.edge_list[edge_index, 1]
+            degree_in_rel = self.fact_graph_supervision.in_degree_per_rel
         pos_index = torch.repeat_interleave(num_t_truth)
-        # only get those of node type
+
+        # remove undesired node type
         if self.heterogeneous_negative:
             pos_t_type = node_type[pos_t_index[:batch_size // 2]]
             t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
         else:
             t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
-        # remove true tails
+        # remove positive
         t_mask[pos_index, t_truth_index] = 0
+        
         ## sample tails not in fact graph
-        # get the candidates in one list
-        neg_t_candidate = t_mask.nonzero()[:, 1]
-        # get number of candidates belonging to each triplet
-        num_t_candidate = t_mask.sum(dim=-1)
-        # sample num_negative from candidate list, knowing (over neg_t_candidate) how many belong to each triplet
-        neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
+        if self.degree_negative:
+            # multinomial negative sampling according to degree per rel
+            # get degree per relation type
+            degree_in_rel_expanded = degree_in_rel[pattern[:,2] + self.graph.num_relation].float()
+            prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
+            # apply mask
+            prob_deg[t_mask] = (degree_in_rel_expanded[t_mask] + 1)
+            neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
+        else:
+            # variadic sampling of negatives uniformly
+            # get the candidates in one list
+            neg_t_candidate = t_mask.nonzero()[:, 1]
+            # get number of candidates belonging to each triplet
+            num_t_candidate = t_mask.sum(dim=-1)
+            # sample num_negative from candidate list, knowing (over neg_t_candidate) how many belong to each triplet
+            neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
+            
 
+
+        ####################### 
+        # sample negative heads # (neg_h, r-1, pos_t)
+        ####################### 
         pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
         pattern = pattern[batch_size // 2:]
+        # if train2 is used for mp
         if self.train2_in_factgraph:
             edge_index, num_h_truth = self.fact_graph.match(pattern)
             h_truth_index = self.fact_graph.edge_list[edge_index, 0]
         else:
             edge_index, num_h_truth = self.fact_graph_supervision.match(pattern)
             h_truth_index = self.fact_graph_supervision.edge_list[edge_index, 0]
+            
         pos_index = torch.repeat_interleave(num_h_truth)
+        
+        # remove undesired node type
         if self.heterogeneous_negative:
             pos_h_type = node_type[pos_h_index[batch_size // 2:]]
             h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
         else:
             h_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+        # remove positive
         h_mask[pos_index, h_truth_index] = 0
-        neg_h_candidate = h_mask.nonzero()[:, 1]
-        num_h_candidate = h_mask.sum(dim=-1)
-        neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
-
+        
+        if self.degree_negative:
+            # multinomial negative sampling according to degree per rel
+            degree_in_rel_expanded = degree_in_rel[pattern[:,2]].float()
+            prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
+            # apply mask
+            prob_deg[h_mask] = (degree_in_rel_expanded[h_mask] + 1)
+            neg_h_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
+        else:
+            # variadic sampling of negatives uniformly
+            neg_h_candidate = h_mask.nonzero()[:, 1]
+            num_h_candidate = h_mask.sum(dim=-1)
+            neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
+        
         neg_index = torch.cat([neg_t_index, neg_h_index])
         return neg_index
     

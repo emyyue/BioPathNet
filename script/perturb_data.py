@@ -11,7 +11,7 @@ def perturb_graph(data_path, graph, perturbation_mode, k=0, seed=123):
     elif graph == 'train2':
         df = pd.read_csv(os.path.join(data_path, 'train2.txt'), sep='\t', header=None)
     else:
-        raise ValueError("Undefined graph: {}".format(graph))
+        raise ValueError("Undefined graph. Possible options are: train1, train2.")
     
 
     if perturbation_mode == 'remove_top_relations':
@@ -41,7 +41,7 @@ def perturb_graph(data_path, graph, perturbation_mode, k=0, seed=123):
         df_perturbed = df[~df[0].isin(top_p_nodes) & ~df[2].isin(top_p_nodes)]
 
     else:
-        raise ValueError("Undefined perturbation mode: {}".format(perturbation_mode))
+        raise ValueError("Undefined perturbation mode. Possible modes are: remove_top_relations, remove_top_kth_relation, remove_random_relations, add_random_relations, remove_top_nodes.")
     
     output_path = os.path.join(data_path, f'{graph}_{perturbation_mode}_{k}.txt')
 

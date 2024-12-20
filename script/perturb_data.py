@@ -18,6 +18,11 @@ def perturb_graph(data_path, graph, perturbation_mode, k=0, seed=123):
         relations_summary = df[1].value_counts()
         top_n_rels = relations_summary.nlargest(k).index
         df_perturbed = df[~df[1].isin(top_n_rels)]
+
+    elif perturbation_mode == 'remove_top_kth_relation':
+        relations_summary = df[1].value_counts()
+        top_kth_rel = relations_summary.nlargest(k).index[-1]
+        df_perturbed = df[df[1] != top_kth_rel]
     
     elif perturbation_mode == 'remove_random_relations':
         n_rm = round(len(df) * k / 100)

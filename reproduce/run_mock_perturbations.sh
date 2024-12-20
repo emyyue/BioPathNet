@@ -25,11 +25,11 @@ DATA_PATH=/lustre/groups/crna01/projects/synthetic_lethality/BioPathNet/data/moc
 SEED=123
 
 ARRAY=(
-       "train1:remove_top_relations:1"
-       "train1:remove_top_relations:2"
-       "train1:remove_top_relations:3"
-       "train1:remove_top_relations:4"
-       "train1:remove_top_relations:5"
+       "train1:remove_top_kth_relation:1"
+       "train1:remove_top_kth_relation:2"
+       "train1:remove_top_kth_relation:3"
+       "train1:remove_top_kth_relation:4"
+       "train1:remove_top_kth_relation:5"
        "train1:remove_random_relations:10"
        "train1:remove_random_relations:20"
        "train1:remove_random_relations:50"
@@ -39,18 +39,20 @@ ARRAY=(
        "train1:add_random_relations:50"
        "train1:add_random_relations:80"
        "train1:remove_top_nodes:5"
+
+       "train2:remove_top_nodes:1"
+       "train2:remove_top_nodes:3"
+       "train2:remove_top_nodes:5"
     
-       ## Not a priority
-       "train2:remove_random_relations:10"
-       "train2:remove_random_relations:20"
-       "train2:remove_random_relations:50"
-       "train2:remove_random_relations:80"
        ## Optional
+       # "train2:remove_random_relations:10"
+       # "train2:remove_random_relations:20"
+       # "train2:remove_random_relations:50"
+       # "train2:remove_random_relations:80"
        # "train2:add_random_relations:10"
        # "train2:add_random_relations:20"
        # "train2:add_random_relations:50"
        # "train2:add_random_relations:80"
-       # "train2:remove_top_nodes:5"
     )
 
 for i in "${ARRAY[@]}"

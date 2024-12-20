@@ -7,7 +7,7 @@
 #SBATCH -c 4
 #SBATCH --gres=gpu:1
 #SBATCH -p gpu_p
-#SBATCH --qos=gpu_priority
+#SBATCH --qos=gpu_normal
 #SBATCH --constraint=a100_40gb
 
 

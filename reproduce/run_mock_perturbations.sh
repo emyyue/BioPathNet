@@ -25,6 +25,10 @@ DATA_PATH=/lustre/groups/crna01/projects/synthetic_lethality/BioPathNet/data/moc
 SEED=123
 
 ARRAY=(
+       "train1:remove_top_relations:1"
+       "train1:remove_top_relations:2"
+       "train1:remove_top_relations:3"
+       "train1:remove_top_relations:4"
        "train1:remove_top_relations:5"
        "train1:remove_random_relations:10"
        "train1:remove_random_relations:20"

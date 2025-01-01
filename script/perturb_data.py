@@ -30,10 +30,25 @@ def perturb_graph(data_path, graph, perturbation_mode, k=0, seed=123):
     
     elif perturbation_mode == 'add_random_relations':
         n_add = round(len(df) * k / 100)
-        edges_df = pd.DataFrame(np.array(np.meshgrid(df[0], df[1], df[2])).T.reshape(-1, 3)).drop_duplicates()
-        exists_in_df = edges_df.apply(lambda x: ''.join(x), axis=1).isin(df.apply(lambda x: ''.join(x), axis=1))
-        new_edges_df = edges_df[~exists_in_df]
-        df_perturbed = pd.concat([df, new_edges_df.sample(n_add)])
+        nodes_1 = df[0].unique()
+        relations = df[1].unique()
+        nodes_2 = df[2].unique()
+
+        existing_edges = set()
+        for row in df.itertuples(index=False):
+            existing_edges.add((row[0], row[1], row[2]))
+            existing_edges.add((row[2], row[1], row[0]))
+
+        sampled_edges = []
+        while len(sampled_edges) < n_add:
+            new_edge = (np.random.choice(nodes_1), np.random.choice(relations), np.random.choice(nodes_2))
+            if new_edge not in existing_edges and (new_edge[2], new_edge[1], new_edge[0]) not in existing_edges:
+                sampled_edges.append(new_edge)
+                existing_edges.add(new_edge)  
+                existing_edges.add((new_edge[2], new_edge[1], new_edge[0]))
+        
+        new_edges_df = pd.DataFrame(sampled_edges, columns=[0, 1, 2])
+        df_perturbed = pd.concat([df, new_edges_df]).drop_duplicates()
     
     elif perturbation_mode == 'remove_top_nodes':
         nodes_summary = pd.Series(df[0].tolist() + df[2].tolist()).value_counts()

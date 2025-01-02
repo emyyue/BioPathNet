@@ -375,38 +375,29 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         t_mask[pos_index, t_truth_index] = 0
         
         ## sample tails not in fact graph
-        if self.neg_samp_strategy == "sans":
-            k_mat = self.fact_graph.k_mat
-            pos_t = pos_t_index[:batch_size //2] # get pos_t
-            rw = util.get_sparse_rows(k_mat, pos_t) # get random walks of pos_t nodes
-            prob_sans = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
-            prob_sans[t_mask] = (rw[t_mask] + 1) # mask
-            neg_t_index = functional.multinomial(prob_sans, self.num_negative, replacement=True)
-        elif self.neg_samp_strategy == "degree":
-            # multinomial negative sampling according to degree per rel
-            # get degree per relation type
-            pos_r = pattern[:,2]
-            degree_in_rel_expanded = degree_in_rel[pos_r + self.graph.num_relation].float()
-            # Initialize a result tensor
-            prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  
-            prob_deg[t_mask] = (degree_in_rel_expanded[t_mask] + 1)
-            neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
-        elif self.neg_samp_strategy == "inv_degree":
-            pos_r = pattern[:,2]
-            inv_degree_in_rel_expanded = num_nodes_per_type[pos_h_type].unsqueeze(1) - (degree_in_rel[pos_r + self.graph.num_relation]).float()
-            prob_deg = torch.zeros_like(inv_degree_in_rel_expanded, dtype=torch.float)
-            # Initialize a result tensor
-            prob_deg[t_mask] = (inv_degree_in_rel_expanded[t_mask] + 1)
-            neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
-        else:
-            # variadic sampling of negatives uniformly
+        if self.neg_samp_strategy in ['sans', 'degree', 'inv_degree']:
+            if self.neg_samp_strategy == "sans":
+                k_mat = self.fact_graph.k_mat
+                pos_t = pos_t_index[:batch_size //2] # get pos_t
+                rw = util.get_sparse_rows(k_mat, pos_t) # get random walks of pos_t nodes
+                prob_sans = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
+                prob_sans[t_mask] = (rw[t_mask] + 1) # mask
+            else:
+                pos_r = pattern[:, 2]
+                if self.neg_samp_strategy == "degree":
+                    degree_values = degree_in_rel[pos_r + self.graph.num_relation].float()
+                else:  # inv_degree
+                    degree_values = num_nodes_per_type[pos_h_type].unsqueeze(1) - degree_in_rel[pos_r + self.graph.num_relation].float()
+                prob = torch.zeros_like(degree_values, dtype=torch.float)
+                prob[t_mask] = degree_values[t_mask] + 1
+            neg_t_index = functional.multinomial(prob, self.num_negative, replacement=True)
+        else: # variadic sampling of negatives uniformly
             # get the candidates in one list
             neg_t_candidate = t_mask.nonzero()[:, 1]
             # get number of candidates belonging to each triplet
             num_t_candidate = t_mask.sum(dim=-1)
             # sample num_negative from candidate list, knowing (over neg_t_candidate) how many belong to each triplet
             neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
-            
 
 
         ####################### 

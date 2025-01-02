@@ -80,6 +80,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 with self.fact_graph.graph():
                     self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
                         self.fact_graph.undirected(add_inverse=True))
+                    self.fact_graph.num_nodes_per_type = torch.bincount(self.fact_graph.node_type)
         else:
             # fact_graph_supervision is used to get negative samples - only remove valid and test
             self.register_buffer("fact_graph_supervision", dataset.graph.edge_mask(fact_mask))
@@ -88,7 +89,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             if self.neg_samp_strategy in ['degree', 'inv_degree']:
                 with self.fact_graph_supervision.graph():
                     self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
-                    self.fact_graph_supervision.undirected(add_inverse=True))
+                        self.fact_graph_supervision.undirected(add_inverse=True))
+                    self.fact_graph.num_nodes_per_type = torch.bincount(self.fact_graph.node_type)
             
             # fact_graph is used for message passing
             fact_mask[train_set.indices] = 0

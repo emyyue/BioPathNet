@@ -72,30 +72,25 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             train_indices = torch.tensor(train_set.indices)
             fact_mask[train_indices[index]] = 0
             train_set = torch_data.Subset(train_set, index)
-            
-        if self.train2_in_factgraph:
-            self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
-            # get in degree per relation type
-            if self.neg_samp_strategy in ['degree', 'inv_degree']:
-                with self.fact_graph.graph():
-                    self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
-                        self.fact_graph.undirected(add_inverse=True))
-                    self.fact_graph.num_nodes_per_type = torch.bincount(self.fact_graph.node_type)
-        else:
-            # fact_graph_supervision is used to get negative samples - only remove valid and test
-            self.register_buffer("fact_graph_supervision", dataset.graph.edge_mask(fact_mask))
-            # get in degree per relation type
-            ## for use in negative sampling
-            if self.neg_samp_strategy in ['degree', 'inv_degree']:
-                with self.fact_graph_supervision.graph():
-                    self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
-                        self.fact_graph_supervision.undirected(add_inverse=True))
-                    self.fact_graph.num_nodes_per_type = torch.bincount(self.fact_graph.node_type)
-            
-            # fact_graph is used for message passing
+        
+        # If not train2_in_factgraph, create a separate fact_graph_supervision
+        fact_graph_attr = "fact_graph" if self.train2_in_factgraph else "fact_graph_supervision"
+        self.register_buffer(fact_graph_attr, dataset.graph.edge_mask(fact_mask))
+        
+        # Get degree per relation type per node and num of nodes
+        if self.neg_samp_strategy in ['degree', 'inv_degree']:
+            fact_graph = getattr(self, fact_graph_attr)
+            with fact_graph.graph():
+                fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
+                    fact_graph.undirected(add_inverse=True)
+                )
+                fact_graph.num_nodes_per_type = torch.bincount(fact_graph.node_type)
+        
+        # Adjust fact_graph for message passing if train2 is not used
+        if not self.train2_in_factgraph:
             fact_mask[train_set.indices] = 0
             self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
-
+    
         if self.sample_weight:
             degree_hr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)
             degree_tr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)

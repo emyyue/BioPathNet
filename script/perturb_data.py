@@ -10,8 +10,16 @@ def perturb_graph(data_path, graph, perturbation_mode, k=0, seed=123):
         df = pd.read_csv(os.path.join(data_path, 'train1.txt'), sep='\t', header=None)
     elif graph == 'train2':
         df = pd.read_csv(os.path.join(data_path, 'train2.txt'), sep='\t', header=None)
+    elif graph == 'train0':
+        train0_path = os.path.join(data_path, 'train0.txt')
+        if os.path.exists(train0_path):
+            df = pd.read_csv(train0_path, sep='\t', header=None)
+        else:
+            df1 = pd.read_csv(os.path.join(data_path, 'train1.txt'), sep='\t', header=None)
+            df2 = pd.read_csv(os.path.join(data_path, 'train2.txt'), sep='\t', header=None)
+            df = pd.concat([df1, df2], ignore_index=True)
     else:
-        raise ValueError("Undefined graph. Possible options are: train1, train2.")
+        raise ValueError("Undefined graph. Possible options are: train0, train1, train2.")
     
 
     if perturbation_mode == 'remove_top_relations':

@@ -74,7 +74,11 @@ do
   fi
   
   # Run the run.py script with the new config YAML file
-  python script/run.py -s 1234 -c "$new_yaml" --gpus [0]
+  for j in 1234 1235 1236 1237 1238
+  do
+    echo "Seed $j"
+    python script/run.py -s $j -c "$new_yaml" --gpus [0]
+  done
 done
   
 # Log the end time

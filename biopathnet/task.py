@@ -341,7 +341,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         node_type = self.fact_graph.node_type
-
+        fact_graph = self.fact_graph if self.train2_in_factgraph else self.fact_graph_supervision        
         
         ####################### 
         # sample negative heads # (pos_h, r, neg_t)
@@ -349,22 +349,19 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         pattern = pattern[:batch_size // 2]
         pos_h_type = node_type[pattern[:, 0]]
+        
 
-        # if train2 not used for mp, it should still serve to sample negatives
-        if self.train2_in_factgraph:
-            edge_index, num_t_truth = self.fact_graph.match(pattern)
-            t_truth_index = self.fact_graph.edge_list[edge_index, 1]
-            if self.neg_samp_strategy in ['degree', 'inv_degree']:
-                degree_in_rel = self.fact_graph.in_degree_per_rel
-                num_nodes_per_type = self.fact_graph.num_nodes_per_type
-        else:
-            edge_index, num_t_truth = self.fact_graph_supervision.match(pattern)
-            t_truth_index = self.fact_graph_supervision.edge_list[edge_index, 1]
-            if self.neg_samp_strategy in ['degree', 'inv_degree']:
-                degree_in_rel = self.fact_graph_supervision.in_degree_per_rel
-                num_nodes_per_type = self.fact_graph_supervision.num_nodes_per_type
+        # Get positive indices
+        edge_index, num_t_truth = fact_graph.match(pattern)
+        t_truth_index = fact_graph.edge_list[edge_index, 1]
+        if self.neg_samp_strategy in ['degree', 'inv_degree']:
+            degree_in_rel = fact_graph.in_degree_per_rel
+            num_nodes_per_type = fact_graph.num_nodes_per_type
+
         pos_index = torch.repeat_interleave(num_t_truth)
-
+        
+        
+        
         # remove undesired node type
         if self.heterogeneous_negative:
             pos_t_type = node_type[pos_t_index[:batch_size // 2]]
@@ -407,13 +404,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         pattern = pattern[batch_size // 2:]
         pos_t_type = node_type[pattern[:, 2]]
         
-        # if train2 is used for mp
-        if self.train2_in_factgraph:
-            edge_index, num_h_truth = self.fact_graph.match(pattern)
-            h_truth_index = self.fact_graph.edge_list[edge_index, 0]
-        else:
-            edge_index, num_h_truth = self.fact_graph_supervision.match(pattern)
-            h_truth_index = self.fact_graph_supervision.edge_list[edge_index, 0]
+        edge_index, num_h_truth = fact_graph.match(pattern)
+        h_truth_index = fact_graph.edge_list[edge_index, 0]
             
         pos_index = torch.repeat_interleave(num_h_truth)
         

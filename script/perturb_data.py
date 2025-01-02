@@ -57,6 +57,35 @@ def perturb_graph(data_path, graph, perturbation_mode, k=0, seed=123):
         
         new_edges_df = pd.DataFrame(sampled_edges, columns=[0, 1, 2])
         df_perturbed = pd.concat([df, new_edges_df]).drop_duplicates()
+
+    elif perturbation_mode == 'add_random_relations_freq':
+        n_add = round(len(df) * k / 100)
+        
+        nodes_1 = df[0].unique()
+        relations = df[1].unique()
+        nodes_2 = df[2].unique()
+
+        relation_counts = df[1].value_counts()
+        relation_weights = relation_counts / relation_counts.sum()
+
+        existing_edges = set()
+        for row in df.itertuples(index=False):
+            existing_edges.add((row[0], row[1], row[2]))
+            existing_edges.add((row[2], row[1], row[0]))
+
+        sampled_edges = []
+        while len(sampled_edges) < n_add:
+            new_edge = (
+                np.random.choice(nodes_1), 
+                np.random.choice(relations, p=relation_weights.loc[relations].values), 
+                np.random.choice(nodes_2))
+            if new_edge not in existing_edges and (new_edge[2], new_edge[1], new_edge[0]) not in existing_edges:
+                sampled_edges.append(new_edge)
+                existing_edges.add(new_edge)  
+                existing_edges.add((new_edge[2], new_edge[1], new_edge[0]))
+        
+        new_edges_df = pd.DataFrame(sampled_edges, columns=[0, 1, 2])
+        df_perturbed = pd.concat([df, new_edges_df]).drop_duplicates()
     
     elif perturbation_mode == 'remove_top_nodes':
         nodes_summary = pd.Series(df[0].tolist() + df[2].tolist()).value_counts()

@@ -341,12 +341,14 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         node_type = self.fact_graph.node_type
+
         
         ####################### 
         # sample negative heads # (pos_h, r, neg_t)
         ####################### 
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         pattern = pattern[:batch_size // 2]
+        pos_h_type = node_type[pattern[:, 0]]
 
         # if train2 not used for mp, it should still serve to sample negatives
         if self.train2_in_factgraph:
@@ -354,11 +356,13 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             t_truth_index = self.fact_graph.edge_list[edge_index, 1]
             if self.neg_samp_strategy in ['degree', 'inv_degree']:
                 degree_in_rel = self.fact_graph.in_degree_per_rel
+                num_nodes_per_type = self.fact_graph.num_nodes_per_type
         else:
             edge_index, num_t_truth = self.fact_graph_supervision.match(pattern)
             t_truth_index = self.fact_graph_supervision.edge_list[edge_index, 1]
             if self.neg_samp_strategy in ['degree', 'inv_degree']:
                 degree_in_rel = self.fact_graph_supervision.in_degree_per_rel
+                num_nodes_per_type = self.fact_graph_supervision.num_nodes_per_type
         pos_index = torch.repeat_interleave(num_t_truth)
 
         # remove undesired node type
@@ -381,10 +385,18 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         elif self.neg_samp_strategy == "degree":
             # multinomial negative sampling according to degree per rel
             # get degree per relation type
-            degree_in_rel_expanded = degree_in_rel[pattern[:,2] + self.graph.num_relation].float()
-            prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
-            # apply mask
+            pos_r = pattern[:,2]
+            degree_in_rel_expanded = degree_in_rel[pos_r + self.graph.num_relation].float()
+            # Initialize a result tensor
+            prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  
             prob_deg[t_mask] = (degree_in_rel_expanded[t_mask] + 1)
+            neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
+        elif self.neg_samp_strategy == "inv_degree":
+            pos_r = pattern[:,2]
+            inv_degree_in_rel_expanded = num_nodes_per_type[pos_h_type].unsqueeze(1) - (degree_in_rel[pos_r + self.graph.num_relation]).float()
+            prob_deg = torch.zeros_like(inv_degree_in_rel_expanded, dtype=torch.float)
+            # Initialize a result tensor
+            prob_deg[t_mask] = (inv_degree_in_rel_expanded[t_mask] + 1)
             neg_t_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
         else:
             # variadic sampling of negatives uniformly
@@ -402,6 +414,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         ####################### 
         pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
         pattern = pattern[batch_size // 2:]
+        pos_t_type = node_type[pattern[:, 2]]
+        
         # if train2 is used for mp
         if self.train2_in_factgraph:
             edge_index, num_h_truth = self.fact_graph.match(pattern)
@@ -429,7 +443,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             neg_h_index = functional.multinomial(prob_sans, self.num_negative, replacement=True)
         elif self.neg_samp_strategy == "degree":
             # multinomial negative sampling according to degree per rel
-            pos_r = pos_r_index[batch_size // 2:]
+            pos_r = pattern[:,2]
             degree_in_rel_expanded = degree_in_rel[pos_r].float()
             prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
             # apply mask

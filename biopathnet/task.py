@@ -380,8 +380,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 k_mat = self.fact_graph.k_mat
                 pos_t = pos_t_index[:batch_size //2] # get pos_t
                 rw = util.get_sparse_rows(k_mat, pos_t) # get random walks of pos_t nodes
-                prob_sans = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
-                prob_sans[t_mask] = (rw[t_mask] + 1) # mask
+                prob = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
+                prob[t_mask] = (rw[t_mask] + 1) # mask
             else:
                 pos_r = pattern[:, 2]
                 if self.neg_samp_strategy == "degree":
@@ -426,22 +426,22 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         # remove positive
         h_mask[pos_index, h_truth_index] = 0
         
-        if self.neg_samp_strategy == "sans":
-            pos_h = pos_h_index[batch_size // 2:] # get pos_h
-            rw = util.get_sparse_rows(k_mat, pos_h) # get random walks of pos_h nodes
-            prob_sans = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
-            prob_sans[h_mask] = (rw[h_mask] + 1) # mask
-            neg_h_index = functional.multinomial(prob_sans, self.num_negative, replacement=True)
-        elif self.neg_samp_strategy == "degree":
-            # multinomial negative sampling according to degree per rel
-            pos_r = pattern[:,2]
-            degree_in_rel_expanded = degree_in_rel[pos_r].float()
-            prob_deg = torch.zeros_like(degree_in_rel_expanded, dtype=torch.float)  # Initialize a result tensor
-            # apply mask
-            prob_deg[h_mask] = (degree_in_rel_expanded[h_mask] + 1)
-            neg_h_index = functional.multinomial(prob_deg, self.num_negative, replacement=True)
-        else:
-            # variadic sampling of negatives uniformly
+        if self.neg_samp_strategy in ['sans', 'degree', 'inv_degree']:
+            if self.neg_samp_strategy == "sans":                
+                pos_h = pos_h_index[batch_size // 2:] # get pos_h
+                rw = util.get_sparse_rows(k_mat, pos_h) # get random walks of pos_h nodes
+                prob = torch.zeros_like(rw, dtype=torch.float)  # Initialize a result tensor
+                prob[h_mask] = (rw[h_mask] + 1) # mask
+            else:
+                pos_r = pattern[:, 2]
+                if self.neg_samp_strategy == "degree":
+                    degree_values = degree_in_rel[pos_r].float()
+                else:   # inv_degree
+                    degree_values = num_nodes_per_type[pos_t_type].unsqueeze(1) - degree_in_rel[pos_r].float()
+                prob = torch.zeros_like(degree_values, dtype=torch.float)
+                prob[h_mask] = degree_values[h_mask] + 1
+            neg_h_index = functional.multinomial(prob, self.num_negative, replacement=True)
+        else: # variadic sampling of negatives uniformly
             neg_h_candidate = h_mask.nonzero()[:, 1]
             num_h_candidate = h_mask.sum(dim=-1)
             neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)

@@ -156,6 +156,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             k_mat: sparse |V| * |V| adjacency matrix
         """
         logger.warning('Preprocessing for Structure Aware Negative Sampling (SANS)')
+        logger.warning('Set seed for Random Walks to 0')
+        np.random.seed(0)
 
         if n_rw == 0 or k_hop == 0:
             return None

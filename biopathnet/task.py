@@ -35,8 +35,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
                  fact_ratio=None, sample_weight=True,
                  full_batch_eval=False, 
-                 degree_negative = False,
-                 structure_aware_negative = False,
+                 neg_samp_strategy = None,
                  remove_pos=True,  train2_in_factgraph=True):
         super(KnowledgeGraphCompletionBiomed, self).__init__(model=model, criterion=criterion, metric=metric, 
                                                              num_negative=num_negative, margin=margin,
@@ -46,15 +45,17 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                                                              sample_weight=sample_weight, full_batch_eval=full_batch_eval)
         self.heterogeneous_negative = heterogeneous_negative
         self.heterogeneous_evaluation = heterogeneous_evaluation
-        self.degree_negative = degree_negative
-        self.structure_aware_negative = structure_aware_negative
+        self.neg_samp_strategy = neg_samp_strategy
         self.remove_pos = remove_pos
         self.train2_in_factgraph = train2_in_factgraph
         
     def preprocess(self, train_set, valid_set, test_set):
-        if self.degree_negative and self.structure_aware_negative:
-            raise ValueError("Unknown combination of structure aware and degree negatives")
-        
+        if self.neg_samp_strategy not in ['sans', 'degree', 'inv_degree', None]:
+            raise ValueError(
+                f"Unknown negative sampling strategy: {self.neg_samp_strategy}; "
+                "possible are 'sans', 'degree', 'inv_degree', and None."
+                )
+            
         if isinstance(train_set, torch_data.Subset):
             dataset = train_set.dataset
         else:
@@ -75,17 +76,19 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         if self.train2_in_factgraph:
             self.register_buffer("fact_graph", dataset.graph.edge_mask(fact_mask))
             # get in degree per relation type
-            with self.fact_graph.graph():
-                self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
-                    self.fact_graph.undirected(add_inverse=True))
+            if self.neg_samp_strategy in ['degree', 'inv_degree']:
+                with self.fact_graph.graph():
+                    self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
+                        self.fact_graph.undirected(add_inverse=True))
         else:
             # fact_graph_supervision is used to get negative samples - only remove valid and test
             self.register_buffer("fact_graph_supervision", dataset.graph.edge_mask(fact_mask))
             # get in degree per relation type
             ## for use in negative sampling
-            with self.fact_graph_supervision.graph():
-                self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
-                self.fact_graph_supervision.undirected(add_inverse=True))
+            if self.neg_samp_strategy in ['degree', 'inv_degree']:
+                with self.fact_graph_supervision.graph():
+                    self.fact_graph.in_degree_per_rel = self.get_in_degree_per_rel(
+                    self.fact_graph_supervision.undirected(add_inverse=True))
             
             # fact_graph is used for message passing
             fact_mask[train_set.indices] = 0
@@ -99,21 +102,23 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                 degree_tr[t, r] += 1
             self.register_buffer("degree_hr", degree_hr)
             self.register_buffer("degree_tr", degree_tr)
-        
-        if self.structure_aware_negative:
-            # get nodes in train, valid and test
+            
+        if self.neg_samp_strategy == 'sans':
+            # Create a fact mask for train, valid, and test nodes
             fact_mask = torch.zeros(len(dataset), dtype=torch.bool)
-            fact_mask[train_set.indices] = 1
-            fact_mask[valid_set.indices] = 1
-            fact_mask[test_set.indices] = 1
+            fact_mask[torch.cat([train_set.indices, valid_set.indices, test_set.indices])] = 1
+            
+            # Extract train graph based on fact mask
             train_graph = dataset.graph.edge_mask(fact_mask)
-            # get unique node types in train, valid and test 
-            # for which random walks are to be performed
-            rw_nodetypes = torch.unique(self.graph.node_type[torch.unique(
-                train_graph.edge_list[:, :2].flatten())])
+            
+            # Identify unique node types for random walks
+            node_indices = train_graph.edge_list[:, :2].flatten()
+            rw_nodetypes = torch.unique(self.graph.node_type[torch.unique(node_indices)])
+            
+            # Perform random walks and build k-matrix
             with self.fact_graph.graph():
                 self.fact_graph.k_mat = self.build_k_rw(rw_nodetypes, n_rw=1000, k_hop=2)
-
+                
         return train_set, valid_set, test_set
         
     def _get_adj_mat(self):

@@ -36,6 +36,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
                  fact_ratio=None, sample_weight=True,
                  full_batch_eval=False, 
                  neg_samp_strategy = None,
+                 sans_rw_hops = "1000:2",
                  remove_pos=True,  train2_in_factgraph=True):
         super(KnowledgeGraphCompletionBiomed, self).__init__(model=model, criterion=criterion, metric=metric, 
                                                              num_negative=num_negative, margin=margin,
@@ -48,6 +49,8 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         self.neg_samp_strategy = neg_samp_strategy
         self.remove_pos = remove_pos
         self.train2_in_factgraph = train2_in_factgraph
+        self.sans_rw = int(sans_rw_hops.split(":")[0])
+        self.sans_hops = int(sans_rw_hops.split(":")[1])
         
     def preprocess(self, train_set, valid_set, test_set):
         if self.neg_samp_strategy not in ['sans', 'degree', 'inv_degree', None]:
@@ -115,7 +118,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             
             # Perform random walks and build k-matrix
             with self.fact_graph.graph():
-                self.fact_graph.k_mat = self.build_k_rw(rw_nodetypes, n_rw=1000, k_hop=2)
+                self.fact_graph.k_mat = self.build_k_rw(rw_nodetypes, n_rw=self.sans_rw, k_hop=self.sans_hops)
                 
         return train_set, valid_set, test_set
         
@@ -151,6 +154,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             k_mat: sparse |V| * |V| adjacency matrix
         """
         logger.warning('Preprocessing for Structure Aware Negative Sampling (SANS)')
+        logger.warning(f'\tApproximation of neighborhood k={self.sans_hops} hop neighborhood using n={self.sans_rw} random walks')
         logger.warning('Set seed for Random Walks to 0')
         np.random.seed(0)
 

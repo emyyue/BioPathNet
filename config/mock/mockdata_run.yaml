@@ -25,7 +25,8 @@ task:
   sample_weight: no
   heterogeneous_negative: yes
   heterogeneous_evaluation: yes
-  #neg_samp_strategy: sans # [sans, degree, inv_degree]
+  # neg_samp_strategy: sans # [sans, degree, inv_degree]
+  # sans_rw_hops: "1000:2" # default 1000:2 # k=2 hop neighborhood approximated with 1000 random walks 
   full_batch_eval: no
 
 optimizer:

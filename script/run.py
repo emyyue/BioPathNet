@@ -22,8 +22,9 @@ def solver_load(checkpoint, load_optimizer=True):
     state = torch.load(checkpoint, map_location=solver.device)
     # some issues with loading back the fact_graph and graph
     # remove
-    state["model"].pop("fact_graph")
-    state["model"].pop("graph")
+    state["model"].pop("fact_graph", 0)
+    state["model"].pop("fact_graph_supervision", 0)
+    state["model"].pop("graph", 0)
     # load without
     solver.model.load_state_dict(state["model"], strict=False)
 

@@ -388,6 +388,30 @@ class biomedical(data.KnowledgeGraphDataset):
 
         self.load_tsvs(txt_files, verbose=verbose)
         self.load_entity_types(path)
+        
+    def load_triplet(self, triplets, entity_vocab=None, relation_vocab=None, inv_entity_vocab=None,
+                     inv_relation_vocab=None):
+        """
+        Load the dataset from triplets.
+        The mapping between indexes and tokens is specified through either vocabularies or inverse vocabularies.
+
+        Parameters:
+            triplets (array_like): triplets of shape :math:`(n, 3)`
+            entity_vocab (dict of str, optional): maps entity indexes to tokens
+            relation_vocab (dict of str, optional): maps relation indexes to tokens
+            inv_entity_vocab (dict of str, optional): maps tokens to entity indexes
+            inv_relation_vocab (dict of str, optional): maps tokens to relation indexes
+        """
+        entity_vocab, inv_entity_vocab = self._standarize_vocab(entity_vocab, inv_entity_vocab)
+        relation_vocab, inv_relation_vocab = self._standarize_vocab(relation_vocab, inv_relation_vocab)
+
+        num_node = len(entity_vocab) if entity_vocab else None
+        num_relation = len(relation_vocab) if relation_vocab else None
+        self.graph = data.Graph(triplets, num_node=num_node, num_relation=num_relation)
+        self.entity_vocab = entity_vocab
+        self.relation_vocab = relation_vocab
+        self.inv_entity_vocab = inv_entity_vocab
+        self.inv_relation_vocab = inv_relation_vocab
 
     def load_entity_types(self, path) -> None:
         inv_type_vocab = {}

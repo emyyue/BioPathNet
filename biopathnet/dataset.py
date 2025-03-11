@@ -362,9 +362,9 @@ class biomedical(data.KnowledgeGraphDataset):
 
     files = [
         "train1.txt", # BRG
-        "train2.txt",  # training graph
-        "valid.txt", # validation graph
-        "test.txt",] # test graph
+        "train2.txt",  # training triplets
+        "valid.txt", # validation triplets
+        "test.txt",] # test triplets
 
     entity_files = ['entity_types.txt', 'entity_names.txt']
 
@@ -388,7 +388,46 @@ class biomedical(data.KnowledgeGraphDataset):
 
         self.load_tsvs(txt_files, verbose=verbose)
         self.load_entity_types(path)
+
+    def load_tsvs(self, tsv_files, verbose=0):
+        """
+        Load the dataset from multiple tsv files.
+
+        Parameters:
+            tsv_files (list of str): list of file names
+            verbose (int, optional): output verbose level
+        """
+        inv_entity_vocab = {}
+        inv_relation_vocab = {}
+        triplets = []
+        num_samples = []
+
+        for tsv_file in tsv_files:
+            with open(tsv_file, "r") as fin:
+                reader = csv.reader(fin, delimiter="\t")
+                if verbose:
+                    reader = tqdm(reader, "Loading %s" % tsv_file, utils.get_line_count(tsv_file))
+
+                num_sample = 0
+                for tokens in reader:
+                    h_token, r_token, t_token = tokens
+                    if h_token not in inv_entity_vocab:
+                        inv_entity_vocab[h_token] = len(inv_entity_vocab)
+                    h = inv_entity_vocab[h_token]
+                    if r_token not in inv_relation_vocab:
+                        inv_relation_vocab[r_token] = len(inv_relation_vocab)
+                    r = inv_relation_vocab[r_token]
+                    if t_token not in inv_entity_vocab:
+                        inv_entity_vocab[t_token] = len(inv_entity_vocab)
+                    t = inv_entity_vocab[t_token]
+                    triplets.append((h, t, r))
+                    num_sample += 1
+            num_samples.append(num_sample)
+
+        self.load_triplet(triplets, inv_entity_vocab=inv_entity_vocab, inv_relation_vocab=inv_relation_vocab)
+        self.num_samples = num_samples
         
+         
     def load_triplet(self, triplets, entity_vocab=None, relation_vocab=None, inv_entity_vocab=None,
                      inv_relation_vocab=None):
         """
@@ -465,15 +504,36 @@ class biomedical(data.KnowledgeGraphDataset):
 class biomedicalInductive(data.KnowledgeGraphDataset):
     
     files = [
-        "train1.txt", # such as B
-        "train2.txt",  # such as KEGG train
-        "valid.txt", # such as KEGG valid
-        "test.txt",] # such as KEGG test
+        "train1.txt", # BRG
+        "train2.txt",  # training triplets
+        "valid.txt", # validation triplets
+        "test_graph.txt", # inference graph
+        "test.txt",] # test triplets
 
-    entity_files = ['entity_types.txt', 'entity_names.txt']
+    entity_files = ['entity_types.txt', 'entity_names.txt'] # entity types and names from training graph and test graph
+    
+    def __init__(self, path, include_factgraph=True, fact_as_train=False, verbose=1, files=None, entity_files = None):
+        if files:
+            self.files = files
+            
+        if entity_files:
+            self.entity_files = entity_files
+            
+        path = os.path.expanduser(path)
+        self.path = path
+        self.include_factgraph = include_factgraph
+        self.fact_as_train = fact_as_train
+        
+        chosen_files = self.files if self.include_factgraph else self.files[1:]
+
+        txt_files=[]
+        for x in chosen_files:
+            txt_files.append(os.path.join(self.path, x))
+        
+        self.load_inductive_tsvs(txt_files[:-2], txt_files[-2:], verbose=verbose)
+        self.load_entity_types(path)
 
     def load_inductive_tsvs(self, train_files, test_files, verbose=0):
-        assert len(train_files) == len(test_files)
         inv_train_entity_vocab = {}
         inv_test_entity_vocab = {}
         inv_relation_vocab = {}
@@ -526,7 +586,6 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
         train_entity_vocab, inv_train_entity_vocab = self._standarize_vocab(None, inv_train_entity_vocab)
         test_entity_vocab, inv_test_entity_vocab = self._standarize_vocab(None, inv_test_entity_vocab)
         relation_vocab, inv_relation_vocab = self._standarize_vocab(None, inv_relation_vocab)
-
         self.train_graph = data.Graph(triplets[:num_samples[0]],
                                       num_node=len(train_entity_vocab), num_relation=len(relation_vocab))
         self.valid_graph = self.train_graph
@@ -552,4 +611,6 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
             split = torch_data.Subset(self, range(offset, offset + num_sample))
             splits.append(split)
             offset += num_sample
+        if self.include_factgraph:
+            return splits[1:]
         return splits

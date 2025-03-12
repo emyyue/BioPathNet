@@ -691,3 +691,39 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
             pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
 
         return pred
+    
+    def target(self, batch):
+        # test target
+        batch_size = len(batch)
+        graph = getattr(self, "%s_graph" % self.split)
+        pos_h_index, pos_t_index, pos_r_index = batch.t()
+        any = -torch.ones_like(pos_h_index)
+        node_type = graph.node_type
+
+        pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+        edge_index, num_t_truth = graph.match(pattern)
+        t_truth_index = graph.edge_list[edge_index, 1]
+        pos_index = torch.repeat_interleave(num_t_truth)
+        t_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
+        t_mask[pos_index, t_truth_index] = 0
+        if self.remove_pos:
+            t_mask[pos_index, t_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            t_mask[node_type.unsqueeze(0) != node_type[pos_t_index].unsqueeze(-1)] = 0
+
+        pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+        edge_index, num_h_truth = graph.match(pattern)
+        h_truth_index = graph.edge_list[edge_index, 0]
+        pos_index = torch.repeat_interleave(num_h_truth)
+        h_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
+        h_mask[pos_index, h_truth_index] = 0
+        if self.remove_pos:
+            h_mask[pos_index, h_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            h_mask[node_type.unsqueeze(0) != node_type[pos_h_index].unsqueeze(-1)] = 0
+
+        mask = torch.stack([t_mask, h_mask], dim=1)
+        target = torch.stack([pos_t_index, pos_h_index], dim=1)
+
+        # in case of GPU OOM
+        return mask.cpu(), target.cpu()

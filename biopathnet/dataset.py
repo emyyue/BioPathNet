@@ -593,11 +593,10 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
         self.test_graph = data.Graph(triplets[sum(num_samples[:-2]): sum(num_samples[:-1])], # 4th file
                                      num_node=len(test_entity_vocab), num_relation=len(relation_vocab))
         self.graph = self.train_graph
-        # triplets: train2 + valid + test
         if self.include_factgraph:
-            self.triplets = torch.tensor(triplets[num_samples[0]:sum(num_samples[0:3])] # train2 + valid
+            self.triplets = torch.tensor(triplets[:sum(num_samples[:3])] # train1 + train2 + valid
                                          + triplets[sum(num_samples[:-1]):])
-            self.num_samples = num_samples[1:3] + num_samples[4:]
+            self.num_samples = num_samples[:3] + num_samples[4:]
         else:
             self.triplets = torch.tensor(triplets[:sum(num_samples[:2])] + triplets[sum(num_samples[:3]):])
             self.num_samples = num_samples[:2] + num_samples[3:]

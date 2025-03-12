@@ -524,10 +524,8 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
         self.include_factgraph = include_factgraph
         self.fact_as_train = fact_as_train
         
-        chosen_files = self.files if self.include_factgraph else self.files[1:]
-
         txt_files=[]
-        for x in chosen_files:
+        for x in self.files:
             txt_files.append(os.path.join(self.path, x))
         
         self.load_inductive_tsvs(txt_files[:-2], txt_files[-2:], verbose=verbose)
@@ -593,13 +591,11 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
         self.test_graph = data.Graph(triplets[sum(num_samples[:-2]): sum(num_samples[:-1])], # 4th file
                                      num_node=len(test_entity_vocab), num_relation=len(relation_vocab))
         self.graph = self.train_graph
-        if self.include_factgraph:
-            self.triplets = torch.tensor(triplets[num_samples[0]:sum(num_samples[0:3])] # train2 + valid
+        
+        self.triplets = torch.tensor(triplets[num_samples[0]:sum(num_samples[0:3])] # train2 + valid
                                          + triplets[sum(num_samples[:-1]):]) # test
-            self.num_samples = num_samples[1:3] + num_samples[4:]
-        else:
-            self.triplets = torch.tensor(triplets[:sum(num_samples[:2])] + triplets[sum(num_samples[:3]):])
-            self.num_samples = num_samples[:2] + num_samples[3:]
+        self.num_samples = num_samples[1:3] + num_samples[4:]
+        
         self.train_entity_vocab = train_entity_vocab
         self.test_entity_vocab = test_entity_vocab
         self.relation_vocab = relation_vocab
@@ -649,6 +645,5 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
             split = torch_data.Subset(self, range(offset, offset + num_sample))
             splits.append(split)
             offset += num_sample
-        if self.include_factgraph:
-            return splits[1:]
-        return splits
+
+        return splits[1:]

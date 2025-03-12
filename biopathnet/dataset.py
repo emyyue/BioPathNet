@@ -586,14 +586,21 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
         train_entity_vocab, inv_train_entity_vocab = self._standarize_vocab(None, inv_train_entity_vocab)
         test_entity_vocab, inv_test_entity_vocab = self._standarize_vocab(None, inv_test_entity_vocab)
         relation_vocab, inv_relation_vocab = self._standarize_vocab(None, inv_relation_vocab)
-        self.train_graph = data.Graph(triplets[:num_samples[0]],
+        
+        self.train_graph = data.Graph(triplets[:sum(num_samples[:-3])],
                                       num_node=len(train_entity_vocab), num_relation=len(relation_vocab))
         self.valid_graph = self.train_graph
-        self.test_graph = data.Graph(triplets[sum(num_samples[:2]): sum(num_samples[:3])],
+        self.test_graph = data.Graph(triplets[sum(num_samples[:-2]): sum(num_samples[:-1])], # 4th file
                                      num_node=len(test_entity_vocab), num_relation=len(relation_vocab))
         self.graph = self.train_graph
-        self.triplets = torch.tensor(triplets[:sum(num_samples[:2])] + triplets[sum(num_samples[:3]):])
-        self.num_samples = num_samples[:2] + num_samples[3:]
+        # triplets: train2 + valid + test
+        if self.include_factgraph:
+            self.triplets = torch.tensor(triplets[num_samples[0]:sum(num_samples[1:3])] # train2 + valid
+                                         + triplets[sum(num_samples[:-1]):])
+            self.num_samples = num_samples[1:3] + num_samples[4:]
+        else:
+            self.triplets = torch.tensor(triplets[:sum(num_samples[:2])] + triplets[sum(num_samples[:3]):])
+            self.num_samples = num_samples[:2] + num_samples[3:]
         self.train_entity_vocab = train_entity_vocab
         self.test_entity_vocab = test_entity_vocab
         self.relation_vocab = relation_vocab

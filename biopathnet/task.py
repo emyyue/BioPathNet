@@ -63,6 +63,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             dataset = train_set.dataset
         else:
             dataset = train_set
+        import pdb; pdb.set_trace()
         self.num_entity = dataset.num_entity
         self.num_relation = dataset.num_relation
         self.register_buffer("graph", dataset.graph)
@@ -603,3 +604,49 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
 
         # in case of GPU OOM
         return mask.cpu(), target.cpu()
+
+
+@R.register("tasks.KnowledgeGraphCompletionBiomedInductive")
+class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, core.Configurable):
+
+    def __init__(self, model, criterion="bce",
+                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10"),
+                 num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
+                 heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
+                 fact_ratio=None, sample_weight=True,
+                 full_batch_eval=False, 
+                 remove_pos=True):
+        super(KnowledgeGraphCompletionBiomedInductive, self).__init__(model=model, criterion=criterion, metric=metric, 
+                                                             num_negative=num_negative, margin=margin,
+                                                             adversarial_temperature=adversarial_temperature, 
+                                                             strict_negative=strict_negative,
+                                                             filtered_ranking=filtered_ranking, fact_ratio=fact_ratio,
+                                                             sample_weight=sample_weight, full_batch_eval=full_batch_eval)
+        self.heterogeneous_negative = heterogeneous_negative
+        self.heterogeneous_evaluation = heterogeneous_evaluation
+        self.remove_pos = remove_pos
+        
+    def preprocess(self, train_set, valid_set, test_set):
+        if isinstance(train_set, torch_data.Subset):
+            dataset = train_set.dataset
+        else:
+            dataset = train_set
+        self.num_entity = dataset.num_entity
+        self.num_relation = dataset.num_relation
+        self.register_buffer("fact_graph", dataset.graph)
+
+        if self.sample_weight:
+            degree_hr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)
+            degree_tr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)
+            for h, t, r in train_set:
+                degree_hr[h, r] += 1
+                degree_tr[t, r] += 1
+            self.register_buffer("degree_hr", degree_hr)
+            self.register_buffer("degree_tr", degree_tr)
+
+
+        self.register_buffer("train_graph", dataset.train_graph)
+        self.register_buffer("valid_graph", dataset.valid_graph)
+        self.register_buffer("test_graph", dataset.test_graph)
+
+        return train_set, valid_set, test_set

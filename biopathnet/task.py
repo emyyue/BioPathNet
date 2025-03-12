@@ -750,4 +750,68 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
             metric[name] = score
 
         return metric
+
+
+    @torch.no_grad()
+    def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
+        batch_size = len(pos_h_index)
+        any = -torch.ones_like(pos_h_index)
+        graph = getattr(self, "%s_graph" % self.split)
+        node_type = graph.node_type
+        fact_graph = graph
+        
+        ####################### 
+        # sample negative heads # (pos_h, r, neg_t)
+        ####################### 
+        pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+        pattern = pattern[:batch_size // 2]
+        pos_h_type = node_type[pattern[:, 0]]
+        
+        # Get positive indices
+        edge_index, num_t_truth = fact_graph.match(pattern)
+        t_truth_index = fact_graph.edge_list[edge_index, 1]
+        pos_index = torch.repeat_interleave(num_t_truth)
+        
+        # remove undesired node type
+        if self.heterogeneous_negative:
+            pos_t_type = node_type[pos_t_index[:batch_size // 2]]
+            t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
+        else:
+            t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+        # remove positive
+        t_mask[pos_index, t_truth_index] = 0
+        
+        # variadic sampling of negatives uniformly
+        neg_t_candidate = t_mask.nonzero()[:, 1]
+        num_t_candidate = t_mask.sum(dim=-1)
+        neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
+
+
+        ####################### 
+        # sample negative heads # (neg_h, r-1, pos_t)
+        ####################### 
+        pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+        pattern = pattern[batch_size // 2:]
+        pos_t_type = node_type[pattern[:, 2]]
+        
+        edge_index, num_h_truth = fact_graph.match(pattern)
+        h_truth_index = fact_graph.edge_list[edge_index, 0]
+            
+        pos_index = torch.repeat_interleave(num_h_truth)
+        
+        # remove undesired node type
+        if self.heterogeneous_negative:
+            pos_h_type = node_type[pos_h_index[batch_size // 2:]]
+            h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
+        else:
+            h_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+        # remove positive
+        h_mask[pos_index, h_truth_index] = 0
+        
+        # variadic sampling of negatives uniformly
+        neg_h_candidate = h_mask.nonzero()[:, 1]
+        num_h_candidate = h_mask.sum(dim=-1)
+        neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
     
+        neg_index = torch.cat([neg_t_index, neg_h_index])
+        return neg_index

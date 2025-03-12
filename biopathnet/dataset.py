@@ -608,6 +608,38 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
         self.inv_test_entity_vocab = inv_test_entity_vocab
         self.inv_relation_vocab = inv_relation_vocab
 
+    def load_entity_types(self, path) -> None:
+        inv_train_type_vocab = {}
+        inv_test_type_vocab = {}
+        node_type_train = {}
+        node_type_test = {}
+        # read in node types
+        with open(os.path.join(path, self.entity_files[0]), "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                entity_token, type_token = line.strip().split()
+                if type_token not in inv_train_type_vocab:
+                    inv_train_type_vocab[type_token] = len(inv_train_type_vocab)
+                if type_token not in inv_test_type_vocab:
+                    inv_test_type_vocab[type_token] = len(inv_test_type_vocab)
+                if entity_token in self.inv_train_entity_vocab:
+                    node_type_train[self.inv_train_entity_vocab[entity_token]] = inv_train_type_vocab[type_token]
+                if entity_token in self.inv_test_entity_vocab:
+                    node_type_test[self.inv_test_entity_vocab[entity_token]] = inv_test_type_vocab[type_token]
+
+        assert self.test_graph.num_node == len(node_type_test)
+        assert self.train_graph.num_node == len(node_type_train)
+        _, node_type_train = zip(*sorted(node_type_train.items()))
+        _, node_type_test = zip(*sorted(node_type_test.items()))
+
+        # train_graph, valid_graph and graph are all the same
+        for g in [self.train_graph, self.graph, self.valid_graph]:
+            with g.node():
+                g.node_type = torch.tensor(node_type_train)
+        # test_graph
+        with self.test_graph.node():
+            self.test_graph.node_type = torch.tensor(node_type_test)
+
     def __getitem__(self, index):
         return self.triplets[index]
 

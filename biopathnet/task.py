@@ -650,3 +650,44 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
         self.register_buffer("test_graph", dataset.test_graph)
 
         return train_set, valid_set, test_set
+    
+    def predict(self, batch, all_loss=None, metric=None):
+        pos_h_index, pos_t_index, pos_r_index = batch.t()
+        batch_size = len(batch)
+        graph = getattr(self, "%s_graph" % self.split)
+
+        if all_loss is None:
+            # test
+            all_index = torch.arange(graph.num_node, device=self.device)
+            t_preds = []
+            h_preds = []
+            num_negative = graph.num_node if self.full_batch_eval else self.num_negative
+            for neg_index in all_index.split(num_negative):
+                r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
+                h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
+                t_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+                t_preds.append(t_pred)
+            t_pred = torch.cat(t_preds, dim=-1)
+            for neg_index in all_index.split(num_negative):
+                r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
+                t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
+                h_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+                h_preds.append(h_pred)
+            h_pred = torch.cat(h_preds, dim=-1)
+            pred = torch.stack([t_pred, h_pred], dim=1)
+            # in case of GPU OOM
+            pred = pred.cpu()
+        else:
+            # train
+            if self.strict_negative:
+                neg_index = self._strict_negative(pos_h_index, pos_t_index, pos_r_index)
+            else:
+                neg_index = torch.randint(self.num_entity, (batch_size, self.num_negative), device=self.device)
+            h_index = pos_h_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+            t_index = pos_t_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+            r_index = pos_r_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+            t_index[:batch_size // 2, 1:] = neg_index[:batch_size // 2]
+            h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
+            pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+
+        return pred

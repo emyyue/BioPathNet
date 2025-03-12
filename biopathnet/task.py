@@ -63,7 +63,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             dataset = train_set.dataset
         else:
             dataset = train_set
-        import pdb; pdb.set_trace()
         self.num_entity = dataset.num_entity
         self.num_relation = dataset.num_relation
         self.register_buffer("graph", dataset.graph)

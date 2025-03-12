@@ -512,7 +512,7 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
 
     entity_files = ['entity_types.txt', 'entity_names.txt'] # entity types and names from training graph and test graph
     
-    def __init__(self, path, include_factgraph=True, fact_as_train=False, verbose=1, files=None, entity_files = None):
+    def __init__(self, path,  verbose=1, files=None, entity_files = None):
         if files:
             self.files = files
             
@@ -521,8 +521,6 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
             
         path = os.path.expanduser(path)
         self.path = path
-        self.include_factgraph = include_factgraph
-        self.fact_as_train = fact_as_train
         
         txt_files=[]
         for x in self.files:
@@ -645,5 +643,4 @@ class biomedicalInductive(data.KnowledgeGraphDataset):
             split = torch_data.Subset(self, range(offset, offset + num_sample))
             splits.append(split)
             offset += num_sample
-
-        return splits[1:]
+        return splits

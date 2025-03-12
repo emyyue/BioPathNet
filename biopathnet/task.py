@@ -741,20 +741,8 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
             elif _metric == "mrr":
                 score = (1 / ranking.float()).mean()
             elif _metric.startswith("hits@"):
-                values = _metric[5:].split("_")
-                threshold = int(values[0])
-                if len(values) > 1:
-                    num_sample = int(values[1])
-                    # unbiased estimation
-                    fp_rate = (ranking - 1).float() / mask.sum(dim=-1)
-                    score = 0
-                    for i in range(threshold):
-                        # choose i false positive from num_sample negatives
-                        num_comb = math.factorial(num_sample) / math.factorial(i) / math.factorial(num_sample - i)
-                        score += num_comb * (fp_rate ** i) * ((1 - fp_rate) ** (num_sample - i))
-                    score = score.mean()
-                else:
-                    score = (ranking <= threshold).float().mean()
+                threshold = int(_metric[5:])
+                score = (ranking <= threshold).float().mean()
             else:
                 raise ValueError("Unknown metric `%s`" % _metric)
 

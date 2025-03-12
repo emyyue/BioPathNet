@@ -4,7 +4,7 @@ dataset:
   class: biomedicalInductive
   path: data/mock_inductive
 
-task: 
+task:
   class: KnowledgeGraphCompletionBiomedInductive
   model:
     class: NBFNet
@@ -35,5 +35,6 @@ engine:
   
 train:
   num_epoch: 5
+  
   
 metric: mrr

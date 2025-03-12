@@ -1,0 +1,3 @@
+pathway23	GO:annotation	gene13
+pathway25	GO:annotation	gene14
+pathway25	GO:annotation	gene9

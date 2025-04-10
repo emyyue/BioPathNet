@@ -607,18 +607,18 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
 
 @R.register("tasks.KnowledgeGraphCompletionBiomedInductive")
 class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, core.Configurable):
-  """
-  Inductive reasoning class for biomedical data.
-  
-  This method is inherited from the KnowledgeGraphCompletionBiomed class and 
-  performs inductive reasoning. Unlike traditional training—where the inference 
-  and training graphs are the same—this implementation uses a distinct inference 
-  graph.
-  
-  Conceptually, the same functions are available, but this method operates on 
-  the separate training and inference graphs during training and testing time, 
-  respectively.
-  """
+    """
+    Inductive reasoning class for biomedical data.
+    
+    This method is inherited from the KnowledgeGraphCompletionBiomed class and 
+    performs inductive reasoning. Unlike traditional training—where the inference 
+    and training graphs are the same—this implementation uses a distinct inference 
+    graph.
+    
+    Conceptually, the same functions are available, but this method operates on 
+    the separate training and inference graphs during training and testing time, 
+    respectively.
+    """
 
     def __init__(self, model, criterion="bce",
                  metric=("mr", "mrr", "hits@1", "hits@3", "hits@10"),

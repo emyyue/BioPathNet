@@ -552,14 +552,16 @@ class BiomedicalInductive(data.KnowledgeGraphDataset):
         self.load_entity_types(path)
 
     def load_inductive_tsvs(self, train_files, test_files, verbose=0) -> None:
-    """
-    Load training and inference data from TSV files for inductive reasoning.
+        """
+        Load training and inference data from TSV files for inductive reasoning.
 
-    This function reads TSV files from two lists: one denoting the files for
-    training and another for the testing. Files for training include train1.txt, 
-    train2.txt, with the validation triplets on the training graph in valid.txt. 
-    Files for testing are test_graph.txt and test.txt.  Further, the training and 
-    testing entity vocabularies are built, as well as the shared relation vocabulary.
+        This function reads TSV files from two lists: one denoting the files for
+        training and another for the testing. Files for training include train1.txt, 
+        train2.txt, with the validation triplets on the training graph in valid.txt. 
+        Files for testing are test_graph.txt and test.txt.  Further, the training and 
+        testing entity vocabularies are built, as well as the shared relation vocabulary.
+        """
+    
         inv_train_entity_vocab = {}
         inv_test_entity_vocab = {}
         inv_relation_vocab = {}
@@ -612,11 +614,11 @@ class BiomedicalInductive(data.KnowledgeGraphDataset):
         train_entity_vocab, inv_train_entity_vocab = self._standarize_vocab(None, inv_train_entity_vocab)
         test_entity_vocab, inv_test_entity_vocab = self._standarize_vocab(None, inv_test_entity_vocab)
         relation_vocab, inv_relation_vocab = self._standarize_vocab(None, inv_relation_vocab)
-        
-        self.train_graph = data.Graph(triplets[:sum(num_samples[:-3])],
+
         # a BRG can be provided (train1.txt) but is not necessary. 
         # This makes sure the training graph is train1.txt + train2.txt or 
         # if absent only train2.txt 
+        self.train_graph = data.Graph(triplets[:sum(num_samples[:-3])],
                                       num_node=len(train_entity_vocab), num_relation=len(relation_vocab))
         self.valid_graph = self.train_graph
         self.test_graph = data.Graph(triplets[sum(num_samples[:-2]): sum(num_samples[:-1])], # 4th file

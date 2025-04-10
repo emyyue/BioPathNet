@@ -615,19 +615,19 @@ class BiomedicalInductive(data.KnowledgeGraphDataset):
         test_entity_vocab, inv_test_entity_vocab = self._standarize_vocab(None, inv_test_entity_vocab)
         relation_vocab, inv_relation_vocab = self._standarize_vocab(None, inv_relation_vocab)
 
-        # a BRG can be provided (train1.txt) but is not necessary. 
-        # This makes sure the training graph is train1.txt + train2.txt or 
-        # if absent only train2.txt 
-        self.train_graph = data.Graph(triplets[:sum(num_samples[:-3])],
+        self.train_graph = data.Graph(triplets[:sum(num_samples[:2])], # train1 + train2 
                                       num_node=len(train_entity_vocab), num_relation=len(relation_vocab))
         self.valid_graph = self.train_graph
-        self.test_graph = data.Graph(triplets[sum(num_samples[:-2]): sum(num_samples[:-1])], # 4th file
+        self.test_graph = data.Graph(triplets[sum(num_samples[:3]): sum(num_samples[:4])], # 4th file - test_graph
                                      num_node=len(test_entity_vocab), num_relation=len(relation_vocab))
         self.graph = self.train_graph
-        
-        self.triplets = torch.tensor(triplets[num_samples[0]:sum(num_samples[0:3])] # train2 + valid
+     
+        self.triplets = torch.tensor(triplets[:sum(num_samples[0:3])] # train2 + valid
                                          + triplets[sum(num_samples[:-1]):]) # test
-        self.num_samples = num_samples[1:3] + num_samples[4:]
+        self.num_samples = num_samples[:3] + num_samples[4:]
+        # self.triplets = torch.tensor(triplets[num_samples[0]:sum(num_samples[:3])] # train2 + valid
+        #                                  + triplets[sum(num_samples[:-1]):]) # test
+        # self.num_samples = num_samples[1:3] + num_samples[4:] 
         
         self.train_entity_vocab = train_entity_vocab
         self.test_entity_vocab = test_entity_vocab
@@ -678,4 +678,4 @@ class BiomedicalInductive(data.KnowledgeGraphDataset):
             split = torch_data.Subset(self, range(offset, offset + num_sample))
             splits.append(split)
             offset += num_sample
-        return splits
+        return splits[1:]

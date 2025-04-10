@@ -119,7 +119,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # Perform random walks and build k-matrix
             with self.fact_graph.graph():
                 self.fact_graph.k_mat = self.build_k_rw(rw_nodetypes, n_rw=self.sans_rw, k_hop=self.sans_hops)
-                
+
         return train_set, valid_set, test_set
         
     def _get_adj_mat(self):
@@ -320,7 +320,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             pred = torch.stack([t_pred, h_pred], dim=1)
             # in case of GPU OOM
             pred = pred.cpu()
-                
         else:
             # train
             if self.strict_negative:
@@ -339,6 +338,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
     
     @torch.no_grad()
     def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
+        torch.manual_seed(0)
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         node_type = self.fact_graph.node_type
@@ -661,6 +661,64 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
         self.register_buffer("test_graph", dataset.test_graph)
 
         return train_set, valid_set, test_set
+
+    
+    def target(self, batch):
+        # test target
+        batch_size = len(batch)
+        graph = getattr(self, "%s_graph" % self.split)
+        pos_h_index, pos_t_index, pos_r_index = batch.t()
+        any = -torch.ones_like(pos_h_index)
+        node_type = graph.node_type
+
+        pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+        edge_index, num_t_truth = graph.match(pattern)
+        t_truth_index = graph.edge_list[edge_index, 1]
+        pos_index = torch.repeat_interleave(num_t_truth)
+        t_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
+        if self.remove_pos:
+            t_mask[pos_index, t_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            t_mask[node_type.unsqueeze(0) != node_type[pos_t_index].unsqueeze(-1)] = 0
+
+        pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+        edge_index, num_h_truth = graph.match(pattern)
+        h_truth_index = graph.edge_list[edge_index, 0]
+        pos_index = torch.repeat_interleave(num_h_truth)
+        h_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
+        if self.remove_pos:
+            h_mask[pos_index, h_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            h_mask[node_type.unsqueeze(0) != node_type[pos_h_index].unsqueeze(-1)] = 0
+
+        mask = torch.stack([t_mask, h_mask], dim=1)
+        target = torch.stack([pos_t_index, pos_h_index], dim=1)
+
+        # in case of GPU OOM
+        return mask.cpu(), target.cpu()
+    
+    def evaluate(self, pred, target):
+        mask, target = target
+
+        pos_pred = pred.gather(-1, target.unsqueeze(-1))
+        ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
+
+        metric = {}
+        for _metric in self.metric:
+            if _metric == "mr":
+                score = ranking.float().mean()
+            elif _metric == "mrr":
+                score = (1 / ranking.float()).mean()
+            elif _metric.startswith("hits@"):
+                threshold = int(_metric[5:])
+                score = (ranking <= threshold).float().mean()
+            else:
+                raise ValueError("Unknown metric `%s`" % _metric)
+
+            name = tasks._get_metric_name(_metric)
+            metric[name] = score
+
+        return metric
     
     def predict(self, batch, all_loss=None, metric=None):
         pos_h_index, pos_t_index, pos_r_index = batch.t()
@@ -700,71 +758,11 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
             t_index[:batch_size // 2, 1:] = neg_index[:batch_size // 2]
             h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
             pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
-
         return pred
-    
-    def target(self, batch):
-        # test target
-        batch_size = len(batch)
-        graph = getattr(self, "%s_graph" % self.split)
-        pos_h_index, pos_t_index, pos_r_index = batch.t()
-        any = -torch.ones_like(pos_h_index)
-        node_type = graph.node_type
-
-        pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
-        edge_index, num_t_truth = graph.match(pattern)
-        t_truth_index = graph.edge_list[edge_index, 1]
-        pos_index = torch.repeat_interleave(num_t_truth)
-        t_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
-        t_mask[pos_index, t_truth_index] = 0
-        if self.remove_pos:
-            t_mask[pos_index, t_truth_index] = 0
-        if self.heterogeneous_evaluation:
-            t_mask[node_type.unsqueeze(0) != node_type[pos_t_index].unsqueeze(-1)] = 0
-
-        pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
-        edge_index, num_h_truth = graph.match(pattern)
-        h_truth_index = graph.edge_list[edge_index, 0]
-        pos_index = torch.repeat_interleave(num_h_truth)
-        h_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
-        h_mask[pos_index, h_truth_index] = 0
-        if self.remove_pos:
-            h_mask[pos_index, h_truth_index] = 0
-        if self.heterogeneous_evaluation:
-            h_mask[node_type.unsqueeze(0) != node_type[pos_h_index].unsqueeze(-1)] = 0
-
-        mask = torch.stack([t_mask, h_mask], dim=1)
-        target = torch.stack([pos_t_index, pos_h_index], dim=1)
-
-        # in case of GPU OOM
-        return mask.cpu(), target.cpu()
-    
-    def evaluate(self, pred, target):
-        mask, target = target
-
-        pos_pred = pred.gather(-1, target.unsqueeze(-1))
-        ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
-
-        metric = {}
-        for _metric in self.metric:
-            if _metric == "mr":
-                score = ranking.float().mean()
-            elif _metric == "mrr":
-                score = (1 / ranking.float()).mean()
-            elif _metric.startswith("hits@"):
-                threshold = int(_metric[5:])
-                score = (ranking <= threshold).float().mean()
-            else:
-                raise ValueError("Unknown metric `%s`" % _metric)
-
-            name = tasks._get_metric_name(_metric)
-            metric[name] = score
-
-        return metric
-
 
     @torch.no_grad()
     def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
+        torch.manual_seed(0)
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         graph = getattr(self, "%s_graph" % self.split)

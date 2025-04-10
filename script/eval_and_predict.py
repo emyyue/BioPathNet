@@ -1,3 +1,8 @@
+# script to load the trained model
+# first, evaluates on the validation and full test set
+# then evaluates on the validation and test_pred.txt
+# finally predicts for test_pred.txt
+# to double check with performances seen during training if all loaded correctly
 import os
 import sys
 import pprint

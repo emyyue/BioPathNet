@@ -1,7 +1,7 @@
 output_dir: experiments/
 
 dataset:
-  class: biomedicalInductive
+  class: BiomedicalInductive
   path: data/mock_inductive
 
 task: 

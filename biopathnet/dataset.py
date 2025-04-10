@@ -500,8 +500,29 @@ class biomedical(data.KnowledgeGraphDataset):
         else:
             return None
 
-@R.register("datasets.biomedicalInductive")
-class biomedicalInductive(data.KnowledgeGraphDataset):
+@R.register("datasets.BiomedicalInductive")
+class BiomedicalInductive(data.KnowledgeGraphDataset):
+    """
+    Data class for inductive reasoning in biomedical knowledge graphs.
+
+    This class is designed to support inductive link prediction, where the 
+    training and inference graphs are disjoint. It is inherited from the 
+    `KnowledgeGraphDataset` base class.
+
+    Attributes:
+        train_graph (Graph): The graph used during training, built using train1.txt (BRG - if available) and train2.txt.
+        valid_graph (Graph): The same as train_graph.
+        test_graph (Graph): The graph used during testing time, build using test_graph.txt.
+        train_entity_vocab (Dict[str, int]): Vocabulary mapping of training graph mapping for biomedical entities.
+        test_entity_vocab (Dict[str, int]): Vocabulary mapping of training graph mapping for biomedical entities.
+        relation_vocab (Dict[str, int]): Shared vocabulary mapping for biomedical relations.
+        inv_train_entity_vocab (Dict[int, str]): Inverse vocabulary mapping.
+
+
+    Methods:
+        load_inductive_tsvs(): Loads the biomedical files and creates the different graphs and vocabularies.
+        load_entity_types(): Loads the entity types of nodes from all files.
+    """
     
     files = [
         "train1.txt", # BRG

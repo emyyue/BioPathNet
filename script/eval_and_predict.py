@@ -9,7 +9,7 @@ from torchdrug.utils import comm
 from torch.utils import data as torch_data
 from torchdrug import data, core, utils
 import pandas as pd
-
+import copy
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from biopathnet import dataset, layer, model, task, util
 import numpy as np
@@ -143,7 +143,6 @@ def test(cfg, solver):
     solver.evaluate("test")
     
 def load_dataset_and_solver(cfg, test_file):
-    import copy
     cfg_local = copy.deepcopy(cfg)
     if 'files' not in cfg_local.dataset:
         cfg_local.dataset['files'] = ['train1.txt', 'train2.txt', 'valid.txt', test_file]

@@ -529,11 +529,12 @@ class BiomedicalInductive(data.KnowledgeGraphDataset):
         "train2.txt",  # training triplets
         "valid.txt", # validation triplets
         "test_graph.txt", # inference graph
-        "test.txt",] # test triplets
+        "test.txt",  # test triplets
+    ]
 
     entity_files = ['entity_types.txt', 'entity_names.txt'] # entity types and names from training graph and test graph
     
-    def __init__(self, path,  verbose=1, files=None, entity_files = None):
+    def __init__(self, path, verbose=1, files=None, entity_files=None):
         if files:
             self.files = files
             
@@ -550,7 +551,7 @@ class BiomedicalInductive(data.KnowledgeGraphDataset):
         self.load_inductive_tsvs(txt_files[:-2], txt_files[-2:], verbose=verbose)
         self.load_entity_types(path)
 
-    def load_inductive_tsvs(self, train_files, test_files, verbose=0):
+    def load_inductive_tsvs(self, train_files, test_files, verbose=0) -> None:
         inv_train_entity_vocab = {}
         inv_test_entity_vocab = {}
         inv_relation_vocab = {}
@@ -654,7 +655,7 @@ class BiomedicalInductive(data.KnowledgeGraphDataset):
         with self.test_graph.node():
             self.test_graph.node_type = torch.tensor(node_type_test)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int):
         return self.triplets[index]
 
     def split(self):

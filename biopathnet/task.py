@@ -338,7 +338,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
     
     @torch.no_grad()
     def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
-        torch.manual_seed(0)
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         node_type = self.fact_graph.node_type
@@ -659,6 +658,9 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
         self.register_buffer("train_graph", dataset.train_graph)
         self.register_buffer("valid_graph", dataset.valid_graph)
         self.register_buffer("test_graph", dataset.test_graph)
+        self.register_buffer("full_valid_graph", dataset.full_valid_graph)
+        self.register_buffer("full_test_graph", dataset.full_test_graph)
+
 
         return train_set, valid_set, test_set
 
@@ -666,14 +668,19 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
     def target(self, batch):
         # test target
         batch_size = len(batch)
+        # use the right graph to match the pattern for filtered protocol
+        if self.split == "valid":
+            match_graph = getattr(self, "full_valid_graph")
+        elif self.split == "test":
+            match_graph = getattr(self, "full_test_graph")
         graph = getattr(self, "%s_graph" % self.split)
         pos_h_index, pos_t_index, pos_r_index = batch.t()
         any = -torch.ones_like(pos_h_index)
         node_type = graph.node_type
 
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
-        edge_index, num_t_truth = graph.match(pattern)
-        t_truth_index = graph.edge_list[edge_index, 1]
+        edge_index, num_t_truth = match_graph.match(pattern)
+        t_truth_index = match_graph.edge_list[edge_index, 1]
         pos_index = torch.repeat_interleave(num_t_truth)
         t_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
         if self.remove_pos:
@@ -682,8 +689,8 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
             t_mask[node_type.unsqueeze(0) != node_type[pos_t_index].unsqueeze(-1)] = 0
 
         pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
-        edge_index, num_h_truth = graph.match(pattern)
-        h_truth_index = graph.edge_list[edge_index, 0]
+        edge_index, num_h_truth = match_graph.match(pattern)
+        h_truth_index = match_graph.edge_list[edge_index, 0]
         pos_index = torch.repeat_interleave(num_h_truth)
         h_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
         if self.remove_pos:
@@ -762,7 +769,6 @@ class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, co
 
     @torch.no_grad()
     def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
-        torch.manual_seed(0)
         batch_size = len(pos_h_index)
         any = -torch.ones_like(pos_h_index)
         graph = getattr(self, "%s_graph" % self.split)

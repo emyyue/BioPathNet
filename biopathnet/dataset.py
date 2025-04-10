@@ -620,14 +620,21 @@ class BiomedicalInductive(data.KnowledgeGraphDataset):
         self.valid_graph = self.train_graph
         self.test_graph = data.Graph(triplets[sum(num_samples[:3]): sum(num_samples[:4])], # 4th file - test_graph
                                      num_node=len(test_entity_vocab), num_relation=len(relation_vocab))
-        self.graph = self.train_graph
-     
+        self.graph = self.train_graph     
         self.triplets = torch.tensor(triplets[:sum(num_samples[0:3])] # train2 + valid
                                          + triplets[sum(num_samples[:-1]):]) # test
         self.num_samples = num_samples[:3] + num_samples[4:]
-        # self.triplets = torch.tensor(triplets[num_samples[0]:sum(num_samples[:3])] # train2 + valid
-        #                                  + triplets[sum(num_samples[:-1]):]) # test
-        # self.num_samples = num_samples[1:3] + num_samples[4:] 
+        
+        # having a filtered protocol during evaluation create two graphs:
+        # one for valid: train1 + train2 + valid
+        # one for test: test_graph + test
+        # then during evaluation, remove all positive triplets
+        # (see function - target)
+        self.full_valid_graph = data.Graph(triplets[:sum(num_samples[:3])], # train1 + train2 + valid
+                num_node=len(train_entity_vocab), num_relation=len(relation_vocab))
+        self.full_test_graph = data.Graph(triplets[sum(num_samples[:3]):], # test_graph + test
+                num_node=len(test_entity_vocab), num_relation=len(relation_vocab))
+        
         
         self.train_entity_vocab = train_entity_vocab
         self.test_entity_vocab = test_entity_vocab

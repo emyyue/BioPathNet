@@ -40,6 +40,8 @@ def solver_load(checkpoint, load_optimizer=True):
     state["model"].pop("train_graph", 0)
     state["model"].pop("valid_graph", 0)
     state["model"].pop("test_graph", 0)
+    state["model"].pop("full_valid_graph", 0)
+    state["model"].pop("full_test_graph", 0)
     # load without
     solver.model.load_state_dict(state["model"], strict=False)
 

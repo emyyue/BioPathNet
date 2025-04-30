@@ -1,0 +1,8 @@
+pathway23	GO:annotation	gene13
+pathway23	GO:annotation	gene11
+pathway25	GO:annotation	gene14
+pathway25	GO:annotation	gene9
+pathway24	GO:annotation	gene10
+pathway24	GO:annotation	gene8
+pathway26	GO:annotation	gene11
+pathway26	GO:annotation	gene13

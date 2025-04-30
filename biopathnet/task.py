@@ -119,7 +119,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             # Perform random walks and build k-matrix
             with self.fact_graph.graph():
                 self.fact_graph.k_mat = self.build_k_rw(rw_nodetypes, n_rw=self.sans_rw, k_hop=self.sans_hops)
-                
+
         return train_set, valid_set, test_set
         
     def _get_adj_mat(self):
@@ -320,7 +320,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
             pred = torch.stack([t_pred, h_pred], dim=1)
             # in case of GPU OOM
             pred = pred.cpu()
-                
         else:
             # train
             if self.strict_negative:
@@ -603,3 +602,231 @@ class KnowledgeGraphCompletionBiomedEval(KnowledgeGraphCompletionBiomed, core.Co
 
         # in case of GPU OOM
         return mask.cpu(), target.cpu()
+
+
+@R.register("tasks.KnowledgeGraphCompletionBiomedInductive")
+class KnowledgeGraphCompletionBiomedInductive(KnowledgeGraphCompletionBiomed, core.Configurable):
+    """
+    Inductive reasoning class for biomedical data.
+    
+    This method is inherited from the KnowledgeGraphCompletionBiomed class and 
+    performs inductive reasoning. Unlike traditional training—where the inference 
+    and training graphs are the same—this implementation uses a distinct inference 
+    graph.
+    
+    Conceptually, the same functions are available, but this method operates on 
+    the separate training and inference graphs during training and testing time, 
+    respectively.
+    """
+
+    def __init__(self, model, criterion="bce",
+                 metric=("mr", "mrr", "hits@1", "hits@3", "hits@10"),
+                 num_negative=128, margin=6, adversarial_temperature=0, strict_negative=True,
+                 heterogeneous_negative=False, heterogeneous_evaluation=False, filtered_ranking=True,
+                 fact_ratio=None, sample_weight=True,
+                 full_batch_eval=False, 
+                 remove_pos=True):
+        super(KnowledgeGraphCompletionBiomedInductive, self).__init__(model=model, criterion=criterion, metric=metric, 
+                                                             num_negative=num_negative, margin=margin,
+                                                             adversarial_temperature=adversarial_temperature, 
+                                                             strict_negative=strict_negative,
+                                                             filtered_ranking=filtered_ranking, fact_ratio=fact_ratio,
+                                                             sample_weight=sample_weight, full_batch_eval=full_batch_eval)
+        self.heterogeneous_negative = heterogeneous_negative
+        self.heterogeneous_evaluation = heterogeneous_evaluation
+        self.remove_pos = remove_pos
+        
+    def preprocess(self, train_set, valid_set, test_set):
+        if isinstance(train_set, torch_data.Subset):
+            dataset = train_set.dataset
+        else:
+            dataset = train_set
+        self.num_entity = dataset.num_entity
+        self.num_relation = dataset.num_relation
+        self.register_buffer("fact_graph", dataset.graph)
+
+        if self.sample_weight:
+            degree_hr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)
+            degree_tr = torch.zeros(self.num_entity, self.num_relation, dtype=torch.long)
+            for h, t, r in train_set:
+                degree_hr[h, r] += 1
+                degree_tr[t, r] += 1
+            self.register_buffer("degree_hr", degree_hr)
+            self.register_buffer("degree_tr", degree_tr)
+
+
+        self.register_buffer("train_graph", dataset.train_graph)
+        self.register_buffer("valid_graph", dataset.valid_graph)
+        self.register_buffer("test_graph", dataset.test_graph)
+        self.register_buffer("full_valid_graph", dataset.full_valid_graph)
+        self.register_buffer("full_test_graph", dataset.full_test_graph)
+
+
+        return train_set, valid_set, test_set
+
+    
+    def target(self, batch):
+        # test target
+        batch_size = len(batch)
+        # use the right graph to match the pattern for filtered protocol
+        if self.split == "valid":
+            match_graph = getattr(self, "full_valid_graph")
+        elif self.split == "test":
+            match_graph = getattr(self, "full_test_graph")
+        graph = getattr(self, "%s_graph" % self.split)
+        pos_h_index, pos_t_index, pos_r_index = batch.t()
+        any = -torch.ones_like(pos_h_index)
+        node_type = graph.node_type
+
+        pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+        edge_index, num_t_truth = match_graph.match(pattern)
+        t_truth_index = match_graph.edge_list[edge_index, 1]
+        pos_index = torch.repeat_interleave(num_t_truth)
+        t_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
+        if self.remove_pos:
+            t_mask[pos_index, t_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            t_mask[node_type.unsqueeze(0) != node_type[pos_t_index].unsqueeze(-1)] = 0
+
+        pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+        edge_index, num_h_truth = match_graph.match(pattern)
+        h_truth_index = match_graph.edge_list[edge_index, 0]
+        pos_index = torch.repeat_interleave(num_h_truth)
+        h_mask = torch.ones(batch_size, graph.num_node, dtype=torch.bool, device=self.device)
+        if self.remove_pos:
+            h_mask[pos_index, h_truth_index] = 0
+        if self.heterogeneous_evaluation:
+            h_mask[node_type.unsqueeze(0) != node_type[pos_h_index].unsqueeze(-1)] = 0
+
+        mask = torch.stack([t_mask, h_mask], dim=1)
+        target = torch.stack([pos_t_index, pos_h_index], dim=1)
+
+        # in case of GPU OOM
+        return mask.cpu(), target.cpu()
+    
+    def evaluate(self, pred, target):
+        mask, target = target
+
+        pos_pred = pred.gather(-1, target.unsqueeze(-1))
+        ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
+
+        metric = {}
+        for _metric in self.metric:
+            if _metric == "mr":
+                score = ranking.float().mean()
+            elif _metric == "mrr":
+                score = (1 / ranking.float()).mean()
+            elif _metric.startswith("hits@"):
+                threshold = int(_metric[5:])
+                score = (ranking <= threshold).float().mean()
+            else:
+                raise ValueError("Unknown metric `%s`" % _metric)
+
+            name = tasks._get_metric_name(_metric)
+            metric[name] = score
+
+        return metric
+    
+    def predict(self, batch, all_loss=None, metric=None):
+        pos_h_index, pos_t_index, pos_r_index = batch.t()
+        batch_size = len(batch)
+        graph = getattr(self, "%s_graph" % self.split)
+
+        if all_loss is None:
+            # test
+            all_index = torch.arange(graph.num_node, device=self.device)
+            t_preds = []
+            h_preds = []
+            num_negative = graph.num_node if self.full_batch_eval else self.num_negative
+            for neg_index in all_index.split(num_negative):
+                r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
+                h_index, t_index = torch.meshgrid(pos_h_index, neg_index)
+                t_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+                t_preds.append(t_pred)
+            t_pred = torch.cat(t_preds, dim=-1)
+            for neg_index in all_index.split(num_negative):
+                r_index = pos_r_index.unsqueeze(-1).expand(-1, len(neg_index))
+                t_index, h_index = torch.meshgrid(pos_t_index, neg_index)
+                h_pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+                h_preds.append(h_pred)
+            h_pred = torch.cat(h_preds, dim=-1)
+            pred = torch.stack([t_pred, h_pred], dim=1)
+            # in case of GPU OOM
+            pred = pred.cpu()
+        else:
+            # train
+            if self.strict_negative:
+                neg_index = self._strict_negative(pos_h_index, pos_t_index, pos_r_index)
+            else:
+                neg_index = torch.randint(self.num_entity, (batch_size, self.num_negative), device=self.device)
+            h_index = pos_h_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+            t_index = pos_t_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+            r_index = pos_r_index.unsqueeze(-1).repeat(1, self.num_negative + 1)
+            t_index[:batch_size // 2, 1:] = neg_index[:batch_size // 2]
+            h_index[batch_size // 2:, 1:] = neg_index[batch_size // 2:]
+            pred = self.model(graph, h_index, t_index, r_index, all_loss=all_loss, metric=metric)
+        return pred
+
+    @torch.no_grad()
+    def _strict_negative(self, pos_h_index, pos_t_index, pos_r_index):
+        batch_size = len(pos_h_index)
+        any = -torch.ones_like(pos_h_index)
+        graph = getattr(self, "%s_graph" % self.split)
+        node_type = graph.node_type
+        fact_graph = graph
+        
+        ####################### 
+        # sample negative heads # (pos_h, r, neg_t)
+        ####################### 
+        pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
+        pattern = pattern[:batch_size // 2]
+        pos_h_type = node_type[pattern[:, 0]]
+        
+        # Get positive indices
+        edge_index, num_t_truth = fact_graph.match(pattern)
+        t_truth_index = fact_graph.edge_list[edge_index, 1]
+        pos_index = torch.repeat_interleave(num_t_truth)
+        
+        # remove undesired node type
+        if self.heterogeneous_negative:
+            pos_t_type = node_type[pos_t_index[:batch_size // 2]]
+            t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
+        else:
+            t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+        # remove positive
+        t_mask[pos_index, t_truth_index] = 0
+        
+        # variadic sampling of negatives uniformly
+        neg_t_candidate = t_mask.nonzero()[:, 1]
+        num_t_candidate = t_mask.sum(dim=-1)
+        neg_t_index = functional.variadic_sample(neg_t_candidate, num_t_candidate, self.num_negative)
+
+
+        ####################### 
+        # sample negative heads # (neg_h, r-1, pos_t)
+        ####################### 
+        pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
+        pattern = pattern[batch_size // 2:]
+        pos_t_type = node_type[pattern[:, 2]]
+        
+        edge_index, num_h_truth = fact_graph.match(pattern)
+        h_truth_index = fact_graph.edge_list[edge_index, 0]
+            
+        pos_index = torch.repeat_interleave(num_h_truth)
+        
+        # remove undesired node type
+        if self.heterogeneous_negative:
+            pos_h_type = node_type[pos_h_index[batch_size // 2:]]
+            h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
+        else:
+            h_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
+        # remove positive
+        h_mask[pos_index, h_truth_index] = 0
+        
+        # variadic sampling of negatives uniformly
+        neg_h_candidate = h_mask.nonzero()[:, 1]
+        num_h_candidate = h_mask.sum(dim=-1)
+        neg_h_index = functional.variadic_sample(neg_h_candidate, num_h_candidate, self.num_negative)
+    
+        neg_index = torch.cat([neg_t_index, neg_h_index])
+        return neg_index

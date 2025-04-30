@@ -361,10 +361,10 @@ class biomedical(data.KnowledgeGraphDataset):
     """
 
     files = [
-        "train1.txt", # such as biogrid
-        "train2.txt",  # such as KEGG train
-        "valid.txt", # such as KEGG valid
-        "test.txt",] # such as KEGG test
+        "train1.txt", # BRG
+        "train2.txt",  # training triplets
+        "valid.txt", # validation triplets
+        "test.txt",] # test triplets
 
     entity_files = ['entity_types.txt', 'entity_names.txt']
 
@@ -388,7 +388,46 @@ class biomedical(data.KnowledgeGraphDataset):
 
         self.load_tsvs(txt_files, verbose=verbose)
         self.load_entity_types(path)
+
+    def load_tsvs(self, tsv_files, verbose=0):
+        """
+        Load the dataset from multiple tsv files.
+
+        Parameters:
+            tsv_files (list of str): list of file names
+            verbose (int, optional): output verbose level
+        """
+        inv_entity_vocab = {}
+        inv_relation_vocab = {}
+        triplets = []
+        num_samples = []
+
+        for tsv_file in tsv_files:
+            with open(tsv_file, "r") as fin:
+                reader = csv.reader(fin, delimiter="\t")
+                if verbose:
+                    reader = tqdm(reader, "Loading %s" % tsv_file, utils.get_line_count(tsv_file))
+
+                num_sample = 0
+                for tokens in reader:
+                    h_token, r_token, t_token = tokens
+                    if h_token not in inv_entity_vocab:
+                        inv_entity_vocab[h_token] = len(inv_entity_vocab)
+                    h = inv_entity_vocab[h_token]
+                    if r_token not in inv_relation_vocab:
+                        inv_relation_vocab[r_token] = len(inv_relation_vocab)
+                    r = inv_relation_vocab[r_token]
+                    if t_token not in inv_entity_vocab:
+                        inv_entity_vocab[t_token] = len(inv_entity_vocab)
+                    t = inv_entity_vocab[t_token]
+                    triplets.append((h, t, r))
+                    num_sample += 1
+            num_samples.append(num_sample)
+
+        self.load_triplet(triplets, inv_entity_vocab=inv_entity_vocab, inv_relation_vocab=inv_relation_vocab)
+        self.num_samples = num_samples
         
+         
     def load_triplet(self, triplets, entity_vocab=None, relation_vocab=None, inv_entity_vocab=None,
                      inv_relation_vocab=None):
         """
@@ -460,4 +499,190 @@ class biomedical(data.KnowledgeGraphDataset):
             return splits[0]
         else:
             return None
+
+@R.register("datasets.BiomedicalInductive")
+class BiomedicalInductive(data.KnowledgeGraphDataset):
+    """
+    Data class for inductive reasoning in biomedical knowledge graphs.
+
+    This class is designed to support inductive link prediction, where the 
+    training and inference graphs are disjoint. It is inherited from the 
+    `KnowledgeGraphDataset` base class.
+
+    Attributes:
+        train_graph (Graph): The graph used during training, built using train1.txt (BRG - if available) and train2.txt.
+        valid_graph (Graph): The same as train_graph.
+        test_graph (Graph): The graph used during testing time, build using test_graph.txt.
+        train_entity_vocab (Dict[str, int]): Vocabulary mapping of training graph mapping for biomedical entities.
+        test_entity_vocab (Dict[str, int]): Vocabulary mapping of training graph mapping for biomedical entities.
+        relation_vocab (Dict[str, int]): Shared vocabulary mapping for biomedical relations.
+        inv_train_entity_vocab (Dict[int, str]): Inverse vocabulary mapping.
+
+
+    Methods:
+        load_inductive_tsvs(): Loads the biomedical files and creates the different graphs and vocabularies.
+        load_entity_types(): Loads the entity types of nodes from all files.
+    """
     
+    files = [
+        "train1.txt", # BRG
+        "train2.txt",  # training triplets
+        "valid.txt", # validation triplets
+        "test_graph.txt", # inference graph
+        "test.txt",  # test triplets
+    ]
+
+    entity_files = ['entity_types.txt', 'entity_names.txt'] # entity types and names from training graph and test graph
+    
+    def __init__(self, path, verbose=1, files=None, entity_files=None):
+        if files:
+            self.files = files
+            
+        if entity_files:
+            self.entity_files = entity_files
+            
+        path = os.path.expanduser(path)
+        self.path = path
+        
+        txt_files=[]
+        for x in self.files:
+            txt_files.append(os.path.join(self.path, x))
+        
+        self.load_inductive_tsvs(txt_files[:-2], txt_files[-2:], verbose=verbose)
+        self.load_entity_types(path)
+
+    def load_inductive_tsvs(self, train_files, test_files, verbose=0) -> None:
+        """
+        Load training and inference data from TSV files for inductive reasoning.
+
+        This function reads TSV files from two lists: one denoting the files for
+        training and another for the testing. Files for training include train1.txt, 
+        train2.txt, with the validation triplets on the training graph in valid.txt. 
+        Files for testing are test_graph.txt and test.txt.  Further, the training and 
+        testing entity vocabularies are built, as well as the shared relation vocabulary.
+        """
+    
+        inv_train_entity_vocab = {}
+        inv_test_entity_vocab = {}
+        inv_relation_vocab = {}
+        triplets = []
+        num_samples = []
+
+        for txt_file in train_files:
+            with open(txt_file, "r") as fin:
+                reader = csv.reader(fin, delimiter="\t")
+                if verbose:
+                    reader = tqdm(reader, "Loading %s" % txt_file, utils.get_line_count(txt_file))
+
+                num_sample = 0
+                for tokens in reader:
+                    h_token, r_token, t_token = tokens
+                    if h_token not in inv_train_entity_vocab:
+                        inv_train_entity_vocab[h_token] = len(inv_train_entity_vocab)
+                    h = inv_train_entity_vocab[h_token]
+                    if r_token not in inv_relation_vocab:
+                        inv_relation_vocab[r_token] = len(inv_relation_vocab)
+                    r = inv_relation_vocab[r_token]
+                    if t_token not in inv_train_entity_vocab:
+                        inv_train_entity_vocab[t_token] = len(inv_train_entity_vocab)
+                    t = inv_train_entity_vocab[t_token]
+                    triplets.append((h, t, r))
+                    num_sample += 1
+            num_samples.append(num_sample)
+
+        for txt_file in test_files:
+            with open(txt_file, "r") as fin:
+                reader = csv.reader(fin, delimiter="\t")
+                if verbose:
+                    reader = tqdm(reader, "Loading %s" % txt_file, utils.get_line_count(txt_file))
+
+                num_sample = 0
+                for tokens in reader:
+                    h_token, r_token, t_token = tokens
+                    if h_token not in inv_test_entity_vocab:
+                        inv_test_entity_vocab[h_token] = len(inv_test_entity_vocab)
+                    h = inv_test_entity_vocab[h_token]
+                    assert r_token in inv_relation_vocab
+                    r = inv_relation_vocab[r_token]
+                    if t_token not in inv_test_entity_vocab:
+                        inv_test_entity_vocab[t_token] = len(inv_test_entity_vocab)
+                    t = inv_test_entity_vocab[t_token]
+                    triplets.append((h, t, r))
+                    num_sample += 1
+            num_samples.append(num_sample)
+
+        train_entity_vocab, inv_train_entity_vocab = self._standarize_vocab(None, inv_train_entity_vocab)
+        test_entity_vocab, inv_test_entity_vocab = self._standarize_vocab(None, inv_test_entity_vocab)
+        relation_vocab, inv_relation_vocab = self._standarize_vocab(None, inv_relation_vocab)
+
+        self.train_graph = data.Graph(triplets[:sum(num_samples[:2])], # train1 + train2 
+                                      num_node=len(train_entity_vocab), num_relation=len(relation_vocab))
+        self.valid_graph = self.train_graph
+        self.test_graph = data.Graph(triplets[sum(num_samples[:3]): sum(num_samples[:4])], # 4th file - test_graph
+                                     num_node=len(test_entity_vocab), num_relation=len(relation_vocab))
+        self.graph = self.train_graph     
+        self.triplets = torch.tensor(triplets[:sum(num_samples[0:3])] # train2 + valid
+                                         + triplets[sum(num_samples[:-1]):]) # test
+        self.num_samples = num_samples[:3] + num_samples[4:]
+        
+        # having a filtered protocol during evaluation create two graphs:
+        # one for valid: train1 + train2 + valid
+        # one for test: test_graph + test
+        # then during evaluation, remove all positive triplets
+        # (see function - target)
+        self.full_valid_graph = data.Graph(triplets[:sum(num_samples[:3])], # train1 + train2 + valid
+                num_node=len(train_entity_vocab), num_relation=len(relation_vocab))
+        self.full_test_graph = data.Graph(triplets[sum(num_samples[:3]):], # test_graph + test
+                num_node=len(test_entity_vocab), num_relation=len(relation_vocab))
+        
+        
+        self.train_entity_vocab = train_entity_vocab
+        self.test_entity_vocab = test_entity_vocab
+        self.relation_vocab = relation_vocab
+        self.inv_train_entity_vocab = inv_train_entity_vocab
+        self.inv_test_entity_vocab = inv_test_entity_vocab
+        self.inv_relation_vocab = inv_relation_vocab
+
+    def load_entity_types(self, path) -> None:
+        inv_train_type_vocab = {}
+        inv_test_type_vocab = {}
+        node_type_train = {}
+        node_type_test = {}
+        # read in node types
+        with open(os.path.join(path, self.entity_files[0]), "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                entity_token, type_token = line.strip().split()
+                if type_token not in inv_train_type_vocab:
+                    inv_train_type_vocab[type_token] = len(inv_train_type_vocab)
+                if type_token not in inv_test_type_vocab:
+                    inv_test_type_vocab[type_token] = len(inv_test_type_vocab)
+                if entity_token in self.inv_train_entity_vocab:
+                    node_type_train[self.inv_train_entity_vocab[entity_token]] = inv_train_type_vocab[type_token]
+                if entity_token in self.inv_test_entity_vocab:
+                    node_type_test[self.inv_test_entity_vocab[entity_token]] = inv_test_type_vocab[type_token]
+
+        assert self.test_graph.num_node == len(node_type_test)
+        assert self.train_graph.num_node == len(node_type_train)
+        _, node_type_train = zip(*sorted(node_type_train.items()))
+        _, node_type_test = zip(*sorted(node_type_test.items()))
+
+        # train_graph, valid_graph and graph are all the same
+        for g in [self.train_graph, self.graph, self.valid_graph]:
+            with g.node():
+                g.node_type = torch.tensor(node_type_train)
+        # test_graph
+        with self.test_graph.node():
+            self.test_graph.node_type = torch.tensor(node_type_test)
+
+    def __getitem__(self, index: int):
+        return self.triplets[index]
+
+    def split(self):
+        offset = 0
+        splits = []
+        for num_sample in self.num_samples:
+            split = torch_data.Subset(self, range(offset, offset + num_sample))
+            splits.append(split)
+            offset += num_sample
+        return splits[1:]

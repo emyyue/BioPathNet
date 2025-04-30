@@ -1,0 +1,13 @@
+gene1	up	gene2
+gene1	down	gene3
+gene1	up	gene4
+gene2	up	gene4
+gene3	up	gene4
+gene4	up	gene5
+gene5	down	gene6
+gene5	down	gene1
+gene2	phos	gene1
+gene3	phos	gene4
+gene4	phos	gene2
+gene4	down	gene3
+gene4	down	gene2

@@ -1,3 +1,8 @@
+# script to load the trained model
+# first, evaluates on the validation and full test set
+# then evaluates on the validation and test_pred.txt
+# finally predicts for test_pred.txt
+# to double check with performances seen during training if all loaded correctly
 import os
 import sys
 import pprint
@@ -9,13 +14,13 @@ from torchdrug.utils import comm
 from torch.utils import data as torch_data
 from torchdrug import data, core, utils
 import pandas as pd
-
+import copy
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from biopathnet import dataset, layer, model, task, util#, reasoning_mod
+from biopathnet import dataset, layer, model, task, util
 import numpy as np
 
 
-def solver_load(checkpoint, load_optimizer=True):
+def solver_load(checkpoint, solver, load_optimizer=True):
 
     if comm.get_rank() == 0:
         logger.warning("Load checkpoint from %s" % checkpoint)
@@ -45,7 +50,7 @@ def solver_load(checkpoint, load_optimizer=True):
     comm.synchronize()
 
 
-def build_solver(cfg):
+def build_solver(cfg, _dataset, train_set, valid_set, test_set):
     cfg.task.model.num_relation = _dataset.num_relation
     _task = core.Configurable.load_config_dict(cfg.task)
     cfg.optimizer.params = _task.parameters()
@@ -137,6 +142,30 @@ def merge_with_entity_vocab(df, dataset, entity_vocab, relation_vocab):
     df = pd.merge(df, lookup, how="left", left_on="pred_node", right_on="short", sort=False)
     return df
 
+
+def test(cfg, solver):
+    solver.model.split = "valid"
+    solver.evaluate("valid")
+    solver.model.split = "test"
+    solver.evaluate("test")
+    
+def load_dataset_and_solver(cfg, test_file):
+    cfg_local = copy.deepcopy(cfg)
+    if 'files' not in cfg_local.dataset:
+        cfg_local.dataset['files'] = ['train1.txt', 'train2.txt', 'valid.txt', test_file]
+    _dataset = core.Configurable.load_config_dict(cfg_local.dataset)
+    train_set, valid_set, test_set = _dataset.split()
+    
+    if comm.get_rank() == 0:
+        logger.warning(_dataset)
+        logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
+    
+    solver = build_solver(cfg_local, _dataset, train_set, valid_set, test_set)
+    if "checkpoint" in cfg_local:
+        solver_load(cfg_local.checkpoint, solver)
+    
+    entity_vocab, relation_vocab = load_vocab(_dataset, vocab_file)
+    return cfg_local, solver, _dataset, entity_vocab, relation_vocab
         
 if __name__ == "__main__":
     args, vars = util.parse_args()
@@ -157,30 +186,26 @@ if __name__ == "__main__":
     logger.warning("Working directory: %s" % working_dir)
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
-        logger.warning(pprint.pformat(cfg))
+        #logger.warning(pprint.pformat(cfg))
 
-    if 'files' not in cfg.dataset:
-        cfg.dataset['files'] = ['train1.txt', 'train2.txt', 'valid.txt', 'test_pred.txt']
-    _dataset = core.Configurable.load_config_dict(cfg.dataset)
-    train_set, valid_set, test_set = _dataset.split()
-    full_valid_set = valid_set
-    if comm.get_rank() == 0:
-        logger.warning(_dataset)
-        logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
+    # Test phase
+    cfg_eval, solver_eval, _dataset_eval, entity_vocab_eval, relation_vocab_eval = load_dataset_and_solver(cfg, 'test.txt')
+    test(cfg_eval, solver_eval)
 
-    solver = build_solver(cfg)
+    # Prediction phase
+    cfg_pred, solver, _dataset, entity_vocab, relation_vocab = load_dataset_and_solver(cfg, 'test_pred.txt')
+    test(cfg_pred, solver)
 
-    if "checkpoint" in cfg:
-        solver_load(cfg.checkpoint)
-    entity_vocab, relation_vocab = load_vocab(_dataset, vocab_file)
-
+    logger.warning(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     logger.warning("Starting link prediction")
+    logger.warning("------------------------------")
     
-    df = get_prediction(cfg, solver, relation_vocab, _dataset)
-    print("Predictions done")
+    df = get_prediction(cfg_pred, solver, relation_vocab, _dataset)
     df = merge_with_entity_vocab(df, _dataset, entity_vocab, relation_vocab)
-    df = df.sort_values(['query_node','query_relation', 'probability'], ascending=[True, False,False])
+    df = df.sort_values(['query_node', 'query_relation', 'probability'], ascending=[True, False, False])
+    
     logger.warning("Link prediction done")
     logger.warning("Saving to file")
-    print(os.path.join(working_dir, "predictions.csv"))
-    df.to_csv(os.path.join( working_dir, "predictions.csv"), index=False, sep="\t")
+    df.to_csv(os.path.join(working_dir, "predictions.csv"), index=False, sep="\t")
+    logger.warning("Done")
+    logger.warning("------------------------------")

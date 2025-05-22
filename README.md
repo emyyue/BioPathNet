@@ -30,13 +30,17 @@ with Python 3.7/3.8 and PyTorch version >= 1.8.0.
 ```bash
 conda create -y -n biopathnet python=3.10
 conda activate biopathnet
-pip install --no-cache-dir torch torchvision torchaudio
-pip install torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.0+cpu.html
+
+pip3 install --no-cache-dir torch==2.0.1+cu118 torchvision==0.15.2+cu118 torchaudio==2.0.2+cu118 -f https://download.pytorch.org/whl/torch_stable.html
+pip install --no-cache-dir pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.1+cu118.html
+
 git clone https://github.com/DeepGraphLearning/torchdrug
 cd torchdrug
 pip install -r requirements.txt
 python setup.py install
 pip install ogb easydict pyyaml
+
+pip install numpy==1.26.4 --force-reinstall
 ```
 
 

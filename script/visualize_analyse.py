@@ -127,7 +127,7 @@ def paths_to_table(results):
                 rows.append((sample_id, "reverse", path_id, step_id, h, r, t, weight))
 
     df = pd.DataFrame(rows, columns=[
-        "sample_id", "direction", "path_id", "step_id", "h", "r", "t", "edge_weight"
+        "sample_id", "direction", "path_id", "step_id", "h", "r", "t", "path_weight"
     ])
     df["index"] = df.index
     return df
@@ -154,6 +154,13 @@ def add_info_to_table(results, ent_types, df):
     df['t_type'] = df['t_id'].map(id_to_type)
     # add relation id
     df['r_id'] = df['r'].map(rel_map)
+    df =  df[['index', 
+        'sample_id', 'direction', 'path_id', 'step_id',
+        'h', 'r','t',
+        'h_id', 'r_id', 't_id', 
+        'h_type','t_type',
+        'h_name', 't_name',
+        'path_weight']]
     return df
 
 

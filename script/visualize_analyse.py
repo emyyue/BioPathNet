@@ -132,6 +132,30 @@ def paths_to_table(results):
     df["index"] = df.index
     return df
 
+def add_info_to_table(results, ent_types, df):
+    # biopathnet interal id to id map
+    internalid_to_id = {idx: name for idx, name in enumerate(results['entity_vocab'])}
+    # id to name map
+    id_to_name = {idx: name for idx, name in enumerate(results['entity_vocab_names'])}
+    # id to type map
+    id_to_type = dict(zip(ent_types['id'], ent_types['type']))
+    # relation map
+    rels = results['relation_vocab'] + ['rev_' + r for r in results['relation_vocab']]
+    rel_map = {idx: rel for idx, rel in enumerate(rels)}
+
+    # add entity id
+    df['h_id'] = df['h'].map(internalid_to_id)
+    df['t_id'] = df['t'].map(internalid_to_id)
+    # add entity name
+    df['h_name'] = df['h'].map(id_to_name)
+    df['t_name'] = df['t'].map(id_to_name)
+    # add entity type
+    df['h_type'] = df['h_id'].map(id_to_type)
+    df['t_type'] = df['t_id'].map(id_to_type)
+    # add relation id
+    df['r_id'] = df['r'].map(rel_map)
+    return df
+
 
 if __name__ == "__main__":
     args, vars = util.parse_args()
@@ -171,5 +195,13 @@ if __name__ == "__main__":
         'relation_vocab': _dataset.relation_vocab
         }
 
-    with open(os.path.join( working_dir, "visualize_analyse.pkl"), "wb") as f:
-        pickle.dump(results, f)
+    # format paths to table
+    df = paths_to_table(results)
+    ent_types = pd.read_csv(os.path.join(os.path.dirname(__file__), cfg.dataset.path, "entity_types.txt"), sep="\t", names=["id", "type"])
+    ent_types['id'] = ent_types['id'].astype(str).str.strip()
+    df = add_info_to_table(results, ent_types, df)
+
+    # save table
+    output_file = os.path.join(working_dir, "paths_table.csv")
+    df.to_csv(output_file, index=False)
+    logger.warning("Paths table saved to %s" % output_file)

@@ -300,8 +300,11 @@ if __name__ == "__main__":
 
     task = solver.model
     task.eval()
-    for i in range(20):
-        batch = data.graph_collate([test_set[i * solver.batch_size + j] for j in range(solver.batch_size)])
+    for i in range(-(-len(test_set) // solver.batch_size)):  # for number of batches
+        start = i * solver.batch_size
+        end = min(start + solver.batch_size, len(test_set))  # make sure we don't go out of bounds
+        batch_samples = [test_set[j] for j in range(start, end)]
+        batch = data.graph_collate(batch_samples)
         batch = torchdrug.utils.cuda(batch)
         with torch.no_grad():
             pred, (mask, target) = task.predict_and_target(batch)

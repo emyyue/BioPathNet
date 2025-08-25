@@ -2,6 +2,8 @@
 
 This is the official codebase of the manuscript **Path-based reasoning for biomedical knowledge graphs with BioPathNet**
 
+[![DOI](https://zenodo.org/badge/836822868.svg)](https://doi.org/10.5281/zenodo.16944505)
+
 ## Overview ##
 BioPathNet is a graph neural network framework, adapted from [NBFNet][paper],
 designed to reason on biomedical knowledge graphs. BioPathNet learns path representations

@@ -305,9 +305,14 @@ if __name__ == "__main__":
         pos_pred = pred.gather(-1, target.unsqueeze(-1))
         ranking = torch.sum((pos_pred <= pred) & mask, dim=-1) + 1
 
-        for j in range(solver.batch_size):
+        for j in range(len(batch_samples)):
             sample = batch[[j]]
-            h, t, r = sample.flatten().tolist()
+            h, t, r = sample.squeeze(0).tolist()
+            if not (0 <= h < task.fact_graph.num_node and 
+                    0 <= t < task.fact_graph.num_node and 
+                    0 <= r < task.fact_graph.num_relation * 2):
+                print(f"Skipping invalid triplet: h={h}, t={t}, r={r}")
+                continue
             
 
 

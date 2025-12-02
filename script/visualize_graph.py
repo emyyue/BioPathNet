@@ -167,7 +167,6 @@ def visualize_echarts(graph, sample, paths, weights, entity_vocab, relation_voca
             if (h,t,r) == (0,0,0):
                 continue
             print(h, t, r, (h, t, r) in triplet2id)
-            #print("not if",h, r, t)
             if r >= graph.num_relation:
                 r = r - graph.num_relation.item()
                 h, t = t, h
@@ -280,8 +279,7 @@ if __name__ == "__main__":
     _dataset = core.Configurable.load_config_dict(cfg.dataset)
     train_set, valid_set, test_set = _dataset.split()
     full_valid_set = valid_set
-    if "NBFNet" in cfg.task.model["class"] and "CBKH" in cfg.dataset["class"]:
-        valid_set = torch_data.random_split(valid_set, [500, len(valid_set) - 500])[0]
+
     if comm.get_rank() == 0:
         logger.warning(_dataset)
         logger.warning("#train: %d, #valid: %d, #test: %d" % (len(train_set), len(valid_set), len(test_set)))
@@ -291,13 +289,9 @@ if __name__ == "__main__":
     if "checkpoint" in cfg:
         solver_load(cfg.checkpoint)
 
+        
 
-    if "FB15k237" in cfg.dataset["class"]:
-        entity_vocab, relation_vocab = 0(_dataset)
-    else:
-        entity_vocab, relation_vocab = load_vocab(_dataset)
-
-
+    entity_vocab, relation_vocab = load_vocab(_dataset)
     task = solver.model
     task.eval()
     for i in range(-(-len(test_set) // solver.batch_size)):  # for number of batches

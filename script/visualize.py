@@ -118,7 +118,6 @@ if __name__ == "__main__":
     logger.warning("Config file: %s" % args.config)
     logger.warning(pprint.pformat(cfg))
 
-    cfg.dataset.files = ['train1.txt', 'train2.txt', 'valid.txt', 'test_vis.txt']
     _dataset = core.Configurable.load_config_dict(cfg.dataset)
     train_set, valid_set, test_set = _dataset.split()
     solver = build_solver(cfg)

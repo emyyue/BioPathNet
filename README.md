@@ -1,8 +1,10 @@
 # BioPathNet: Link Prediction for Biomedical Knowledge Graphs #
 
-This is the official codebase of the manuscript **Path-based reasoning for biomedical knowledge graphs with BioPathNet**
+This is the official codebase of the paper [Enhancing link prediction in biomedical knowledge graphs with BioPathNet](https://doi.org/10.1038/s41551-025-01598-z) published in Nature Biomedical Engineering.
 
-[![DOI](https://zenodo.org/badge/836822868.svg)](https://doi.org/10.5281/zenodo.16944505)
+[![DOI](https://zenodo.org/badge/836822868.svg)](https://doi.org/10.5281/zenodo.16944505) 
+[![Nature Paper](https://img.shields.io/badge/Nature%20Paper-DOI-orange)](https://doi.org/10.1038/s41551-025-01598-z)
+
 
 ## Overview ##
 BioPathNet is a graph neural network framework, adapted from [NBFNet][paper],

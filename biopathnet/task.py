@@ -344,7 +344,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         fact_graph = self.fact_graph if self.train2_in_factgraph else self.fact_graph_supervision        
         
         ####################### 
-        # sample negative heads # (pos_h, r, neg_t)
+        # sample negative tail # (pos_h, r, neg_t)
         ####################### 
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         pattern = pattern[:batch_size // 2]
@@ -361,7 +361,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         pos_index = torch.repeat_interleave(num_t_truth)
         
         
-        
         # remove undesired node type
         if self.heterogeneous_negative:
             pos_t_type = node_type[pos_t_index[:batch_size // 2]]
@@ -369,7 +368,7 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         else:
             t_mask = torch.ones(len(pattern), self.num_entity, dtype=torch.bool, device=self.device)
         # remove positive
-        t_mask[pos_index, t_truth_index] = 0
+        t_mask[pos_index, t_truth_index] = 0 # remove positives
         
         ## sample tails not in fact graph
         if self.neg_samp_strategy in ['sans', 'degree', 'inv_degree']:
@@ -408,7 +407,6 @@ class KnowledgeGraphCompletionBiomed(tasks.KnowledgeGraphCompletion, core.Config
         h_truth_index = fact_graph.edge_list[edge_index, 0]
             
         pos_index = torch.repeat_interleave(num_h_truth)
-        
         # remove undesired node type
         if self.heterogeneous_negative:
             pos_h_type = node_type[pos_h_index[batch_size // 2:]]

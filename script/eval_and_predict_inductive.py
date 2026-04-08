@@ -167,9 +167,10 @@ def load_dataset_and_solver(cfg, test_file):
         
 if __name__ == "__main__":
     args, vars = util.parse_args()
+    logger = util.get_root_logger()
     cfg = util.load_config(args.config, context=vars)
     working_dir = util.create_working_directory(cfg)
-    print(working_dir)
+    logger.warning(f"working directory = {working_dir}")
     # get entity names
     if 'entity_files' in cfg.dataset:
         vfile = cfg.dataset.entity_files[1]
@@ -180,8 +181,6 @@ if __name__ == "__main__":
 
     torch.manual_seed(args.seed + comm.get_rank())
 
-    logger = util.get_root_logger()
-    logger.warning("Working directory: %s" % working_dir)
     if comm.get_rank() == 0:
         logger.warning("Config file: %s" % args.config)
         #logger.warning(pprint.pformat(cfg))
@@ -192,6 +191,7 @@ if __name__ == "__main__":
 
     # Prediction phase
     cfg_pred, solver, _dataset, entity_vocab, relation_vocab = load_dataset_and_solver(cfg, 'test_pred.txt')
+    logger.warning(f"******* solver = {solver}")
     test(cfg_pred, solver)
 
     logger.warning(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")

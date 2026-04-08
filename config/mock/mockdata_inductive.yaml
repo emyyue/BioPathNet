@@ -1,8 +1,8 @@
-output_dir: experiments/
+output_dir: /Users/claudy/work/projects/BioPathNet/experiments/
 
 dataset:
   class: BiomedicalInductive
-  path: data/mock_inductive
+  path: /Users/claudy/work/projects/BioPathNet/data/mock_inductive
 
 task:
   class: KnowledgeGraphCompletionBiomedInductive

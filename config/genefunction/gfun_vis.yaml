@@ -1,8 +1,9 @@
-output_dir: experiments/
+output_dir: /pasteur/appa/homes/claudy/2026-BPN-paper-data/gene-function-prediction/
+
 
 dataset:
   class: biomedical
-  path: data/PC_KEGG_0928
+  path: /pasteur/appa/homes/claudy/BioPathNet/data/PC_KEGG_0602
   include_factgraph: yes
   
 task:

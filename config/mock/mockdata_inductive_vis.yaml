@@ -1,0 +1,52 @@
+output_dir: /Users/claudy/work/projects/BioPathNet/experiments/
+
+dataset:
+  class: BiomedicalInductive
+  path: /Users/claudy/work/projects/BioPathNet/data/mock_inductive
+
+task: 
+  class: KnowledgeGraphCompletionBiomedInductive
+  model:
+    class: NBFNet
+    input_dim: 32
+    hidden_dims: [32, 32, 32, 32, 32, 32]
+    message_func: distmult
+    aggregate_func: pna
+    short_cut: yes
+    layer_norm: yes
+    dependent: yes
+    symmetric: no
+  criterion: bce
+  num_negative: 32
+  strict_negative: yes
+  adversarial_temperature: 0.5
+  sample_weight: no
+  heterogeneous_negative: yes
+  heterogeneous_evaluation: yes
+  full_batch_eval: no
+<<<<<<< HEAD
+=======
+  remove_pos: no
+>>>>>>> 776380a (feat(config files): adds config files for inductive models on mock data  and missing visualisation for gene function prediction.)
+
+optimizer:
+  class: Adam
+  lr: 5.0e-3
+
+engine:
+  gpus: {{ gpus }}
+  batch_size: 4
+  
+<<<<<<< HEAD
+=======
+
+>>>>>>> 776380a (feat(config files): adds config files for inductive models on mock data  and missing visualisation for gene function prediction.)
+train:
+  num_epoch: 5
+  
+metric: mrr
+<<<<<<< HEAD
+=======
+
+>>>>>>> 776380a (feat(config files): adds config files for inductive models on mock data  and missing visualisation for gene function prediction.)
+checkpoint: {{checkpoint}}
